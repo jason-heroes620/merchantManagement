@@ -59,6 +59,46 @@ return [
             ]) : [],
         ],
 
+        'journey' => [
+            'driver' => 'mysql',
+            'url' => env('JOURNEY_DB_URL'),
+            'host' => env('JOURNEY_DB_HOST', '127.0.0.1'),
+            'port' => env('JOURNEY_DB_PORT', '3306'),
+            'database' => env('JOURNEY_DB_DATABASE', ''),
+            'username' => env('JOURNEY_DB_USERNAME', 'root'),
+            'password' => env('JOURNEY_DB_PASSWORD', ''),
+            'unix_socket' => env('JOURNEY_DB_SOCKET', ''),
+            'charset' => env('JOURNEY_DB_CHARSET', 'utf8mb4'),
+            'collation' => env('JOURNEY_DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => env('JOURNEY_PREFIX', ''),
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
+        'merchant' => [
+            'driver' => 'mysql',
+            'url' => env('MERCHANT_DB_URL'),
+            'host' => env('MERCHANT_DB_HOST', '127.0.0.1'),
+            'port' => env('MERCHANT_DB_PORT', '3306'),
+            'database' => env('MERCHANT_DB_DATABASE', ''),
+            'username' => env('MERCHANT_DB_USERNAME', 'root'),
+            'password' => env('MERCHANT_DB_PASSWORD', ''),
+            'unix_socket' => env('MERCHANT_DB_SOCKET', ''),
+            'charset' => env('MERCHANT_DB_CHARSET', 'utf8mb4'),
+            'collation' => env('MERCHANT_DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => env('MERCHANT_PREFIX', ''),
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),
@@ -144,7 +184,7 @@ return [
 
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
-            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_database_'),
+            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_') . '_database_'),
         ],
 
         'default' => [

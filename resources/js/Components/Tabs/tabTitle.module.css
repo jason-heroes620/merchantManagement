@@ -1,0 +1,33 @@
+.title {
+    background: #bcbcbc;
+    border-color: #aaa;
+    color: black;
+    border-radius: 5px 5px 0 0;
+    padding: 4px 6px 4px 6px;
+}
+
+.title.active {
+    background: #736c6c;
+    border-color: #aaa;
+    color: rgb(255, 255, 255);
+    border-radius: 5px 5px 0 0;
+    margin: 4px;
+}
+
+/* Dark theme colors */
+@media (prefers-color-scheme: dark) {
+    .title {
+        background-color: coral;
+        color: white;
+        border-radius: 5px 5px 0 0;
+        padding: 4px 6px 4px 6px;
+        font-weight: 800;
+        opacity: 0.5;
+    }
+    li .title .active {
+        border-color: aqua;
+        color: white;
+        border-radius: 5px 5px 0 0;
+        padding: 4px 6px 4px 6px;
+    }
+}
