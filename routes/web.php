@@ -43,6 +43,14 @@ Route::get('/clear-cache', function () {
     Artisan::call('cache:clear');
     return "All cache cleared";
 });
+Route::get('/config-clear', function () {
+    Artisan::call('config:clear');
+    return "All config cleared";
+});
+Route::get('/config-cache', function () {
+    Artisan::call('cache:clear');
+    return "All config cache";
+});
 
 // Route::get('/events', function () {
 //     return Inertia::render('Events/Events');
