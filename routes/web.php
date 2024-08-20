@@ -10,6 +10,7 @@ use App\Http\Controllers\EventController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Artisan;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -36,6 +37,11 @@ Route::get('/dashboard', function () {
 
 Route::group(['middleware' => ['auth']], function () {
     Route::resource('roles', RoleController::class);
+});
+
+Route::get('/clear-cache', function () {
+    Artisan::call('cache:clear');
+    return "All cache cleared";
 });
 
 // Route::get('/events', function () {
