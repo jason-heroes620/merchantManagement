@@ -7,4 +7,4 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote')->hourly();
 
-Artisan::call('reverb:start', function () {});
+Artisan::call('reverb:start --port=8080', function () {});
