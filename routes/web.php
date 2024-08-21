@@ -53,7 +53,7 @@ Route::group(['middleware' => ['auth']], function () {
 // });
 
 Route::get('/reverb-start', function () {
-    Artisan::call('reverb:start --port=8080');
+    Artisan::call('reverb:start');
     return "Reverb started";
 });
 
