@@ -55,7 +55,7 @@ Route::get('/clear-cache', function () {
 // });
 
 Route::get('/reverb-start', function () {
-    Artisan::call('reverb:start');
+    Artisan::call('reverb:start --port=8080 host=0.0.0.0 hostname=merchants-admin.heroes.my');
     return "Reverb started";
 });
 
