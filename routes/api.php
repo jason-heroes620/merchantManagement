@@ -33,7 +33,10 @@ use App\Http\Controllers\API\UserController;
 
 Route::post('/login', [UserController::class, 'login']);
 
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/chats', [ChatController::class, 'chats']);
     Route::post('/createMessage', [ChatController::class, 'createMessage']);
+
+    Route::post('/logout', [UserController::class, 'logout']);
 });
