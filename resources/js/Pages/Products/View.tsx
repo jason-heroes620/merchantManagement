@@ -1,16 +1,20 @@
 import React, { useEffect, useState } from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Link, Head, useForm } from "@inertiajs/react";
+import { Link, Head, useForm, router } from "@inertiajs/react";
 import { PageProps } from "@/types";
 import InputLabel from "@/Components/InputLabel";
 import TextInput from "@/Components/TextInput";
+import TextArea from "@/Components/TextArea";
 import InputError from "@/Components/InputError";
 import RichTextEditor from "@/Components/RichTextEditor";
 import SelectInput from "@/Components/SelectInput";
+import LoadingButton from "@/Components/Button/LoadingButton";
+import DangerButton from "@/Components/DangerButton";
 import Categories from "@/Components/Categories";
 import { FiHelpCircle } from "react-icons/fi";
 import Frequency from "@/Components/Frequency/Frequency";
 import { DatePicker, TimePicker, DatePickerProps, TimePickerProps } from "antd";
+import Modal from "@/Components/Modal";
 import dayjs from "dayjs";
 
 const dateFormat = "DD/MM/YYYY";
@@ -18,14 +22,16 @@ const timeFormat = "HH:mm";
 
 const View = ({
     auth,
-    event,
-    event_description,
+    product,
+    product_description,
     categories,
     frequency,
 }: any) => {
     const [dark, setDark] = useState(
         window.matchMedia("(prefers-color-scheme: dark)").matches
     );
+    const [showModal, setShowModal] = useState(false);
+    const [rejectText, setRejectText] = useState("");
 
     const onSelectMode = (mode: string) => {
         setDark(mode === "dark" ? true : false);
@@ -34,6 +40,7 @@ const View = ({
     };
 
     useEffect(() => {
+        console.log("product -> ", product);
         window
             .matchMedia("(prefers-color-scheme: dark)")
             .addEventListener("change", (e) =>
@@ -42,19 +49,35 @@ const View = ({
     }, [dark]);
 
     const { data, setData, post, processing, errors, reset } = useForm({
-        event_name: event.event_name,
-        category_id: event.category_id,
-        event_description: event_description,
-        frequency_id: event.event_detail.frequency_id,
-        event_date: event.event_detail.event_date,
-        event_start_date: event.event_detail.event_start_date,
-        event_end_date: event.event_detail.event_end_date,
-        event_start_time: event.event_detail.event_start_time,
-        event_end_time: event.event_detail.event_end_time,
-        location: event.event_detail.location,
-        google_map_location: event.event_detail.google_map_location,
-        quantity: event.event_detail.event_quantity,
-        price: event.event_detail.price,
+        product_name: product.product_name,
+        category_id: product.category_id,
+        product_description: product_description,
+        frequency_id: product.product_detail?.frequency_id
+            ? product.product_detail.frequency_id
+            : "",
+        event_date: product.product_detail?.event_date
+            ? product.product_detail.event_date
+            : "",
+        event_start_date: product.product_detail?.event_start_date
+            ? product.product_detail.event_start_date
+            : "",
+        event_end_date: product.product_detail?.event_end_date
+            ? product.product_detail.event_end_date
+            : "",
+        event_start_time: product.product_detail?.event_start_time
+            ? product.product_detail.event_start_time
+            : "",
+        event_end_time: product.product_detail?.event_end_time
+            ? product.product_detail.event_end_time
+            : "",
+        location: product.product_detail?.location
+            ? product.product_detail.location
+            : "",
+        google_map_location: product.product_detail?.google_map_location
+            ? product.product_detail.google_map_location
+            : "",
+        quantity: product.product_detail?.event_quantity,
+        price: product.product_detail?.price,
     });
 
     const onDateChange: DatePickerProps["onChange"] = (date, dateString) => {
@@ -72,6 +95,9 @@ const View = ({
         setData("event_end_date", timeString as string);
     };
 
+    const handleReject = () => {
+        alert(rejectText);
+    };
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -79,19 +105,66 @@ const View = ({
                 <div className="flex flex-row gap-8">
                     <div>
                         <Link
-                            href={route("events")}
+                            href={route("products")}
                             className="text-indigo-600 hover:text-white border rounded-md hover:bg-red-800 py-2 px-4"
                         >
                             Back
                         </Link>
                     </div>
                     <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                        Event
+                        Product
                     </h2>
                 </div>
             }
         >
-            <Head title="Create Event" />
+            <Head title="Create Product" />
+            <Modal
+                maxWidth="md"
+                show={showModal}
+                closeable={true}
+                onClose={() => setShowModal(false)}
+            >
+                <div>
+                    <InputLabel>Please provide reject comment:</InputLabel>
+                    <div className="py-2">
+                        <TextArea
+                            onChange={(e) => setRejectText(e.target.value)}
+                        />
+                    </div>
+                </div>
+                <div className="flex flex-row justify-end py-4">
+                    <DangerButton
+                        type="button"
+                        className="ml-auto border py-2 px-4 rounded-md text-sm"
+                        onClick={() => setShowModal(false)}
+                    >
+                        Cancel
+                    </DangerButton>
+                    <LoadingButton
+                        loading={processing}
+                        type="button"
+                        className="ml-4 border py-2 px-4 rounded-md text-sm"
+                        onClick={() => {
+                            router.put(
+                                `/products/reject/${product.id}`,
+                                {
+                                    rejectText: rejectText,
+                                },
+                                {
+                                    onBefore: () =>
+                                        confirm("Confirm to reject product?"),
+                                    onSuccess: () => {
+                                        setShowModal(false);
+                                        alert("Product is rejected.");
+                                    },
+                                }
+                            );
+                        }}
+                    >
+                        Confirm
+                    </LoadingButton>
+                </div>
+            </Modal>
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
@@ -99,26 +172,25 @@ const View = ({
                             <form action="">
                                 <div className="py-2">
                                     <InputLabel
-                                        htmlFor="event_name"
-                                        value="Event Name"
+                                        htmlFor="product_name"
+                                        value="Product Name"
                                     />
                                     <TextInput
-                                        id="event_name"
-                                        name="event_name"
-                                        value={data.event_name}
+                                        id="product_name"
+                                        name="product_name"
+                                        value={data.product_name}
                                         className="mt-1 block w-full"
-                                        autoComplete="event_name"
-                                        isFocused={true}
+                                        autoComplete="product_name"
                                         onChange={(e) =>
                                             setData(
-                                                "event_name",
+                                                "product_name",
                                                 e.target.value
                                             )
                                         }
                                         required
                                     />
                                     <InputError
-                                        message={errors.event_name}
+                                        message={errors.product_name}
                                         className="mt-2"
                                     />
                                 </div>
@@ -136,16 +208,21 @@ const View = ({
                                 </div>
                                 <div className="py-2">
                                     <InputLabel
-                                        htmlFor="event_description"
+                                        htmlFor="product_description"
                                         value="Description"
                                     />
                                     <RichTextEditor
-                                        value={data.event_description}
-                                        onChange={setData}
-                                        contentFor={"event_description"}
+                                        value={data.product_description}
+                                        onChange={(e) =>
+                                            setData(
+                                                "product_description",
+                                                e.target.value
+                                            )
+                                        }
+                                        contentFor={"product_description"}
                                     />
                                     <InputError
-                                        message={errors.event_description}
+                                        message={errors.product_description}
                                         className="mt-2"
                                     />
                                 </div>
@@ -156,7 +233,11 @@ const View = ({
                                     />
                                     <SelectInput
                                         options={frequency}
-                                        selected={data.frequency_id}
+                                        selected={
+                                            data.frequency_id
+                                                ? data.frequency_id
+                                                : ""
+                                        }
                                         onChange={(e) => {
                                             setData(
                                                 "frequency_id",
@@ -174,7 +255,6 @@ const View = ({
                                     onStartTimeChange={onStartTimeChange}
                                     onEndTimeChange={onEndTimeChange}
                                     values={[
-                                        data.event_date,
                                         data.event_start_date,
                                         data.event_end_date,
                                         data.event_start_time,
@@ -184,7 +264,7 @@ const View = ({
                                 <div className="py-2">
                                     <InputLabel
                                         htmlFor="location"
-                                        value="Event Location"
+                                        value="Location"
                                     />
                                     <TextInput
                                         id="location"
@@ -192,7 +272,6 @@ const View = ({
                                         value={data.location}
                                         className="mt-1 block w-full"
                                         autoComplete="location"
-                                        isFocused={true}
                                         onChange={(e) =>
                                             setData("location", e.target.value)
                                         }
@@ -223,7 +302,6 @@ const View = ({
                                         value={data.google_map_location}
                                         className="mt-1 block w-full"
                                         autoComplete="event_map_location"
-                                        isFocused={true}
                                         onChange={(e) =>
                                             setData(
                                                 "google_map_location",
@@ -252,7 +330,6 @@ const View = ({
                                         value={data.quantity}
                                         className="mt-1 block w-full"
                                         autoComplete="equantity"
-                                        isFocused={true}
                                         onChange={(e) =>
                                             setData("quantity", e.target.value)
                                         }
@@ -271,7 +348,6 @@ const View = ({
                                         value={data.price}
                                         className="mt-1 block w-full"
                                         autoComplete="price"
-                                        isFocused={true}
                                         onChange={(e) =>
                                             setData("price", e.target.value)
                                         }
@@ -281,6 +357,65 @@ const View = ({
                                         message={errors.price}
                                         className="mt-2"
                                     />
+                                </div>
+
+                                <div className="py-4">
+                                    <div className="flex justify-end flex-col md:flex-row">
+                                        <div className="flex items-center px-4 py-2 bborder-t dark:bg-gray-800 dark:border-gray-800 border-gray-200">
+                                            <LoadingButton
+                                                loading={processing}
+                                                type="submit"
+                                                className="ml-auto border py-2 px-4 rounded-md text-sm"
+                                            >
+                                                Update
+                                            </LoadingButton>
+                                        </div>
+                                        {product.status === 1 ? (
+                                            <div className="flex justify-end flex-col md:flex-row">
+                                                <div className="flex items-center px-4 py-2 bg-gray-100 border-t dark:bg-gray-800 dark:border-gray-800 border-gray-200">
+                                                    <DangerButton
+                                                        type="button"
+                                                        className="ml-auto border py-2 px-4 rounded-md text-sm"
+                                                        onClick={() =>
+                                                            setShowModal(true)
+                                                        }
+                                                    >
+                                                        Reject
+                                                    </DangerButton>
+                                                </div>
+                                                <div className="flex items-center px-4 py-2 bg-gray-100 border-t dark:bg-gray-800 dark:border-gray-800 border-gray-200">
+                                                    <LoadingButton
+                                                        loading={processing}
+                                                        type="button"
+                                                        className="ml-auto border py-2 px-4 rounded-md text-sm"
+                                                        onClick={() => {
+                                                            if (
+                                                                confirm(
+                                                                    "Confirm to approve product?"
+                                                                )
+                                                            ) {
+                                                                router.put(
+                                                                    `/products/approve/${product.id}`,
+                                                                    {},
+                                                                    {
+                                                                        onSuccess:
+                                                                            () =>
+                                                                                alert(
+                                                                                    "Product has been approved."
+                                                                                ),
+                                                                    }
+                                                                );
+                                                            }
+                                                        }}
+                                                    >
+                                                        Approve
+                                                    </LoadingButton>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            ""
+                                        )}
+                                    </div>
                                 </div>
                             </form>
                         </div>

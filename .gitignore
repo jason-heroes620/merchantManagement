@@ -18,3 +18,7 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+*.zip
+.env
+.env.local
+.DS_Store

@@ -39,7 +39,7 @@ export interface Merchant {
     phone: string;
 }
 
-export interface Event {
+export interface Product {
     id: number;
     product_name: string;
     category: string;
@@ -50,6 +50,7 @@ export interface Chat {
     id: string;
     user_id: string;
     message: string;
+    user: User;
 }
 
 export type PageProps<

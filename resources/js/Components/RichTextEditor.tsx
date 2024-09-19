@@ -13,6 +13,7 @@ import {
     Indent,
     IndentBlock,
     Underline,
+    BlockQuote,
 } from "ckeditor5";
 
 import "ckeditor5/ckeditor5.css";
@@ -38,9 +39,7 @@ const RichTextEditor = ({ value, onChange, contentFor }: any) => {
                         "underline",
                         "|",
                         "link",
-                        "uploadImage",
                         "blockQuote",
-                        "codeBlock",
                         "|",
                         "bulletedList",
                         "numberedList",
@@ -61,6 +60,7 @@ const RichTextEditor = ({ value, onChange, contentFor }: any) => {
                     Indent,
                     IndentBlock,
                     Underline,
+                    BlockQuote,
                 ],
             }}
             data={value}

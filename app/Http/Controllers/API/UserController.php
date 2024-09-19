@@ -24,4 +24,11 @@ class UserController extends Controller
             return $this->sendError('Unauthorised.', ['error' => 'Unauthorised']);
         }
     }
+
+    public function logout(Request $req)
+    {
+        $req->user()->tokens()->currentAccessToken()->delete();
+
+        return $this->sendResponse('', 'User logout successfully.');
+    }
 }

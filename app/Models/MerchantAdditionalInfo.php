@@ -22,6 +22,7 @@ class MerchantAdditionalInfo extends Model
         'web',
         'ic_no',
         'company_registration',
+        'location'
     ];
 
     public function merchant(): BelongsTo

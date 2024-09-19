@@ -14,7 +14,6 @@ export default function SelectInput({
     selected,
     ...props
 }: SelectInputProps) {
-    console.log("selected => ", selected);
     return (
         <select
             id={name}

@@ -1,35 +1,48 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { PageProps, Chat, PaginatedData } from "@/types";
-import { Head, useForm, usePage } from "@inertiajs/react";
+import { Head, useForm, usePage, Link } from "@inertiajs/react";
 import React, { useEffect, useRef, useState, FormEventHandler } from "react";
-import Message from "@/Components/Message/Message.jsx";
 import MessageInput from "@/Components/Message/MessageInput.jsx";
+import * as Ably from "ably";
+import {
+    MinChatUiProvider,
+    MainContainer,
+    MessageContainer,
+    MessageList,
+    MessageHeader,
+} from "@minchat/react-chat-ui";
 
-// const REVERB_APP_ID = 965717;
-// const REVERB_APP_KEY = "v3q9f4wcmt91fpdkyxjq";
-// const REVERB_APP_SECRET = "3dasp8g8ilyv6xd3n8fh";
-// const REVERB_HOST = "localhost";
-// const REVERB_PORT = 8080;
-// const REVERB_SCHEME = "http";
+var ably = new Ably.Realtime({
+    key: import.meta.env.VITE_ABLY_KEY,
+});
 
 const Chats = ({ auth }: PageProps) => {
-    const { chats } = usePage<{ chats: any }>().props;
+    const { chats, receiver } = usePage<{ chats: any; receiver: any }>().props;
     const { datas, links } = chats;
     const [allMessages, setAllMessages] = useState(chats);
-
     const { data, setData, post, processing, errors, reset } = useForm({
         text: "",
+        roomId: receiver.id,
     });
-
+    const channel = ably.channels.get("message");
     const messageRequest = () => {
         try {
-            post(route("create.message"));
+            console.log("data= >", data);
+
+            // setData("text", "");
+            post(route("create.message"), {
+                preserveScroll: true,
+                preserveState: false,
+                onSuccess: () => {
+                    reset();
+                },
+            });
         } catch (err: any) {
             console.log(err.message);
         }
     };
 
-    const sendMessage: FormEventHandler = (e) => {
+    const sendMessage = (e) => {
         e.preventDefault();
         if (data.text.trim() === "") {
             alert("Please enter a message!");
@@ -39,26 +52,26 @@ const Chats = ({ auth }: PageProps) => {
         messageRequest();
     };
 
-    // window.Echo.channel("chat-channel").listen("message.sent", (newMessage) => {
-    //     console.log("New message:", newMessage.message);
-    // });
-
+    const subscribe = async () => {
+        channel.subscribe("AblyMessageEvent", (message) => {
+            console.log("subscribed To Channel => ", message.data);
+            setAllMessages((prevAllMessages: any) => [
+                ...prevAllMessages,
+                JSON.parse(message.data),
+            ]);
+        });
+    };
     useEffect(() => {
+        console.log("data ->", receiver);
         try {
-            window.Echo.channel(`chat.${auth.user.id}`).listen(
-                "NewMessage",
-                (newMessage: Chat) => {
-                    setAllMessages((prevAllMessages: any) => [
-                        ...prevAllMessages,
-                        newMessage.message,
-                    ]);
-                }
-            );
+            subscribe();
         } catch (e) {
             console.log("error =>", e);
         }
         return () => {
-            window.Echo.leave(`chat.${auth.user.id}`);
+            // pusher.unsubscribe(`chat.${auth.user.id}`);
+            channel.unsubscribe();
+            window.Echo.leave("message");
         };
     }, []);
 
@@ -66,9 +79,18 @@ const Chats = ({ auth }: PageProps) => {
         <AuthenticatedLayout
             user={auth.user}
             header={
-                <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                    Chats
-                </h2>
+                <div className="flex flex-row gap-8">
+                    <div>
+                        <Link
+                            href={route("chatrooms")}
+                            onClick={() => channel.unsubscribe("message")}
+                            className="text-indigo-600 hover:text-white border rounded-md hover:bg-red-800 py-2 px-4"
+                        >
+                            Back
+                        </Link>
+                    </div>
+                    <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight"></h2>
+                </div>
             }
         >
             <Head title="Chats" />
@@ -79,30 +101,55 @@ const Chats = ({ auth }: PageProps) => {
                         <div className="p-6 text-gray-900 dark:text-gray-100">
                             <div className="col-md-8">
                                 <div className="card">
-                                    <div className="card-header">Chat Box</div>
-                                    <div
-                                        className="card-body"
-                                        style={{
-                                            height: "500px",
-                                            overflowY: "auto",
-                                        }}
-                                    >
-                                        {allMessages?.map((message: Chat) => (
+                                    {/* <div className="card-header bg-gray-100 py-4">
+                                        <div className="px-4">
+                                            {receiver.user?.name}
+                                        </div>
+                                    </div> */}
+                                    <div className="card-body py-4 px-4">
+                                        <MinChatUiProvider theme="#6ea9d7">
+                                            <MainContainer
+                                                style={{ height: "100vh" }}
+                                            >
+                                                <MessageContainer>
+                                                    <MessageHeader
+                                                        showBack={false}
+                                                        mobileView={true}
+                                                    >
+                                                        {receiver?.user.name}
+                                                    </MessageHeader>
+                                                    <MessageList
+                                                        currentUserId={auth.user.id.toString()}
+                                                        messages={allMessages}
+                                                        mobileView={true}
+                                                    />
+                                                    <MessageInput
+                                                        placeholder="Type message here"
+                                                        sendMessage={
+                                                            sendMessage
+                                                        }
+                                                        setData={setData}
+                                                    />
+                                                </MessageContainer>
+                                            </MainContainer>
+                                        </MinChatUiProvider>
+                                        {/* {allMessages?.map((message: Chat) => (
                                             <Message
                                                 key={message.id}
+                                                me={auth.user.id}
                                                 userId={message.user_id}
                                                 message={message}
                                             />
-                                        ))}
+                                        ))} */}
                                         {/* <span ref={scroll}></span> */}
                                     </div>
-                                    <div className="card-footer">
-                                        <MessageInput
-                                            sendMessage={sendMessage}
-                                            setData={setData}
-                                        />
-                                    </div>
                                 </div>
+                                {/* <div className="card-footer flex-1 item-end">
+                                    <MessageInput
+                                        sendMessage={sendMessage}
+                                        setData={setData}
+                                    />
+                                </div> */}
                             </div>
                         </div>
                     </div>

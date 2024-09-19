@@ -1,29 +1,29 @@
 import React from "react";
 import OneTime from "./OneTime";
+import dayjs from "dayjs";
 
 const Frequency = ({
     frequency,
-    onDateChange,
+    onStartDateChange,
+    onEndDateChange,
     dateFormat,
     timeFormat,
     onStartTimeChange,
     onEndTimeChange,
     values,
 }: any) => {
+    console.log("values => ", values[2]);
     return (
-        <div className="py-2">
+        <div className="py">
             {frequency == "4" ? (
                 <OneTime
-                    onDateChange={onDateChange}
+                    onStartDateChange={onStartDateChange}
+                    onEndDateChange={onEndDateChange}
                     dateFormat={dateFormat}
                     timeFormat={timeFormat}
                     onStartTimeChange={onStartTimeChange}
                     onEndTimeChange={onEndTimeChange}
-                    values={[
-                        values.event_date,
-                        values.event_start_time,
-                        values.event_end_time,
-                    ]}
+                    values={values}
                 />
             ) : (
                 ""

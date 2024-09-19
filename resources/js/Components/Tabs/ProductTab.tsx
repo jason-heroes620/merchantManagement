@@ -1,11 +1,9 @@
-import React from "react";
-import { Event, PaginatedData } from "@/types";
 import Pagination from "@/Components/Pagination";
 import { Trash2 } from "lucide-react";
 import Table from "@/Components/Table/Table";
 
-const EventTab = ({ events }: any) => {
-    const { data, links } = events;
+const ProductTab = ({ products }: any) => {
+    const { data, links } = products;
     return (
         <div>
             <div className="pt-4">
@@ -19,11 +17,11 @@ const EventTab = ({ events }: any) => {
                         <Table
                             columns={[
                                 {
-                                    label: "Event Name",
+                                    label: "Product Name",
                                     name: "name",
                                     renderCell: (row: any) => (
                                         <>
-                                            <>{row.event_name}</>
+                                            <>{row.product_name}</>
                                             {row.deleted_at && (
                                                 <Trash2
                                                     size={16}
@@ -38,7 +36,7 @@ const EventTab = ({ events }: any) => {
                                     name: "merchant",
                                     renderCell: (row) => (
                                         <>
-                                            <>{row.merchant.merchant_name}</>
+                                            <>{row.merchant?.merchant_name}</>
                                         </>
                                     ),
                                 },
@@ -55,7 +53,7 @@ const EventTab = ({ events }: any) => {
                             ]}
                             rows={data}
                             getRowDetailsUrl={(row) =>
-                                route("event.view", row.id)
+                                route("product.view", row.id)
                             }
                         />
                         <Pagination links={links} />
@@ -66,4 +64,4 @@ const EventTab = ({ events }: any) => {
     );
 };
 
-export default EventTab;
+export default ProductTab;

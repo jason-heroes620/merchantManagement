@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 use App\Http\Controllers\API\ChatController;
+use App\Http\Controllers\API\RoomController;
 use App\Http\Controllers\API\UserController;
 
 // Route::get('/user', function (Request $request) {
@@ -35,8 +36,14 @@ Route::post('/login', [UserController::class, 'login']);
 
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/chats', [ChatController::class, 'chats']);
+
+    Route::get('/chatrooms', [RoomController::class, 'rooms']);
+    Route::patch('/updatechatroom/{id}', [RoomController::class, 'roomsChatUpdate']);
+
+    Route::get('/chats/{id}', [ChatController::class, 'chats']);
     Route::post('/createMessage', [ChatController::class, 'createMessage']);
+
+    Route::get('/unreadChats/', [ChatController::class, 'unreadChats']);
 
     Route::post('/logout', [UserController::class, 'logout']);
 });

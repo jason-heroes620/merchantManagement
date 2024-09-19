@@ -7,17 +7,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\hasOne;
 
-class Event extends Model
+class Product extends Model
 {
     use HasFactory;
 
-    protected $table = 'event';
+    protected $table = 'products';
     protected $connection = 'merchant';
     public $timestamps = false;
     protected $fillable = [
-        'event_id',
-        'event_name',
-        'event_description',
+        'merchant_id',
+        'product_name',
+        'category_id',
+        'product_description',
+        'status',
+        'reject_comment'
     ];
 
     public function merchant(): BelongsTo
@@ -27,6 +30,6 @@ class Event extends Model
 
     public function detail(): hasOne
     {
-        return $this->hasOne(EventDetail::class, 'event_id', 'id');
+        return $this->hasOne(ProductDetail::class, 'product_id', 'id');
     }
 }

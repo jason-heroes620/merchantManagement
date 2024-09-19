@@ -9,11 +9,6 @@ const MerchantTab = ({ merchants }: any) => {
     return (
         <div>
             <div className="pt-4">
-                {/* <div>
-                    <h2 className="text-lg dark:text-white font-semibold">
-                        Merchant List
-                    </h2>
-                </div> */}
                 {data && (
                     <div>
                         <Table
@@ -24,6 +19,21 @@ const MerchantTab = ({ merchants }: any) => {
                                     renderCell: (row) => (
                                         <>
                                             <>{row.merchant_name}</>
+                                            {row.deleted_at && (
+                                                <Trash2
+                                                    size={16}
+                                                    className="ml-2 text-gray-400"
+                                                />
+                                            )}
+                                        </>
+                                    ),
+                                },
+                                {
+                                    label: "Type",
+                                    name: "type",
+                                    renderCell: (row) => (
+                                        <>
+                                            <>{row.merchant_type}</>
                                             {row.deleted_at && (
                                                 <Trash2
                                                     size={16}

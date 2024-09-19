@@ -3,31 +3,36 @@ import { Head, Link, useForm, usePage, router } from "@inertiajs/react";
 import { PageProps, Merchant } from "@/types";
 import InputLabel from "@/Components/InputLabel";
 import TextInput from "@/Components/TextInput";
-import TextArea from "@/Components/TextArea";
+import SelectInput from "@/Components/SelectInput";
 import LoadingButton from "@/Components/Button/LoadingButton";
 import DangerButton from "@/Components/Button/DangerButton";
 import RichTextEditor from "@/Components/RichTextEditor";
 import { ToastContainer, toast } from "react-toastify";
 import { useState, useEffect } from "react";
+import MerchantFileList from "@/Components/Merchant/MerchantFileList";
 
 import "react-toastify/dist/ReactToastify.css";
 
 const View = ({ auth, flash }: any) => {
     const [merchantAbout, setMerchantAbout] = useState("");
-    const { merchant, merchant_description } = usePage<{
+    const { merchant, types, merchant_description, merchant_files } = usePage<{
         merchant: any;
+        types: [];
         merchant_description: any;
     }>().props;
-
+    console.log("merchant => ", merchant);
     const { data, setData, post, processing, errors, reset } = useForm({
-        name: merchant.merchant.merchant_name,
-        phone: merchant.merchant.merchant_phone,
-        email: merchant.merchant.merchant_email,
+        merchant_name: merchant.merchant_name,
+        merchant_phone: merchant.merchant_phone,
+        merchant_email: merchant.merchant_email,
         merchant_description: merchant_description,
-        id: merchant.merchant.id,
-        web: merchant.web,
-        facebook: merchant.facebook,
-        instagram: merchant.instagram,
+        id: merchant.merchant_id,
+        web: merchant.web || "",
+        facebook: merchant.facebook || "",
+        instagram: merchant.instagram || "",
+        merchant_type: merchant.merchant_type,
+        location: merchant.location || "",
+        company_registration: merchant.company_registration || "",
         _method: "put",
     });
 
@@ -75,7 +80,7 @@ const View = ({ auth, flash }: any) => {
                             <div>
                                 <div>
                                     <h3 className="text-lg font-semibold dark:text-white">
-                                        {merchant.merchant.merchant_name}
+                                        {merchant.merchant_name}
                                     </h3>
                                 </div>
                                 <div>
@@ -94,21 +99,41 @@ const View = ({ auth, flash }: any) => {
                                                 <TextInput
                                                     id="merchant_name"
                                                     name="merchant_name"
-                                                    value={
-                                                        merchant.merchant
-                                                            .merchant_name
+                                                    defaultValue={
+                                                        data.merchant_name
                                                     }
                                                     className="mt-1 block w-full"
                                                     autoComplete="merchant_name"
-                                                    isFocused={true}
                                                     onChange={(e) =>
                                                         setData(
-                                                            "name",
+                                                            "merchant_name",
                                                             e.target.value
                                                         )
                                                     }
                                                     required
                                                     readOnly
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="grid py-2 grid-flow-row-dense gap-4 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
+                                            <div className="flex items-center md:col-span-1 lg:col-span-2">
+                                                <InputLabel
+                                                    htmlFor="merchantType"
+                                                    value="Merchant Type"
+                                                />
+                                            </div>
+                                            <div className="flex md:col-span-5 lg:col-span-10">
+                                                <SelectInput
+                                                    options={types}
+                                                    selected={
+                                                        data.merchant_type
+                                                    }
+                                                    onChange={(e) => {
+                                                        setData(
+                                                            "merchant_type",
+                                                            e.target.value
+                                                        );
+                                                    }}
                                                 />
                                             </div>
                                         </div>
@@ -125,15 +150,13 @@ const View = ({ auth, flash }: any) => {
                                                     name="email"
                                                     type="email"
                                                     defaultValue={
-                                                        merchant.merchant
-                                                            .merchant_email
+                                                        data.merchant_email
                                                     }
                                                     className="mt-1 block w-full"
                                                     autoComplete="email"
-                                                    isFocused={true}
                                                     onChange={(e) =>
                                                         setData(
-                                                            "email",
+                                                            "merchant_email",
                                                             e.target.value
                                                         )
                                                     }
@@ -154,16 +177,14 @@ const View = ({ auth, flash }: any) => {
                                                     name="phone"
                                                     type="tel"
                                                     defaultValue={
-                                                        merchant.merchant
-                                                            .merchant_phone
+                                                        data.merchant_phone
                                                     }
                                                     maxLength={14}
                                                     className="mt-1 block w-full"
                                                     autoComplete="phone"
-                                                    isFocused={true}
                                                     onChange={(e) =>
                                                         setData(
-                                                            "phone",
+                                                            "merchant_phone",
                                                             e.target.value
                                                         )
                                                     }
@@ -188,6 +209,64 @@ const View = ({ auth, flash }: any) => {
                                                 />
                                             </div>
                                         </div>
+                                        {merchant.type === "learningCentre" ? (
+                                            <div>
+                                                <div className="grid py-2 grid-flow-row-dense gap-6 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
+                                                    <div className="flex items-center md:col-span-1 lg:col-span-2">
+                                                        <InputLabel
+                                                            htmlFor="location"
+                                                            value="Location"
+                                                        />
+                                                    </div>
+                                                    <div className="flex md:col-span-5 lg:col-span-10">
+                                                        <TextInput
+                                                            id="location"
+                                                            name="location"
+                                                            value={
+                                                                data.location
+                                                            }
+                                                            className="mt-1 block w-full"
+                                                            autoComplete="location"
+                                                            onChange={(e) =>
+                                                                setData(
+                                                                    "location",
+                                                                    e.target
+                                                                        .value
+                                                                )
+                                                            }
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="grid py-2 grid-flow-row-dense gap-6 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
+                                                    <div className="flex items-center md:col-span-1 lg:col-span-2">
+                                                        <InputLabel
+                                                            htmlFor="companyRegistration"
+                                                            value="Company Registration No."
+                                                        />
+                                                    </div>
+                                                    <div className="flex md:col-span-5 lg:col-span-10">
+                                                        <TextInput
+                                                            id="companyRegistration"
+                                                            name="companyRegistration"
+                                                            value={
+                                                                data.company_registration
+                                                            }
+                                                            className="mt-1 block w-full"
+                                                            autoComplete="companyRegistration"
+                                                            onChange={(e) =>
+                                                                setData(
+                                                                    "company_registration",
+                                                                    e.target
+                                                                        .value
+                                                                )
+                                                            }
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            ""
+                                        )}
                                         <div className="grid py-2 grid-flow-row-dense gap-6 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
                                             <div className="flex items-center md:col-span-1 lg:col-span-2">
                                                 <InputLabel
@@ -199,10 +278,10 @@ const View = ({ auth, flash }: any) => {
                                                 <TextInput
                                                     id="website"
                                                     name="website"
-                                                    value={merchant.web}
+                                                    type="url"
+                                                    value={data.web}
                                                     className="mt-1 block w-full"
                                                     autoComplete="website"
-                                                    isFocused={true}
                                                     onChange={(e) =>
                                                         setData(
                                                             "web",
@@ -223,10 +302,9 @@ const View = ({ auth, flash }: any) => {
                                                 <TextInput
                                                     id="facebook"
                                                     name="facebook"
-                                                    value={merchant.facebook}
+                                                    value={data.facebook}
                                                     className="mt-1 block w-full"
                                                     autoComplete="facebook"
-                                                    isFocused={true}
                                                     onChange={(e) =>
                                                         setData(
                                                             "facebook",
@@ -247,10 +325,9 @@ const View = ({ auth, flash }: any) => {
                                                 <TextInput
                                                     id="instagram"
                                                     name="instagram"
-                                                    value={merchant.instagram}
+                                                    value={data.instagram}
                                                     className="mt-1 block w-full"
                                                     autoComplete="instagram"
-                                                    isFocused={true}
                                                     onChange={(e) =>
                                                         setData(
                                                             "instagram",
@@ -260,19 +337,27 @@ const View = ({ auth, flash }: any) => {
                                                 />
                                             </div>
                                         </div>
+                                        {merchant.type === "learningCentre" ? (
+                                            <div>
+                                                <MerchantFileList
+                                                    data={merchant_files}
+                                                />
+                                            </div>
+                                        ) : (
+                                            ""
+                                        )}
                                         <div className="py-4">
                                             <div className="flex justify-end flex-col md:flex-row">
-                                                <div className="flex items-center px-4 py-2 bg-gray-100 border-t dark:bg-gray-800 dark:border-gray-800 border-gray-200">
+                                                <div className="flex items-center px-4 py-2 bborder-t dark:bg-gray-800 dark:border-gray-800 border-gray-200">
                                                     <LoadingButton
                                                         loading={processing}
                                                         type="submit"
-                                                        className="ml-auto border py-4 px-6 rounded-md"
+                                                        className="ml-auto border py-2 px-4 rounded-md text-sm"
                                                     >
-                                                        Update Merchant
+                                                        Update
                                                     </LoadingButton>
                                                 </div>
-                                                {merchant.merchant.status ===
-                                                1 ? (
+                                                {merchant.status === 1 ? (
                                                     <div className="flex justify-end flex-col md:flex-row">
                                                         <div className="flex items-center px-4 py-2 bg-gray-100 border-t dark:bg-gray-800 dark:border-gray-800 border-gray-200">
                                                             <DangerButton
@@ -280,7 +365,7 @@ const View = ({ auth, flash }: any) => {
                                                                     processing
                                                                 }
                                                                 type="button"
-                                                                className="ml-auto border py-4 px-6 rounded-md"
+                                                                className="ml-auto border py-2 px-4 rounded-md text-sm"
                                                                 onClick={() => {
                                                                     if (
                                                                         confirm(
@@ -288,12 +373,12 @@ const View = ({ auth, flash }: any) => {
                                                                         )
                                                                     ) {
                                                                         router.put(
-                                                                            `/merchants/reject/${merchant.merchant.id}`
+                                                                            `/merchants/reject/${merchant.id}`
                                                                         );
                                                                     }
                                                                 }}
                                                             >
-                                                                Reject Merchant
+                                                                Reject
                                                             </DangerButton>
                                                         </div>
                                                         <div className="flex items-center px-4 py-2 bg-gray-100 border-t dark:bg-gray-800 dark:border-gray-800 border-gray-200">
@@ -302,7 +387,7 @@ const View = ({ auth, flash }: any) => {
                                                                     processing
                                                                 }
                                                                 type="button"
-                                                                className="ml-auto border py-4 px-6 rounded-md"
+                                                                className="ml-auto border py-2 px-4 rounded-md text-sm"
                                                                 onClick={() => {
                                                                     if (
                                                                         confirm(
@@ -310,12 +395,12 @@ const View = ({ auth, flash }: any) => {
                                                                         )
                                                                     ) {
                                                                         router.put(
-                                                                            `/merchants/approve/${merchant.merchant.id}`
+                                                                            `/merchants/approve/${merchant.id}`
                                                                         );
                                                                     }
                                                                 }}
                                                             >
-                                                                Approve Merchant
+                                                                Approve
                                                             </LoadingButton>
                                                         </div>
                                                     </div>

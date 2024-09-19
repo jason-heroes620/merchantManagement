@@ -10,18 +10,37 @@ use App\Models\Chat;
 use App\Jobs\SendMessage;
 use Inertia\Response;
 use Illuminate\Support\Facades\Redirect;
+use Pusher\Pusher;
+use App\Events\AblyMessageEvent;
+use Ably\AblyRest;
+use App\Models\Room;
+use App\Models\RoomParticipant;
 
 class ChatController extends Controller
 {
     public function chats(Request $req)
     {
-        $user = $req->user();
+        $part = RoomParticipant::where('room_id', $req->id)->with('receiver')->get();
+        $exist = false;
+        if ($part->contains('user_id', auth()->id())) {
+            $exist = true;
+        }
 
-        $chats = Chat::with('user')->get()->append('time');
-        // print_r($chats);
-        return Inertia::render('Chats/Chats', [
-            'chats' => $chats
-        ]);
+        if ($exist && count(Room::where('id', $req->id)->get()) > 0) {
+            $chats = Chat::where('room_id', $req->id)
+                ->with('room')
+                ->with('user')
+                ->get()
+                ->append('time');
+
+            $receiver = Room::with('user')->first();
+            return Inertia::render('Chats/Chats', [
+                'chats' => $chats,
+                'receiver' => $receiver,
+            ]);
+        } else {
+            return redirect()->route('chatrooms');
+        }
     }
 
     public function messages(): Response
@@ -33,12 +52,21 @@ class ChatController extends Controller
         ]);
     }
 
-    public function createMessage(Request $request)
+    public function createMessage(Request $req)
     {
+        $data = $req->post();
         $chat = Chat::create([
+            'room_id' => $data['roomId'],
             'user_id' => auth()->id(),
-            'text' => $request->get('text'),
+            'type' => 'text',
+            'text' => $data['text'],
         ]);
-        SendMessage::dispatch($chat, $chat->user()->first());
+        $chat['user'] = $chat->user()->first();
+        $chat['_id'] = $chat->id;
+        $chat['createdAt'] = $chat->created_at;
+
+        $client = new AblyRest('V65OGg.kbAMrg:Qvm_880AOYVW1nmm8bFJ_-7WtTR98ooQdyt4_cK47hY');
+        $channel = $client->channel('message');
+        $channel->publish('AblyMessageEvent', json_encode($chat)); // => true
     }
 }

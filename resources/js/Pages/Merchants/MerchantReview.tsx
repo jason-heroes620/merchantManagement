@@ -3,7 +3,7 @@ import { Head, Link, useForm, usePage } from "@inertiajs/react";
 import { PageProps, Merchant } from "@/types";
 import InputLabel from "@/Components/InputLabel";
 import TextInput from "@/Components/TextInput";
-import TextArea from "@/Components/TextArea";
+import SelectInput from "@/Components/SelectInput";
 import LoadingButton from "@/Components/Button/LoadingButton";
 import RichTextEditor from "@/Components/RichTextEditor";
 import { ToastContainer, toast } from "react-toastify";
@@ -13,8 +13,9 @@ import "react-toastify/dist/ReactToastify.css";
 
 const MerchantReview = ({ auth, flash }: PageProps) => {
     const [merchantAbout, setMerchantAbout] = useState("");
-    const { merchant, merchant_description } = usePage<{
+    const { merchant, types, merchant_description } = usePage<{
         merchant: any;
+        types: [];
         merchant_description: any;
     }>().props;
 
@@ -23,6 +24,7 @@ const MerchantReview = ({ auth, flash }: PageProps) => {
         phone: merchant.merchant.merchant_phone,
         email: merchant.merchant.merchant_email,
         merchant_description: merchant_description,
+        merchant_type: merchant.merchant.merchant_type,
         id: merchant.merchant.id,
         web: merchant.web,
         facebook: merchant.facebook,
@@ -111,6 +113,21 @@ const MerchantReview = ({ auth, flash }: PageProps) => {
                                             </div>
                                         </div>
                                         <div className="grid py-2 grid-flow-row-dense gap-4 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
+                                            <div className="py-2">
+                                                <InputLabel
+                                                    htmlFor="Type"
+                                                    value="Type"
+                                                />
+                                                <SelectInput
+                                                    options={types}
+                                                    onChange={(e) => {
+                                                        setData(
+                                                            "merchant_type",
+                                                            e.target.value
+                                                        );
+                                                    }}
+                                                />
+                                            </div>
                                             <div className="flex items-center md:col-span-1 lg:col-span-2">
                                                 <InputLabel
                                                     htmlFor="merchant_email"

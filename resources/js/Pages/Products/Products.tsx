@@ -2,29 +2,27 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, usePage } from "@inertiajs/react";
 import { PageProps } from "@/types";
 
-import { PaginatedData, Event } from "@/types";
+import { PaginatedData, Product } from "@/types";
 import Tabs from "@/Components/Tabs/Tabs";
 import Tab from "@/Components/Tabs/Tab";
-import EventTab from "@/Components/Tabs/EventTab";
+import ProductTab from "@/Components/Tabs/ProductTab";
 
-const Events = ({ auth }: PageProps) => {
-    const { newEvents, events, role } = usePage<{
-        newEvents: PaginatedData<Event>;
-        events: PaginatedData<Event>;
+const Products = ({ auth }: PageProps) => {
+    const { newProducts, products, role } = usePage<{
+        newProducts: PaginatedData<Product>;
+        products: PaginatedData<Product>;
     }>().props;
-    console.log(events);
-    console.log(newEvents);
-    console.log("role => ", role);
+
     return (
         <AuthenticatedLayout
             user={auth.user}
             header={
                 <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                    Events
+                    Products
                 </h2>
             }
         >
-            <Head title="Events" />
+            <Head title="Products" />
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -32,27 +30,27 @@ const Events = ({ auth }: PageProps) => {
                         <div className="p-6 text-gray-900 dark:text-gray-100">
                             <div className="flex justify-end px-8 py-2">
                                 <Link
-                                    href={route("events.create")}
+                                    href={route("products.form")}
                                     type="button"
-                                    className="py-4 px-6 border bg-green-600 hover:bg-green-800 text-white rounded-md"
+                                    className="py-2 px-4 border bg-green-600 hover:bg-green-800 text-white font-bold text-sm rounded-md"
                                 >
-                                    Create Event
+                                    Create Product
                                 </Link>
                             </div>
                             <div>
                                 <Tabs>
-                                    <Tab title="Pending Events">
-                                        <EventTab events={newEvents} />
+                                    <Tab title="Pending Products">
+                                        <ProductTab products={newProducts} />
                                     </Tab>
 
                                     <Tab
                                         title={
                                             role === "admin"
-                                                ? "Events"
-                                                : "My Events"
+                                                ? "Products"
+                                                : "My Products"
                                         }
                                     >
-                                        <EventTab events={events} />
+                                        <ProductTab products={products} />
                                     </Tab>
                                 </Tabs>
                             </div>
@@ -64,4 +62,4 @@ const Events = ({ auth }: PageProps) => {
     );
 };
 
-export default Events;
+export default Products;
