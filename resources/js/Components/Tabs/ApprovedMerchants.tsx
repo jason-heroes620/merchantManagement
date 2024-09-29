@@ -6,7 +6,7 @@ import { Merchant, PaginatedData } from "@/types";
 
 const ApprovedMerchants = ({ merchants }: any) => {
     const { data, links } = merchants;
-    console.log("merhants =?", merchants);
+
     return (
         <div>
             <div className="pt-4">

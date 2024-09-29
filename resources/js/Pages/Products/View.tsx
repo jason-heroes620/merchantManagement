@@ -196,7 +196,7 @@ const View = ({
         const newTime = [...data.week_time];
         const time = newTime.find((t) => t.index === i);
         time.end_time = dayjs(val).format("HH:mm");
-        console.log("times => ", newTime);
+
         setData("week_time", newTime);
     };
 

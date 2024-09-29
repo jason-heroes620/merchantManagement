@@ -79,7 +79,6 @@ const Week = ({
     onWeekEndTimeChange,
     values,
 }) => {
-    console.log("values => ", values);
     return (
         <div className="border rounded-sm py-4 px-4">
             <div className="flex flex-row gap-6">

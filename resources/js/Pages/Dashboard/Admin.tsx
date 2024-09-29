@@ -3,7 +3,6 @@ import DashboardCard from "@/Components/Dashboard/DashboardCard";
 import { usePage } from "@inertiajs/react";
 
 const Admin = ({ product, merchant }) => {
-    console.log("event= >", product);
     return (
         <div className="flex px-4 py-4">
             <div id="header" className="flex flex-row gap-4 overflow-x-auto	">

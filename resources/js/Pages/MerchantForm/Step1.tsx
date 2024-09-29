@@ -2,7 +2,6 @@ import React from "react";
 import PrimaryButton from "@/Components/PrimaryButton";
 
 const Step1 = ({ types, merchantType, setMerchantType, setSteps, setData }) => {
-    console.log("merchant type => ", types);
     return (
         <div>
             <div className="flex flex-col items-center">

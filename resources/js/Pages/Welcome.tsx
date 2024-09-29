@@ -25,7 +25,7 @@ export default function Welcome({
             ?.classList.add("!flex-row");
         document.getElementById("background")?.classList.add("!hidden");
     };
-    console.log("auth =>", auth.user);
+
     return (
         <>
             <Head title="Welcome" />

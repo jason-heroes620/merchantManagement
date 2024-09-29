@@ -20,7 +20,7 @@ const View = ({ auth, flash }: any) => {
         types: [];
         merchant_description: any;
     }>().props;
-    console.log("merchant => ", merchant);
+
     const { data, setData, post, put, processing, errors, reset } = useForm({
         merchant_name: merchant.merchant_name,
         merchant_phone: merchant.merchant_phone,
@@ -209,7 +209,7 @@ const View = ({ auth, flash }: any) => {
                                                 />
                                             </div>
                                         </div>
-                                        {merchant.type === "learningCentre" ? (
+                                        {merchant.type === "learningCenter" ? (
                                             <div>
                                                 <div className="grid py-2 grid-flow-row-dense gap-6 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
                                                     <div className="flex items-center md:col-span-1 lg:col-span-2">
@@ -337,7 +337,7 @@ const View = ({ auth, flash }: any) => {
                                                 />
                                             </div>
                                         </div>
-                                        {merchant.type === "learningCentre" ? (
+                                        {merchant.type === "learningCenter" ? (
                                             <div>
                                                 <MerchantFileList
                                                     data={merchant_files}

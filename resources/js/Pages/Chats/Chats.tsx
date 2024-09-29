@@ -27,8 +27,6 @@ const Chats = ({ auth }: PageProps) => {
     const channel = ably.channels.get("message");
     const messageRequest = () => {
         try {
-            console.log("data= >", data);
-
             // setData("text", "");
             post(route("create.message"), {
                 preserveScroll: true,
@@ -62,7 +60,6 @@ const Chats = ({ auth }: PageProps) => {
         });
     };
     useEffect(() => {
-        console.log("data ->", receiver);
         try {
             subscribe();
         } catch (e) {
