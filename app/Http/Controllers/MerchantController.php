@@ -94,7 +94,7 @@ class MerchantController extends Controller
     public function create(Request $req)
     {
         $merchant = Merchant::create([
-            'merchant_type' => MerchantType::where('type', $req->input('merchant_type'))->first(),
+            'merchant_type' => $req->input('merchantType'),
             'merchant_name' => $req->input('merchant_name'),
             'merchant_email' => $req->input('email'),
             'merchant_phone' => $req->input('mobile'),

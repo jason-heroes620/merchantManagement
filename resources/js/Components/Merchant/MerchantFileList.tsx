@@ -4,8 +4,8 @@ import { Trash2 } from "lucide-react";
 import { Link } from "@inertiajs/react";
 import axios from "axios";
 
-const MerchantFileList = ({ data }) => {
-    console.log("data => ", data);
+const MerchantFileList = ({ data }: any) => {
+    const { original_file_name, deleted_at } = data;
 
     const downloadFile = async (id, fileName) => {
         try {
@@ -41,7 +41,7 @@ const MerchantFileList = ({ data }) => {
                                 {
                                     label: "File Name",
                                     name: "filename",
-                                    renderCell: (row) => (
+                                    renderCell: (row: any) => (
                                         <>
                                             <>{row.original_file_name}</>
                                             {row.deleted_at && (
@@ -56,7 +56,7 @@ const MerchantFileList = ({ data }) => {
                                 {
                                     label: "Type",
                                     name: "type",
-                                    renderCell: (row) => (
+                                    renderCell: (row: any) => (
                                         <>
                                             <>{row.file_type}</>
                                             {row.deleted_at && (

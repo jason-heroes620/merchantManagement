@@ -1,7 +1,7 @@
 import React from "react";
 import PrimaryButton from "@/Components/PrimaryButton";
 
-const Step1 = ({ types, merchantType, setMerchantType, setSteps }) => {
+const Step1 = ({ types, merchantType, setMerchantType, setSteps, setData }) => {
     console.log("merchant type => ", types);
     return (
         <div>
@@ -14,7 +14,11 @@ const Step1 = ({ types, merchantType, setMerchantType, setSteps }) => {
                         return (
                             <div key={i}>
                                 <button
-                                    onClick={() => setMerchantType(type.type)}
+                                    // onClick={() => setMerchantType(type.type)}
+                                    onClick={() => {
+                                        setMerchantType(type.type);
+                                        setData("merchantType", type.id);
+                                    }}
                                     className={`border border-[#F36B3C] py-10 px-8 rounded-3xl hover:bg-[#F36B3C] hover:text-white hover:font-bold hover:opacity-80 ${
                                         merchantType === type.type
                                             ? "text-white bg-[#F36B3C]"

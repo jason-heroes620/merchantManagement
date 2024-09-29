@@ -92,6 +92,7 @@ export default function MerchantForm({ flash }: any) {
                     merchantType={merchantType}
                     setMerchantType={setMerchantType}
                     setSteps={setSteps}
+                    setData={setData}
                 />
             ) : (
                 <Step2

@@ -12,7 +12,8 @@ class Merchant extends Model
     // protected $primaryKey = 'manufacturer_id';
     protected $connection = 'merchant';
 
-    public $timestamps = false;
+    const CREATED_AT = 'created';
+    const UPDATED_AT = null;
 
     protected $fillable = [
         'merchant_type',

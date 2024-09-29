@@ -73,7 +73,6 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        console.log("values =>", data);
         post(route("product.create"), {
             forceFormData: true,
             preserveState: false,

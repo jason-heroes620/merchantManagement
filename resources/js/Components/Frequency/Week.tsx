@@ -142,7 +142,7 @@ const Week = ({
                                                                   d.index
                                                               ].start_time
                                                       )
-                                                    : ""
+                                                    : null
                                             }
                                         ></TimePicker>
                                     </div>
@@ -164,7 +164,7 @@ const Week = ({
                                                                   d.index
                                                               ].end_time
                                                       )
-                                                    : ""
+                                                    : null
                                             }
                                         ></TimePicker>
                                     </div>
