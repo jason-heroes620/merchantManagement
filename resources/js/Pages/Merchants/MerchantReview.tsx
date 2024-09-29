@@ -37,7 +37,7 @@ const MerchantReview = ({ auth, flash }: PageProps) => {
             e.preventDefault();
 
             // NOTE: We are using POST method here, not PUT/PATCH. See comment above.
-            post(route("merchants.update", merchant.merchant_id));
+            post(route("merchant.update", { id: merchant.merchant_id }));
         }
     };
 

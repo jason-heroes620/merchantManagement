@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Storage;
 
 class MerchantController extends Controller
 {
-    public function merchants(): Response
+    public function merchants(Request $req): Response
     {
         $merchants =
             Merchant::select('merchants.id', 'merchants.merchant_name', 'merchants.merchant_email', 'merchants.merchant_phone', 'merchant_type.name as merchant_type')
@@ -32,15 +32,25 @@ class MerchantController extends Controller
             ->where('merchants.status', 1)
             ->orderBy('merchant_name', 'ASC')
             ->paginate(10);
+
+        $rejectedMerchants =
+            Merchant::select('merchants.id', 'merchants.merchant_name', 'merchants.merchant_email', 'merchants.merchant_phone', 'merchant_type.name as merchant_type')
+            ->leftJoin('merchant_type', 'merchants.merchant_type', '=', 'merchant_type.id')
+            ->where('merchants.status', 2)
+            ->orderBy('merchant_name', 'ASC')
+            ->paginate(10);
+
         return Inertia::render('Merchants/Merchants', [
             'merchants' => $merchants,
-            'pendingMerchants' => $pendingMerchants
+            'pendingMerchants' => $pendingMerchants,
+            'rejectedMerchants' => $rejectedMerchants,
+            'type' => $req->type
         ]);
     }
 
     public function view(Request $req)
     {
-        $merchant = MerchantAdditionalInfo::with('merchant')->where('merchant_id', $req->id)->first();
+        // $merchant = MerchantAdditionalInfo::with('merchant')->where('merchant_id', $req->id)->first();
         $merchant = Merchant::where('merchants.id', $req->id)
             ->leftJoin('merchant_additional_info', 'merchants.id', '=', 'merchant_additional_info.merchant_id')
             ->leftJoin('merchant_type', 'merchants.merchant_type', '=', 'merchant_type.id')
@@ -63,7 +73,7 @@ class MerchantController extends Controller
 
     public function update(Merchant $merchant, MerchantAdditionalInfo $merchantInfo, Request $req): RedirectResponse
     {
-        $merchant->update([
+        $merchant->where('id', $req->id)->update([
             'merchant_type' => $req->input('merchant_type'),
             'merchant_name' => $req->merchant_name,
             'merchant_email' => $req->merchant_email,
@@ -124,7 +134,6 @@ class MerchantController extends Controller
         $merchant->where('id', $req->id)->update([
             'status' => 0,
         ]);
-
         return Redirect::back()->with(['success' => "Merchant Approved"]);
     }
 

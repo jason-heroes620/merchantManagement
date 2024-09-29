@@ -21,12 +21,17 @@ import { Button } from "@/Components/ui/button";
 import dayjs from "dayjs";
 import { Toaster } from "@/Components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
+import { useObjectUrls } from "@/utils/getObjectUrls";
+import GoogleMapInstruction from "@/Components/GoogleMapInstruction";
+import { RangePickerProps } from "antd/es/date-picker";
 
 const dateFormat = "DD/MM/YYYY";
 const timeFormat = "HH:mm";
 
 const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
     const { toast } = useToast();
+    const [files, setFiles] = useState<File[]>([]);
+    const getObjectUrl = useObjectUrls();
 
     const { data, setData, post, processing, errors, reset } = useForm({
         product_name: "",
@@ -34,15 +39,25 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
         product_description: "",
         age_group: "",
         frequency_id: "",
-        event_date: dayjs(new Date()).add(1, "day"),
-        event_start_date: dayjs(new Date()).add(1, "day").toString(),
-        event_end_date: dayjs(new Date()).add(1, "day").toString(),
-        event_start_time: dayjs().toString(),
-        event_end_time: dayjs().toString(),
-        event_location: "",
-        event_map_location: "",
-        event_quantity: 1,
-        event_price: "0.00",
+        event_date: dayjs().add(1, "day"),
+        event_start_date: "",
+        event_end_date: "",
+        event_start_time: "",
+        event_end_time: "",
+        location: "",
+        google_map_location: "",
+        quantity: 1,
+        price: "0.00",
+        images: [],
+        week_time: [
+            { index: 0, start_time: "", end_time: "" },
+            { index: 1, start_time: "", end_time: "" },
+            { index: 2, start_time: "", end_time: "" },
+            { index: 3, start_time: "", end_time: "" },
+            { index: 4, start_time: "", end_time: "" },
+            { index: 5, start_time: "", end_time: "" },
+            { index: 6, start_time: "", end_time: "" },
+        ],
     });
 
     useEffect(() => {
@@ -58,20 +73,12 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        console.log("data => ", data);
-        post(route("products.create"));
+        console.log("values =>", data);
+        post(route("product.create"), {
+            forceFormData: true,
+            preserveState: false,
+        });
         reset();
-    };
-
-    const onStartDateChange: DatePickerProps["onChange"] = (
-        date,
-        dateString
-    ) => {
-        setData("event_start_date", dateString as string);
-    };
-
-    const onEndDateChange: DatePickerProps["onChange"] = (date, dateString) => {
-        setData("event_end_date", dateString as string);
     };
 
     const onStartTimeChange: TimePickerProps["onChange"] = (
@@ -83,6 +90,49 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
 
     const onEndTimeChange: TimePickerProps["onChange"] = (time, timeString) => {
         setData("event_end_time", timeString as string);
+    };
+
+    const onDateTimeChange: RangePickerProps["onCalendarChange"] = (
+        date,
+        dateString
+    ) => {
+        const val = {
+            event_start_date: dayjs(date[0]).format("YYYY-MM-DD"),
+            event_start_time: dayjs(date[0]).format("HH:mm"),
+            event_end_date: dayjs(date[1]).format("YYYY-MM-DD"),
+            event_end_time: dayjs(date[1]).format("HH:mm"),
+        };
+        setData({ ...data, ...val });
+    };
+
+    const handleFileUpload = (e) => {
+        const files: File[] = Array.from(e.target.files || []);
+        var canUpload = true;
+        files.map((f: File) => {
+            f.size > 1048576 ? (canUpload = false) : "";
+        });
+        if (canUpload) {
+            setFiles(files);
+            setData("images", [...e.target.files]);
+        } else {
+            alert("1 or more files exceed the upload limit.");
+        }
+    };
+
+    const onWeekStartTimeChange = (i, val) => {
+        const newTime = [...data.week_time];
+        const time = newTime.find((t) => t.index === i);
+        time.start_time = dayjs(val).format("HH:mm");
+
+        setData("week_time", newTime);
+    };
+
+    const onWeekEndTimeChange = (i, val) => {
+        const newTime = [...data.week_time];
+        const time = newTime.find((t) => t.index === i);
+        time.end_time = dayjs(val).format("HH:mm");
+        console.log("times => ", newTime);
+        setData("week_time", newTime);
     };
 
     return (
@@ -148,6 +198,22 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
                                         }
                                     />
                                 </div>
+
+                                <div className="py-2">
+                                    <InputLabel
+                                        htmlFor="product_description"
+                                        value="Description"
+                                    />
+                                    <RichTextEditor
+                                        value={data.product_description}
+                                        onChange={setData}
+                                        contentFor={"product_description"}
+                                    />
+                                    <InputError
+                                        message={errors.product_description}
+                                        className="mt-2"
+                                    />
+                                </div>
                                 <div className="py-2">
                                     <InputLabel
                                         htmlFor="age_group"
@@ -172,21 +238,6 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
                                 </div>
                                 <div className="py-2">
                                     <InputLabel
-                                        htmlFor="product_description"
-                                        value="Description"
-                                    />
-                                    <RichTextEditor
-                                        value={data.product_description}
-                                        onChange={setData}
-                                        contentFor={"product_description"}
-                                    />
-                                    <InputError
-                                        message={errors.product_description}
-                                        className="mt-2"
-                                    />
-                                </div>
-                                <div className="py-2">
-                                    <InputLabel
                                         htmlFor="frequency"
                                         value="Frequency"
                                     />
@@ -203,12 +254,13 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
 
                                 <Frequency
                                     frequency={data.frequency_id}
-                                    onStartDateChange={onStartDateChange}
-                                    onEndDateChange={onEndDateChange}
                                     dateFormat={dateFormat}
                                     timeFormat={timeFormat}
-                                    onStartTimeChange={onStartTimeChange}
-                                    onEndTimeChange={onEndTimeChange}
+                                    onWeekStartTimeChange={
+                                        onWeekStartTimeChange
+                                    }
+                                    onWeekEndTimeChange={onWeekEndTimeChange}
+                                    onDateTimeChange={onDateTimeChange}
                                     values={data}
                                 />
 
@@ -220,20 +272,17 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
                                     <TextInput
                                         id="event_location"
                                         name="event_location"
-                                        value={data.event_location}
+                                        value={data.location}
                                         className="mt-1 block w-full"
                                         autoComplete="event_location"
                                         onChange={(e) =>
-                                            setData(
-                                                "event_location",
-                                                e.target.value
-                                            )
+                                            setData("location", e.target.value)
                                         }
                                         placeholder="e.g. City, State"
                                         required
                                     />
                                     <InputError
-                                        message={errors.event_location}
+                                        message={errors.location}
                                         className="mt-2"
                                     />
                                 </div>
@@ -255,104 +304,7 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
                                                     updatePositionStrategy="always"
                                                     className="w-100"
                                                 >
-                                                    <div className="">
-                                                        <div>
-                                                            1. Go to Google Maps
-                                                            Open your web
-                                                            browser and visit
-                                                            Google Maps.
-                                                        </div>
-                                                        <div>
-                                                            2. Search for a
-                                                            Location In the
-                                                            search bar, type the
-                                                            address, location,
-                                                            or business name you
-                                                            want to embed on
-                                                            your website. Hit
-                                                            Enter to search.
-                                                        </div>
-                                                        <div className="flex flex-col">
-                                                            <span>
-                                                                3. Click on the
-                                                                Location After
-                                                                searching, click
-                                                                on the specific
-                                                                location in the
-                                                                map view that
-                                                                you want to
-                                                                share.
-                                                            </span>{" "}
-                                                            <span>
-                                                                This step
-                                                                highlights the
-                                                                location and
-                                                                shows more
-                                                                details.
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex flex-col">
-                                                            <span className=" ">
-                                                                4. Click the
-                                                                "Share" Button
-                                                                Once the
-                                                                location is
-                                                                selected, click
-                                                                the "Share"
-                                                                button. You can
-                                                                find this
-                                                                button:
-                                                            </span>
-                                                            <span>
-                                                                On the left
-                                                                sidebar, under
-                                                                the location
-                                                                details. On the
-                                                                map view, near
-                                                                the location’s
-                                                                name (a small
-                                                                icon with a
-                                                                share arrow).
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex flex-col">
-                                                            <span>
-                                                                5. Choose the
-                                                                "Embed a Map"
-                                                                Tab A popup
-                                                                window will
-                                                                appear. At the
-                                                                top, you’ll see
-                                                                two options:
-                                                                Send a Link and
-                                                                Embed a Map.
-                                                            </span>
-                                                            <span>
-                                                                Click on the
-                                                                "Embed a Map"
-                                                                tab to generate
-                                                                the iFrame link.
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex flex-col">
-                                                            <span>
-                                                                6. Copy the
-                                                                iFrame Code
-                                                                Below the map,
-                                                                you’ll see a box
-                                                                with the iFrame
-                                                                code. The code
-                                                                looks like this:
-                                                                html Copy code.
-                                                            </span>
-                                                            <span>
-                                                                Click on "Copy
-                                                                HTML" to copy
-                                                                the entire
-                                                                iFrame code.
-                                                            </span>
-                                                        </div>
-                                                    </div>
+                                                    <GoogleMapInstruction />
                                                 </HoverCardContent>
                                             </HoverCard>
                                         </div>
@@ -360,19 +312,19 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
                                     <TextInput
                                         id="event_map_location"
                                         name="event_map_location"
-                                        value={data.event_map_location}
+                                        value={data.google_map_location}
                                         className="mt-1 block w-full"
                                         autoComplete="event_map_location"
                                         onChange={(e) =>
                                             setData(
-                                                "event_map_location",
+                                                "google_map_location",
                                                 e.target.value
                                             )
                                         }
                                         required
                                     />
                                     <InputError
-                                        message={errors.event_map_location}
+                                        message={errors.google_map_location}
                                         className="mt-2"
                                     />
                                 </div>
@@ -387,19 +339,19 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
                                         type="number"
                                         maxLength={3}
                                         min={1}
-                                        value={data.event_quantity}
+                                        value={data.quantity}
                                         className="mt-1 block w-full"
                                         autoComplete="event_quantity"
                                         onChange={(e) =>
                                             setData(
-                                                "event_quantity",
+                                                "quantity",
                                                 parseInt(e.target.value)
                                             )
                                         }
                                         required
                                     />
                                     <InputError
-                                        message={errors.event_quantity}
+                                        message={errors.quantity}
                                         className="mt-2"
                                     />
                                 </div>
@@ -411,21 +363,46 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
                                     <TextInput
                                         id="event_price"
                                         name="event_price"
-                                        value={data.event_price}
+                                        value={data.price}
                                         className="mt-1 block w-full"
                                         autoComplete="event_price"
                                         onChange={(e) =>
-                                            setData(
-                                                "event_price",
-                                                e.target.value
-                                            )
+                                            setData("price", e.target.value)
                                         }
                                         required
                                     />
                                     <InputError
-                                        message={errors.event_price}
+                                        message={errors.price}
                                         className="mt-2"
                                     />
+                                </div>
+                                <div className="py-2">
+                                    <InputLabel
+                                        htmlFor="images"
+                                        value="Images (.png, .jpg not more than 1 MB)"
+                                        className="pb-2"
+                                    />
+                                    <input
+                                        type="file"
+                                        multiple
+                                        accept=".png,.jpg,.jpeg"
+                                        onChange={(e) => {
+                                            handleFileUpload(e);
+                                        }}
+                                    />
+                                    {files && (
+                                        <div className="flex flex-row gap-4 py-2">
+                                            {files.map((file) => (
+                                                <img
+                                                    key={file.name}
+                                                    src={getObjectUrl(file)}
+                                                    alt={file.name}
+                                                    width={80}
+                                                    height={"auto"}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="flex items-center justify-end mt-4">
                                     <PrimaryButton

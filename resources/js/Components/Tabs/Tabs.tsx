@@ -29,8 +29,6 @@ const Tabs = (props: Props): JSX.Element => {
                     />
                 ))}
             </ul>
-
-            {/* show selcted tab by index*/}
             {children[selectedTabIndex]}
         </div>
     );

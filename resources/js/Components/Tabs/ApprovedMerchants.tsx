@@ -56,7 +56,7 @@ const ApprovedMerchants = ({ merchants }: any) => {
                             ]}
                             rows={data}
                             getRowDetailsUrl={(row: any) =>
-                                route("merchants.view", row.id)
+                                route("merchant.view", row.id)
                             }
                         />
                         <Pagination links={links} />

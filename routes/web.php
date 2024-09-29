@@ -10,6 +10,7 @@ use App\Http\Controllers\MerchantController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductImageController;
 
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -61,10 +62,10 @@ Route::get('/clear-cache', function () {
 //     return "All config cache";
 // });
 
-Route::get('/reverb-start', function () {
-    Artisan::call('reverb:start --port=8080 host=0.0.0.0 hostname=merchants-admin.heroes.my');
-    return "Reverb started";
-});
+// Route::get('/reverb-start', function () {
+//     Artisan::call('reverb:start --port=8080 host=0.0.0.0 hostname=merchants-admin.heroes.my');
+//     return "Reverb started";
+// });
 
 
 Route::get('/list', function () {
@@ -89,11 +90,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/chats', [ChatController::class, 'createMessage'])->name('create.message');
     Route::get('/chats/{id}', [ChatController::class, 'chats'])->name('chats');
 
-    Route::get('/merchants', [MerchantController::class, 'merchants'])->name('merchants');
-    Route::get('/merchants/{id}', [MerchantController::class, 'view'])->name('merchants.view');
-    Route::put('/merchants/{merchant}', [MerchantController::class, 'update'])->name('merchants.update');
-    Route::put('/merchants/approve/{id}', [MerchantController::class, 'approve'])->name('merchant.approve');
-    Route::put('/merchants/reject/{id}', [MerchantController::class, 'reject'])->name('merchant.reject');
+    Route::get('/merchants/{type?}', [MerchantController::class, 'merchants'])->name('merchants');
+    Route::get('/merchant/{id}', [MerchantController::class, 'view'])->name('merchant.view');
+    Route::put('/merchant/{id}', [MerchantController::class, 'update'])->name('merchant.update');
+    Route::put('/merchant/approve/{id}', [MerchantController::class, 'approve'])->name('merchant.approve');
+    Route::put('/merchant/reject/{id}', [MerchantController::class, 'reject'])->name('merchant.reject');
     Route::get('/merchantFileDownload/{id}', [MerchantController::class, 'fileDownload'])->name('fileDownload');
 
 
@@ -101,13 +102,15 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::get('/products/create', [ProductController::class, 'createProduct'])->name('products.form');
-    Route::post('/products/create', [ProductController::class, 'createProduct'])->name('products.create');
-    Route::get('/products', [ProductController::class, 'products'])->name('products');
-    Route::get('/products/{id}', [ProductController::class, 'view'])->name('product.view');
-    Route::put('/products/approve/{id}', [ProductController::class, 'approve'])->name('product.approve');
-    Route::put('/products/reject/{id}', [ProductController::class, 'reject'])->name('product.reject');
+    Route::get('/products/create', [ProductController::class, 'createProduct'])->name('product.form');
+    Route::post('/products/create', [ProductController::class, 'createProduct'])->name('product.create');
+    Route::get('/products/{type?}', [ProductController::class, 'products'])->name('products');
+    Route::get('/product/{id}', [ProductController::class, 'view'])->name('product.view');
+    Route::post('/product/{id}', [ProductController::class, 'update'])->name('product.update');
+    Route::put('/product/approve/{id}', [ProductController::class, 'approve'])->name('product.approve');
+    Route::put('/product/reject/{id}', [ProductController::class, 'reject'])->name('product.reject');
 
+    Route::delete('product-image/delete/{id}', [ProductImageController::class, 'delete'])->name('product_image.delete');
     Route::get('/categories', [CategoryController::class, 'categories']);
 });
 

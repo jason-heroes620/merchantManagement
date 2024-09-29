@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState, FormEventHandler } from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Link, Head, useForm, router } from "@inertiajs/react";
-import { PageProps } from "@/types";
 import InputLabel from "@/Components/InputLabel";
 import TextInput from "@/Components/TextInput";
 import TextArea from "@/Components/TextArea";
@@ -11,11 +10,22 @@ import SelectInput from "@/Components/SelectInput";
 import LoadingButton from "@/Components/Button/LoadingButton";
 import DangerButton from "@/Components/DangerButton";
 import Categories from "@/Components/Categories";
-import { FiHelpCircle } from "react-icons/fi";
+import { FiHelpCircle, FiDelete } from "react-icons/fi";
+import { MdDeleteForever } from "react-icons/md";
 import Frequency from "@/Components/Frequency/Frequency";
-import { DatePicker, TimePicker, DatePickerProps, TimePickerProps } from "antd";
+import { DatePickerProps, TimePickerProps } from "antd";
 import Modal from "@/Components/Modal";
+import { Toaster } from "@/Components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
+import {
+    HoverCard,
+    HoverCardContent,
+    HoverCardTrigger,
+} from "@/Components/ui/hover-card";
+import GoogleMapInstruction from "@/Components/GoogleMapInstruction";
+import { RangePickerProps } from "antd/es/date-picker";
 import dayjs from "dayjs";
+import { useObjectUrls } from "@/utils/getObjectUrls";
 
 const dateFormat = "DD/MM/YYYY";
 const timeFormat = "HH:mm";
@@ -26,12 +36,20 @@ const View = ({
     product_description,
     categories,
     frequency,
+    images,
+    flash,
 }: any) => {
+    const { toast } = useToast();
     const [dark, setDark] = useState(
         window.matchMedia("(prefers-color-scheme: dark)").matches
     );
     const [showModal, setShowModal] = useState(false);
+    const [showImageModal, setShowImageModal] = useState(false);
+    const [selectedImage, setSelectedImage] = useState("");
     const [rejectText, setRejectText] = useState("");
+
+    const [files, setFiles] = useState<File[]>([]);
+    const getObjectUrl = useObjectUrls();
 
     const onSelectMode = (mode: string) => {
         setDark(mode === "dark" ? true : false);
@@ -39,18 +57,35 @@ const View = ({
         else document.body.classList.remove("dark-mode");
     };
 
-    useEffect(() => {
-        console.log("product -> ", product);
-        window
-            .matchMedia("(prefers-color-scheme: dark)")
-            .addEventListener("change", (e) =>
-                onSelectMode(e.matches ? "dark" : "light")
-            );
-    }, [dark]);
+    const handleFileUpload = (e) => {
+        const files: File[] = Array.from(e.target.files || []);
+        var canUpload = true;
+        files.map((f: File) => {
+            f.size > 1048576 ? (canUpload = false) : "";
+        });
+        if (canUpload) {
+            setFiles(files);
+            setData("images", [...e.target.files]);
+        } else {
+            alert("1 or more files exceed the upload limit.");
+        }
+    };
 
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const {
+        data,
+        setData,
+        post,
+        delete: destroy,
+        processing,
+        errors,
+        reset,
+    } = useForm({
+        product_id: product.id,
+        merchant_id: product.merchant_id,
+        merchant_name: product.merchant.merchant_name,
         product_name: product.product_name,
         category_id: product.category_id,
+        age_group: product.age_group,
         product_description: product_description,
         frequency_id: product.product_detail?.frequency_id
             ? product.product_detail.frequency_id
@@ -76,28 +111,95 @@ const View = ({
         google_map_location: product.product_detail?.google_map_location
             ? product.product_detail.google_map_location
             : "",
-        quantity: product.product_detail?.event_quantity,
+        quantity: product.product_detail?.quantity,
         price: product.product_detail?.price,
+        images: images,
+        week_time: product.week_time,
     });
 
-    const onDateChange: DatePickerProps["onChange"] = (date, dateString) => {
-        setData("event_date", dateString as string);
+    useEffect(() => {
+        if (flash.message.success) {
+            toast({
+                description: flash.message.success,
+            });
+        }
+
+        window
+            .matchMedia("(prefers-color-scheme: dark)")
+            .addEventListener("change", (e) =>
+                onSelectMode(e.matches ? "dark" : "light")
+            );
+    }, [dark, flash]);
+
+    const submit: FormEventHandler = (e) => {
+        e.preventDefault();
+        post(route("product.update", product.id), {
+            forceFormData: true,
+            method: "put",
+        });
+        setFiles([]);
+    };
+
+    const onStartDateChange: DatePickerProps["onChange"] = (
+        date,
+        dateString
+    ) => {
+        setData("event_start_date", dateString as string);
+    };
+
+    const onEndDateChange: DatePickerProps["onChange"] = (date, dateString) => {
+        setData("event_end_date", dateString as string);
     };
 
     const onStartTimeChange: TimePickerProps["onChange"] = (
         time,
         timeString
     ) => {
-        setData("event_start_date", timeString as string);
+        setData("event_start_time", timeString as string);
     };
 
     const onEndTimeChange: TimePickerProps["onChange"] = (time, timeString) => {
-        setData("event_end_date", timeString as string);
+        setData("event_end_time", timeString as string);
     };
 
-    const handleReject = () => {
-        alert(rejectText);
+    const onDateTimeChange: RangePickerProps["onCalendarChange"] = (
+        date,
+        dateString
+    ) => {
+        const val = {
+            event_start_date: dayjs(date[0]).format("YYYY-MM-DD"),
+            event_start_time: dayjs(date[0]).format("HH:mm"),
+            event_end_date: dayjs(date[1]).format("YYYY-MM-DD"),
+            event_end_time: dayjs(date[1]).format("HH:mm"),
+        };
+        setData({ ...data, ...val });
     };
+
+    const handleDeleteImage = (id) => {
+        if (confirm("Confirm to delete image?")) {
+            destroy(route("product_image.delete", id), {
+                preserveState: false,
+                preserveScroll: true,
+            });
+        }
+    };
+
+    const onWeekStartTimeChange = (i, val) => {
+        const newTime = [...data.week_time];
+        const time = newTime.find((t) => t.index === i);
+        time.start_time = dayjs(val).format("HH:mm");
+
+        setData("week_time", newTime);
+    };
+
+    const onWeekEndTimeChange = (i, val) => {
+        const newTime = [...data.week_time];
+        const time = newTime.find((t) => t.index === i);
+        time.end_time = dayjs(val).format("HH:mm");
+        console.log("times => ", newTime);
+        setData("week_time", newTime);
+    };
+
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -118,6 +220,7 @@ const View = ({
             }
         >
             <Head title="Create Product" />
+            <Toaster />
             <Modal
                 maxWidth="md"
                 show={showModal}
@@ -146,7 +249,7 @@ const View = ({
                         className="ml-4 border py-2 px-4 rounded-md text-sm"
                         onClick={() => {
                             router.put(
-                                `/products/reject/${product.id}`,
+                                `/product/reject/${product.id}`,
                                 {
                                     rejectText: rejectText,
                                 },
@@ -155,7 +258,6 @@ const View = ({
                                         confirm("Confirm to reject product?"),
                                     onSuccess: () => {
                                         setShowModal(false);
-                                        alert("Product is rejected.");
                                     },
                                 }
                             );
@@ -165,11 +267,32 @@ const View = ({
                     </LoadingButton>
                 </div>
             </Modal>
+            <Modal
+                maxWidth="md"
+                show={showImageModal}
+                closeable={true}
+                onClose={() => setShowImageModal(false)}
+            >
+                <img src={selectedImage} alt="" />
+            </Modal>
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-gray-100">
-                            <form action="">
+                            <form onSubmit={submit}>
+                                <div className="py-2">
+                                    <InputLabel
+                                        htmlFor="merchant_name"
+                                        value="Merchant"
+                                    />
+                                    <TextInput
+                                        id="merchant_name"
+                                        name="merchant_name"
+                                        value={data.merchant_name}
+                                        className="mt-1 block w-full"
+                                        disabled
+                                    />
+                                </div>
                                 <div className="py-2">
                                     <InputLabel
                                         htmlFor="product_name"
@@ -208,17 +331,34 @@ const View = ({
                                 </div>
                                 <div className="py-2">
                                     <InputLabel
+                                        htmlFor="age_group"
+                                        value="Age Group"
+                                    />
+                                    <TextInput
+                                        id="age_group"
+                                        name="age_group"
+                                        value={data.age_group}
+                                        className="mt-1 block w-full"
+                                        autoComplete="age_group"
+                                        onChange={(e) =>
+                                            setData("age_group", e.target.value)
+                                        }
+                                        placeholder="e.g. 6-12"
+                                        required
+                                    />
+                                    <InputError
+                                        message={errors.age_group}
+                                        className="mt-2"
+                                    />
+                                </div>
+                                <div className="py-2">
+                                    <InputLabel
                                         htmlFor="product_description"
                                         value="Description"
                                     />
                                     <RichTextEditor
                                         value={data.product_description}
-                                        onChange={(e) =>
-                                            setData(
-                                                "product_description",
-                                                e.target.value
-                                            )
-                                        }
+                                        onChange={setData}
                                         contentFor={"product_description"}
                                     />
                                     <InputError
@@ -249,19 +389,18 @@ const View = ({
 
                                 <Frequency
                                     frequency={data.frequency_id}
-                                    onDateChange={onDateChange}
+                                    onStartDateChange={onStartDateChange}
+                                    onEndDateChange={onEndDateChange}
                                     dateFormat={dateFormat}
                                     timeFormat={timeFormat}
-                                    onStartTimeChange={onStartTimeChange}
-                                    onEndTimeChange={onEndTimeChange}
-                                    values={[
-                                        data.event_start_date,
-                                        data.event_end_date,
-                                        data.event_start_time,
-                                        data.event_end_time,
-                                    ]}
+                                    onWeekStartTimeChange={
+                                        onWeekStartTimeChange
+                                    }
+                                    onWeekEndTimeChange={onWeekEndTimeChange}
+                                    onDateTimeChange={onDateTimeChange}
+                                    values={data}
                                 />
-                                <div className="py-2">
+                                <div className="py-4">
                                     <InputLabel
                                         htmlFor="location"
                                         value="Location"
@@ -289,11 +428,19 @@ const View = ({
                                             htmlFor="google_map_location"
                                             value="Google Location"
                                         />
-                                        <div className="pl-4">
-                                            <FiHelpCircle
-                                                size={15}
-                                                color={dark ? "white" : "black"}
-                                            />
+                                        <div className="pl-2">
+                                            <HoverCard>
+                                                <HoverCardTrigger>
+                                                    <FiHelpCircle size={15} />
+                                                </HoverCardTrigger>
+                                                <HoverCardContent
+                                                    side="right"
+                                                    updatePositionStrategy="always"
+                                                    className="w-100"
+                                                >
+                                                    <GoogleMapInstruction />
+                                                </HoverCardContent>
+                                            </HoverCard>
                                         </div>
                                     </div>
                                     <TextInput
@@ -310,6 +457,14 @@ const View = ({
                                         }
                                         required
                                     />
+
+                                    <div
+                                        className="flex justify-center py-2"
+                                        dangerouslySetInnerHTML={{
+                                            __html: data.google_map_location,
+                                        }}
+                                    />
+
                                     <InputError
                                         message={errors.google_map_location}
                                         className="mt-2"
@@ -325,7 +480,6 @@ const View = ({
                                         name="quantity"
                                         type="number"
                                         maxLength={3}
-                                        defaultValue={1}
                                         min={1}
                                         value={data.quantity}
                                         className="mt-1 block w-full"
@@ -358,6 +512,79 @@ const View = ({
                                         className="mt-2"
                                     />
                                 </div>
+                                <div className="py-2">
+                                    <InputLabel
+                                        htmlFor="images"
+                                        value="Images (.png, .jpg not more than 1 MB)"
+                                        className="pb-2"
+                                    />
+                                    <input
+                                        type="file"
+                                        multiple
+                                        accept=".png,.jpg,.jpeg"
+                                        onChange={(e) => {
+                                            handleFileUpload(e);
+                                        }}
+                                    />
+                                    {files && (
+                                        <div className="flex flex-row gap-4 py-2">
+                                            {files.map((file) => (
+                                                <img
+                                                    key={file.name}
+                                                    src={getObjectUrl(file)}
+                                                    alt={file.name}
+                                                    width={80}
+                                                    height={"auto"}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                                {images?.length > 0 ? (
+                                    <div className="py-2">
+                                        <InputLabel>Product Images</InputLabel>
+                                        <div className="flex border py-2 px-4 gap-4">
+                                            {images.map((f) => {
+                                                return (
+                                                    <div
+                                                        className="border rounded-md "
+                                                        key={f.id}
+                                                    >
+                                                        <div className="flex flex-row px-2 py-2">
+                                                            <img
+                                                                src={f.url}
+                                                                alt={f.name}
+                                                                width={80}
+                                                                height={"auto"}
+                                                                onClick={() => {
+                                                                    setSelectedImage(
+                                                                        f.url
+                                                                    );
+                                                                    setShowImageModal(
+                                                                        true
+                                                                    );
+                                                                }}
+                                                            />
+                                                            <MdDeleteForever
+                                                                size={20}
+                                                                color="red"
+                                                                onClick={() =>
+                                                                    handleDeleteImage(
+                                                                        f.id
+                                                                    )
+                                                                }
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="py-4">
+                                        No image available
+                                    </div>
+                                )}
 
                                 <div className="py-4">
                                     <div className="flex justify-end flex-col md:flex-row">
@@ -395,15 +622,7 @@ const View = ({
                                                                 )
                                                             ) {
                                                                 router.put(
-                                                                    `/products/approve/${product.id}`,
-                                                                    {},
-                                                                    {
-                                                                        onSuccess:
-                                                                            () =>
-                                                                                alert(
-                                                                                    "Product has been approved."
-                                                                                ),
-                                                                    }
+                                                                    `/product/approve/${product.id}`
                                                                 );
                                                             }
                                                         }}

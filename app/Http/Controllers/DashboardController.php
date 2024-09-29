@@ -16,22 +16,27 @@ class DashboardController extends Controller
         $user = $req->user();
         $role = $user->roles->pluck('name')->toArray();
 
+        $m_reject = Merchant::selectRaw('COUNT(*) as count')->where('status', 2)->first();
         $m_new = Merchant::selectRaw('COUNT(*) as count')->where('status', 1)->first();
         $m_current = Merchant::selectRaw('COUNT(*) as count')->where('status', 0)->first();
-        $e_new = 0;
-        $e_current = 0;
+
+        $p_reject = 0;
+        $p_new = 0;
+        $p_current = 0;
 
         if ($role[0] === 'admin') {
-            $e_new = Product::selectRaw('COUNT(*) as count')->where('status', 1)->first();
-            $e_current = Product::selectRaw('COUNT(*) as count')->where('status', 0)->first();
+            $p_reject = Product::selectRaw('COUNT(*) as count')->where('status', 2)->first();
+            $p_new = Product::selectRaw('COUNT(*) as count')->where('status', 1)->first();
+            $p_current = Product::selectRaw('COUNT(*) as count')->where('status', 0)->first();
         } else {
-            $e_new = Product::selectRaw('COUNT(*) as count')->where('status', 1)->where('merchant_id', $user->id)->first();
-            $e_current = Product::selectRaw('COUNT(*) as count')->where('status', 0)->where('merchant_id', $user->id)->first();
+            $p_reject = Product::selectRaw('COUNT(*) as count')->where('status', 2)->where('merchant_id', $user->id)->first();
+            $p_new = Product::selectRaw('COUNT(*) as count')->where('status', 1)->where('merchant_id', $user->id)->first();
+            $p_current = Product::selectRaw('COUNT(*) as count')->where('status', 0)->where('merchant_id', $user->id)->first();
         }
 
         return Inertia::render('Dashboard/Dashboard', [
-            'merchant' => [$m_new, $m_current],
-            'product' => [$e_new, $e_current],
+            'merchant' => [$m_new, $m_current, $m_reject],
+            'product' => [$p_new, $p_current, $p_reject],
         ]);
     }
 }

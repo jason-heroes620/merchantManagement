@@ -21,6 +21,14 @@ const Merchant = ({ product }) => {
                         links={["products", 1]}
                     />
                 </div>
+                <div>
+                    <DashboardCard
+                        header={"Product"}
+                        content={product[2]?.count}
+                        type={"Rejected"}
+                        links={["products", 2]}
+                    />
+                </div>
             </div>
         </div>
     );

@@ -7,10 +7,13 @@ import Tab from "@/Components/Tabs/Tab";
 import MerchantTab from "@/Components/Tabs/MerchantTab";
 
 const Merchants = ({ auth }: PageProps) => {
-    const { merchants, pendingMerchants } = usePage<{
+    const { merchants, pendingMerchants, rejectedMerchants, type } = usePage<{
         merchants: PaginatedData<Merchant>;
         pendingMerchants: PaginatedData<Merchant>;
+        rejectedMerchants: PaginatedData<Merchant>;
+        type: string;
     }>().props;
+    const index = type === "Current" ? 1 : type === "Rejected" ? 2 : 0;
 
     return (
         <AuthenticatedLayout
@@ -28,87 +31,22 @@ const Merchants = ({ auth }: PageProps) => {
                     <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-gray-100">
                             <div className="py-4 border-1 border-gray-100">
-                                <Tabs preSelectedTabIndex={0}>
-                                    <Tab title="Pending Merchants">
+                                <Tabs preSelectedTabIndex={index}>
+                                    <Tab title="Pending">
                                         <MerchantTab
                                             merchants={pendingMerchants}
                                         />
                                     </Tab>
-
-                                    <Tab title={"Merchants"}>
+                                    <Tab title={"Current"}>
                                         <MerchantTab merchants={merchants} />
                                     </Tab>
+                                    <Tab title={"Rejected"}>
+                                        <MerchantTab
+                                            merchants={rejectedMerchants}
+                                        />
+                                    </Tab>
                                 </Tabs>
-
-                                {/* <div>
-                                    <table className="table">
-                                        <thead>
-                                            <tr>
-                                                <th className="dark:text-white">
-                                                    Merchant
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody></tbody>
-                                    </table>
-                                </div> */}
                             </div>
-                            {/* <div className="pt-4">
-                                <div>
-                                    <h2 className="text-lg dark:text-white font-semibold">
-                                        Merchant List
-                                    </h2>
-                                </div>
-                                <div>
-                                    <Table
-                                        columns={[
-                                            {
-                                                label: "Name",
-                                                name: "name",
-                                                renderCell: (row) => (
-                                                    <>
-                                                        <>{row.merchant_name}</>
-                                                        {row.deleted_at && (
-                                                            <Trash2
-                                                                size={16}
-                                                                className="ml-2 text-gray-400"
-                                                            />
-                                                        )}
-                                                    </>
-                                                ),
-                                            },
-                                            {
-                                                label: "Email",
-                                                name: "email",
-                                                renderCell: (row) => (
-                                                    <>
-                                                        <>
-                                                            {row.merchant_email}
-                                                        </>
-                                                    </>
-                                                ),
-                                            },
-                                            {
-                                                label: "Contact No.",
-                                                name: "phone",
-                                                colSpan: 2,
-                                                renderCell: (row) => (
-                                                    <>
-                                                        <>
-                                                            {row.merchant_phone}
-                                                        </>
-                                                    </>
-                                                ),
-                                            },
-                                        ]}
-                                        rows={data}
-                                        getRowDetailsUrl={(row) =>
-                                            route("merchants.view", row.id)
-                                        }
-                                    />
-                                    <Pagination links={links} />
-                                </div>
-                            </div> */}
                         </div>
                     </div>
                 </div>

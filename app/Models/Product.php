@@ -18,6 +18,7 @@ class Product extends Model
         'merchant_id',
         'product_name',
         'category_id',
+        'age_group',
         'product_description',
         'status',
         'reject_comment'
@@ -25,7 +26,7 @@ class Product extends Model
 
     public function merchant(): BelongsTo
     {
-        return $this->belongsTo(Merchant::class, 'merchant_id');
+        return $this->belongsTo(Merchant::class, 'merchant_id', 'id');
     }
 
     public function detail(): hasOne

@@ -65,7 +65,7 @@ const MerchantTab = ({ merchants }: any) => {
                             ]}
                             rows={data}
                             getRowDetailsUrl={(row) =>
-                                route("merchants.view", row.id)
+                                route("merchant.view", row.id)
                             }
                         />
                         <Pagination links={links} />

@@ -21,7 +21,7 @@ const View = ({ auth, flash }: any) => {
         merchant_description: any;
     }>().props;
     console.log("merchant => ", merchant);
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, post, put, processing, errors, reset } = useForm({
         merchant_name: merchant.merchant_name,
         merchant_phone: merchant.merchant_phone,
         merchant_email: merchant.merchant_email,
@@ -42,7 +42,7 @@ const View = ({ auth, flash }: any) => {
             e.preventDefault();
 
             // NOTE: We are using POST method here, not PUT/PATCH. See comment above.
-            post(route("merchants.update", merchant.merchant_id));
+            put(route("merchant.update", merchant.merchant_id));
         }
     };
 
@@ -372,8 +372,11 @@ const View = ({ auth, flash }: any) => {
                                                                             "Confirm to reject merchant?"
                                                                         )
                                                                     ) {
-                                                                        router.put(
-                                                                            `/merchants/reject/${merchant.id}`
+                                                                        post(
+                                                                            route(
+                                                                                "merchant.reject",
+                                                                                merchant.merchant_id
+                                                                            )
                                                                         );
                                                                     }
                                                                 }}
@@ -394,8 +397,11 @@ const View = ({ auth, flash }: any) => {
                                                                             "Confirm to approve merchant?"
                                                                         )
                                                                     ) {
-                                                                        router.put(
-                                                                            `/merchants/approve/${merchant.id}`
+                                                                        put(
+                                                                            route(
+                                                                                "merchant.approve",
+                                                                                merchant.merchant_id
+                                                                            )
                                                                         );
                                                                     }
                                                                 }}

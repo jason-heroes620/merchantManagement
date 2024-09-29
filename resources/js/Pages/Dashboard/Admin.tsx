@@ -6,12 +6,12 @@ const Admin = ({ product, merchant }) => {
     console.log("event= >", product);
     return (
         <div className="flex px-4 py-4">
-            <div id="header" className="flex flex-row gap-6">
+            <div id="header" className="flex flex-row gap-4 overflow-x-auto	">
                 <div>
                     <DashboardCard
                         header={"Merchant"}
                         content={merchant[0].count}
-                        type={"New"}
+                        type={"Pending"}
                         links={["merchants", 0]}
                     />
                 </div>
@@ -23,11 +23,19 @@ const Admin = ({ product, merchant }) => {
                         links={["merchants", 1]}
                     />
                 </div>
+                <div>
+                    <DashboardCard
+                        header={"Merchant"}
+                        content={merchant[2].count}
+                        type={"Rejected"}
+                        links={["merchants", 2]}
+                    />
+                </div>
                 <div className="">
                     <DashboardCard
                         header={"Product"}
                         content={product[0].count}
-                        type={"New"}
+                        type={"Pending"}
                         links={["products", 0]}
                     />
                 </div>
@@ -37,6 +45,14 @@ const Admin = ({ product, merchant }) => {
                         content={product[1].count}
                         type={"Current"}
                         links={["products", 1]}
+                    />
+                </div>
+                <div>
+                    <DashboardCard
+                        header={"Product"}
+                        content={product[2].count}
+                        type={"Rejected"}
+                        links={["products", 2]}
                     />
                 </div>
             </div>

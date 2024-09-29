@@ -8,11 +8,14 @@ import Tab from "@/Components/Tabs/Tab";
 import ProductTab from "@/Components/Tabs/ProductTab";
 
 const Products = ({ auth }: PageProps) => {
-    const { newProducts, products, role } = usePage<{
+    const { newProducts, products, rejectedProducts, role, type } = usePage<{
         newProducts: PaginatedData<Product>;
         products: PaginatedData<Product>;
+        rejectedProducts: PaginatedData<Product>;
+        type: string;
     }>().props;
 
+    const index = type === "Current" ? 1 : type === "Rejected" ? 2 : 0;
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -30,7 +33,7 @@ const Products = ({ auth }: PageProps) => {
                         <div className="p-6 text-gray-900 dark:text-gray-100">
                             <div className="flex justify-end px-8 py-2">
                                 <Link
-                                    href={route("products.form")}
+                                    href={route("product.form")}
                                     type="button"
                                     className="py-2 px-4 border bg-green-600 hover:bg-green-800 text-white font-bold text-sm rounded-md"
                                 >
@@ -38,19 +41,24 @@ const Products = ({ auth }: PageProps) => {
                                 </Link>
                             </div>
                             <div>
-                                <Tabs>
-                                    <Tab title="Pending Products">
+                                <Tabs preSelectedTabIndex={index}>
+                                    <Tab title="Pending">
                                         <ProductTab products={newProducts} />
                                     </Tab>
 
                                     <Tab
                                         title={
                                             role === "admin"
-                                                ? "Products"
+                                                ? "Current"
                                                 : "My Products"
                                         }
                                     >
                                         <ProductTab products={products} />
+                                    </Tab>
+                                    <Tab title="Rejected">
+                                        <ProductTab
+                                            products={rejectedProducts}
+                                        />
                                     </Tab>
                                 </Tabs>
                             </div>
