@@ -17,11 +17,15 @@ use Ably\AblyRest;
 
 class ChatController extends Controller
 {
+    private $ably_key;
+
     public function chats(Request $req)
     {
         $chats = Chat::select('chats.type', 'chats.text', 'chats.image', 'chats.id as _id', 'chats.user_id', 'chats.created_at as createdAt')
             ->where('room_id', $req->id)
             ->with('user')
+            ->orderBy('chats.created_at', 'desc')
+            ->take(30)
             ->get();
         // $chats = Chat::with('user')->get();
         $data['chats'] = $chats;
@@ -42,9 +46,12 @@ class ChatController extends Controller
         $chat['_id'] = $chat->id;
         $chat['createdAt'] = $chat->created_at;
 
-        $client = new AblyRest('V65OGg.kbAMrg:Qvm_880AOYVW1nmm8bFJ_-7WtTR98ooQdyt4_cK47hY');
+        $this->ably_key = config("custom.ably_key");
+
+        $client = new AblyRest("V65OGg.kbAMrg:Qvm_880AOYVW1nmm8bFJ_-7WtTR98ooQdyt4_cK47hY");
         $channel = $client->channel('message');
         $channel->publish('AblyMessageEvent', json_encode($chat)); // => true
+        $channel->publish('AblyNewMessageEvent', json_encode($chat)); // => true
         return $this->sendResponse($chat, '');
     }
 

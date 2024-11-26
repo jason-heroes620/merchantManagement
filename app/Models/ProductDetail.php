@@ -20,6 +20,7 @@ class ProductDetail extends Model
         'location',
         'price',
         'google_map_location',
+        'min_quantity',
         'quantity',
         'event_start_date',
         'event_end_date',

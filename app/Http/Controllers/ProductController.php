@@ -83,6 +83,7 @@ class ProductController extends Controller
                 'location' => $req->input('location'),
                 'price' => $req->input('price'),
                 'google_map_location' => $req->input('google_map_location'),
+                'min_quantity' => $req->input('min_quantity'),
                 'quantity' => $req->input('quantity'),
                 'event_start_date' =>  date('Y-m-d', strtotime(str_replace('/', '-', $req->input('event_start_date')))),
                 'event_end_date' => date(
@@ -157,6 +158,7 @@ class ProductController extends Controller
             'location' => $req->location,
             'price' => $req->price,
             'google_map_location' => $req->google_map_location,
+            'min_quantity' => $req->min_quantity,
             'quantity' => $req->quantity,
             'event_start_date' =>  date('Y-m-d', strtotime(str_replace('/', '-', $req->event_start_date))),
             'event_end_date' => date(

@@ -23,6 +23,7 @@ const View = ({ auth, flash }: any) => {
 
     const { data, setData, post, put, processing, errors, reset } = useForm({
         merchant_name: merchant.merchant_name,
+        person_in_charge: merchant.person_in_charge,
         merchant_phone: merchant.merchant_phone,
         merchant_email: merchant.merchant_email,
         merchant_description: merchant_description,
@@ -66,7 +67,7 @@ const View = ({ auth, flash }: any) => {
                         </Link>
                     </div>
                     <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                        Merchant
+                        Merchant Detail
                     </h2>
                 </div>
             }
@@ -88,33 +89,6 @@ const View = ({ auth, flash }: any) => {
                                         onSubmit={handleSubmit}
                                         className="py-4"
                                     >
-                                        <div className="grid py-2 grid-flow-row-dense gap-6 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
-                                            <div className="flex items-center md:col-span-1 lg:col-span-2">
-                                                <InputLabel
-                                                    htmlFor="merchant_name"
-                                                    value="Name"
-                                                />
-                                            </div>
-                                            <div className="flex md:col-span-5 lg:col-span-10">
-                                                <TextInput
-                                                    id="merchant_name"
-                                                    name="merchant_name"
-                                                    defaultValue={
-                                                        data.merchant_name
-                                                    }
-                                                    className="mt-1 block w-full"
-                                                    autoComplete="merchant_name"
-                                                    onChange={(e) =>
-                                                        setData(
-                                                            "merchant_name",
-                                                            e.target.value
-                                                        )
-                                                    }
-                                                    required
-                                                    readOnly
-                                                />
-                                            </div>
-                                        </div>
                                         <div className="grid py-2 grid-flow-row-dense gap-4 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
                                             <div className="flex items-center md:col-span-1 lg:col-span-2">
                                                 <InputLabel
@@ -134,6 +108,57 @@ const View = ({ auth, flash }: any) => {
                                                             e.target.value
                                                         );
                                                     }}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="grid py-2 grid-flow-row-dense gap-6 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
+                                            <div className="flex items-center md:col-span-1 lg:col-span-2">
+                                                <InputLabel
+                                                    htmlFor="merchant_name"
+                                                    value="Name"
+                                                />
+                                            </div>
+                                            <div className="flex md:col-span-5 lg:col-span-10">
+                                                <TextInput
+                                                    id="merchant_name"
+                                                    name="merchant_name"
+                                                    defaultValue={
+                                                        data.merchant_name
+                                                    }
+                                                    className="mt-1 block w-full"
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            "merchant_name",
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    required
+                                                    readOnly
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="grid py-2 grid-flow-row-dense gap-6 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
+                                            <div className="flex items-center md:col-span-1 lg:col-span-2">
+                                                <InputLabel
+                                                    htmlFor="person_in_charge"
+                                                    value="Person In Charge"
+                                                />
+                                            </div>
+                                            <div className="flex md:col-span-5 lg:col-span-10">
+                                                <TextInput
+                                                    id="person_in_charge"
+                                                    name="person_in_charge"
+                                                    defaultValue={
+                                                        data.person_in_charge
+                                                    }
+                                                    className="mt-1 block w-full"
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            "person_in_charge",
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    required
                                                 />
                                             </div>
                                         </div>

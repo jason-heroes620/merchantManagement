@@ -1,5 +1,8 @@
 <?php
 
+use App\Events\NewMerchantApplication;
+use App\Events\NewMerchantApplicationResponse;
+use App\Events\MerchantApplicationApprove;
 use App\Models\MerchantType;
 
 use App\Http\Controllers\RoomController;
@@ -11,11 +14,18 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductImageController;
-
+use App\Models\Merchant;
+use App\Models\Role;
+use Illuminate\Auth\Passwords\PasswordBroker;
 use Illuminate\Foundation\Application;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\URL;
+
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -32,6 +42,30 @@ Route::get('/merchant-form', function () {
         'types' => $types
     ]);
 })->name('merchant.form');
+
+
+// to be removed after test
+Route::get('/test-new-merchant-email', function () {
+    $merchant = Merchant::where('id', 39)->first();
+    // event(new NewMerchantApplication($merchant));
+    // return (new MailMessage)->markdown('emails.newmerchantresponse', compact('merchant'));
+
+    // $password = Str::random(10);
+    // $user = App\Models\User::create([
+    //     'name' => $merchant->person_in_charge,
+    //     'email' => $merchant->merchant_email,
+    //     'password' => $password
+    // ]);
+    // Password::sendResetLink(
+    //     $user->only('email')
+    // );
+
+    // $user->assignRole('Merchant');
+    // event(new MerchantApplicationApprove($user, $link));
+    return (new MailMessage)->markdown('emails.merchantrejected', compact('merchant'));
+});
+
+// Route::get('/test-new-merchant-email', [MerchantController::class, 'testMerchantEmail']);
 
 Route::post('/merchant-register', [MerchantController::class, 'create'])->name('merchant.register');
 

@@ -19,27 +19,36 @@ const MerchantTab = ({ merchants }: any) => {
                                     renderCell: (row) => (
                                         <>
                                             <>{row.merchant_name}</>
-                                            {row.deleted_at && (
+                                            {/* {row.deleted_at && (
                                                 <Trash2
                                                     size={16}
                                                     className="ml-2 text-gray-400"
                                                 />
-                                            )}
+                                            )} */}
                                         </>
                                     ),
                                 },
+                                // {
+                                //     label: "Type",
+                                //     name: "type",
+                                //     renderCell: (row) => (
+                                //         <>
+                                //             <>{row.merchant_type}</>
+                                //             {row.deleted_at && (
+                                //                 <Trash2
+                                //                     size={16}
+                                //                     className="ml-2 text-gray-400"
+                                //                 />
+                                //             )}
+                                //         </>
+                                //     ),
+                                // },
                                 {
-                                    label: "Type",
-                                    name: "type",
-                                    renderCell: (row) => (
+                                    label: "PIC",
+                                    name: "pic",
+                                    renderCell: (row: any) => (
                                         <>
-                                            <>{row.merchant_type}</>
-                                            {row.deleted_at && (
-                                                <Trash2
-                                                    size={16}
-                                                    className="ml-2 text-gray-400"
-                                                />
-                                            )}
+                                            <>{row.person_in_charge}</>
                                         </>
                                     ),
                                 },

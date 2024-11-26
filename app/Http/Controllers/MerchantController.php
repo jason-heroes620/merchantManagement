@@ -2,14 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\MerchantApplicationApprove;
+use App\Events\NewMerchantApplication;
+use App\Events\NewMerchantApplicationResponse;
 use App\Models\Merchant;
 use App\Models\MerchantType;
 use App\Models\MerchantAdditionalInfo;
 use App\Models\MerchantFiles;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Password;
 
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
@@ -19,7 +25,7 @@ class MerchantController extends Controller
     public function merchants(Request $req): Response
     {
         $merchants =
-            Merchant::select('merchants.id', 'merchants.merchant_name', 'merchants.merchant_email', 'merchants.merchant_phone', 'merchant_type.name as merchant_type')
+            Merchant::select('merchants.id', 'merchants.merchant_name', 'merchants.person_in_charge', 'merchants.merchant_email', 'merchants.merchant_phone', 'merchant_type.name as merchant_type')
             ->leftJoin('merchant_type', 'merchants.merchant_type', '=', 'merchant_type.id')
             ->where('merchants.status', 0)
             ->orderBy('merchant_name', 'ASC')
@@ -27,14 +33,14 @@ class MerchantController extends Controller
         // print_r($merchants);
 
         $pendingMerchants =
-            Merchant::select('merchants.id', 'merchants.merchant_name', 'merchants.merchant_email', 'merchants.merchant_phone', 'merchant_type.name as merchant_type')
+            Merchant::select('merchants.id', 'merchants.merchant_name', 'merchants.person_in_charge', 'merchants.merchant_email', 'merchants.merchant_phone', 'merchant_type.name as merchant_type')
             ->leftJoin('merchant_type', 'merchants.merchant_type', '=', 'merchant_type.id')
             ->where('merchants.status', 1)
             ->orderBy('merchant_name', 'ASC')
             ->paginate(10);
 
         $rejectedMerchants =
-            Merchant::select('merchants.id', 'merchants.merchant_name', 'merchants.merchant_email', 'merchants.merchant_phone', 'merchant_type.name as merchant_type')
+            Merchant::select('merchants.id', 'merchants.merchant_name', 'merchants.person_in_charge', 'merchants.merchant_email', 'merchants.merchant_phone', 'merchant_type.name as merchant_type')
             ->leftJoin('merchant_type', 'merchants.merchant_type', '=', 'merchant_type.id')
             ->where('merchants.status', 2)
             ->orderBy('merchant_name', 'ASC')
@@ -73,11 +79,12 @@ class MerchantController extends Controller
 
     public function update(Merchant $merchant, MerchantAdditionalInfo $merchantInfo, Request $req): RedirectResponse
     {
+        // dd($req->input('merchant_name'));
         $merchant->where('id', $req->id)->update([
             'merchant_type' => $req->input('merchant_type'),
-            'merchant_name' => $req->merchant_name,
-            'merchant_email' => $req->merchant_email,
-            'merchant_phone' => $req->merchant_phone,
+            'merchant_email' => $req->input('merchant_email'),
+            'merchant_phone' => $req->input('merchant_phone'),
+            'person_in_charge' => $req->input('person_in_charge'),
             'merchant_description' => htmlspecialchars($req->merchant_description),
         ]);
 
@@ -98,6 +105,7 @@ class MerchantController extends Controller
             'merchant_name' => $req->input('merchant_name'),
             'merchant_email' => $req->input('email'),
             'merchant_phone' => $req->input('mobile'),
+            'person_in_charge' => $req->input('person_in_charge'),
             'merchant_description' => htmlspecialchars(
                 $req->input('description')
             ),
@@ -125,7 +133,8 @@ class MerchantController extends Controller
             ]);
         }
 
-
+        event(new NewMerchantApplication($merchant));
+        event(new NewMerchantApplicationResponse($merchant));
         return redirect()->back()->with(['success' => "Form Submitted"]);
     }
 
@@ -134,6 +143,19 @@ class MerchantController extends Controller
         $merchant->where('id', $req->id)->update([
             'status' => 0,
         ]);
+
+        $password = Str::random(10);
+        $user = User::create([
+            'name' => $merchant->person_in_charge,
+            'email' => $merchant->merchant_email,
+            'password' => $password
+        ]);
+
+        $user->assignRole('Merchant');
+        event(new MerchantApplicationApprove($user));
+        Password::sendResetLink(
+            $user->only('email')
+        );
         return Redirect::back()->with(['success' => "Merchant Approved"]);
     }
 
@@ -152,5 +174,14 @@ class MerchantController extends Controller
         return response()->download(
             public_path('storage/companyRegistrationForm/' . $file['original_file_name'], $file['original_file_name'])
         );
+    }
+
+    public function testMerchantEmail()
+    {
+        $merchant = Merchant::where('merchants.id', 39)
+            ->first(['merchants.*']);
+
+        // event(new NewMerchantApplication($merchant));
+        event(new NewMerchantApplicationResponse($merchant));
     }
 }

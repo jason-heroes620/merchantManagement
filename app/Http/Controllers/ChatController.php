@@ -68,5 +68,6 @@ class ChatController extends Controller
         $client = new AblyRest('V65OGg.kbAMrg:Qvm_880AOYVW1nmm8bFJ_-7WtTR98ooQdyt4_cK47hY');
         $channel = $client->channel('message');
         $channel->publish('AblyMessageEvent', json_encode($chat)); // => true
+        $channel->publish('AblyNewMessageEvent', json_encode($chat)); // => true
     }
 }

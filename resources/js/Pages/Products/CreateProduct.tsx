@@ -1,6 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, useForm } from "@inertiajs/react";
-import { PageProps } from "@/types";
 import InputError from "@/Components/InputError";
 import InputLabel from "@/Components/InputLabel";
 import TextInput from "@/Components/TextInput";
@@ -9,7 +8,6 @@ import Categories from "@/Components/Categories";
 import RichTextEditor from "@/Components/RichTextEditor";
 import { FiHelpCircle } from "react-icons/fi";
 import { useState, FormEventHandler, useEffect } from "react";
-import { DatePickerProps, TimePickerProps } from "antd";
 import Frequency from "@/Components/Frequency/Frequency";
 import PrimaryButton from "@/Components/PrimaryButton";
 import {
@@ -17,7 +15,6 @@ import {
     HoverCardContent,
     HoverCardTrigger,
 } from "@/Components/ui/hover-card";
-import { Button } from "@/Components/ui/button";
 import dayjs from "dayjs";
 import { Toaster } from "@/Components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
@@ -46,6 +43,7 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
         event_end_time: "",
         location: "",
         google_map_location: "",
+        min_quantity: 1,
         quantity: 1,
         price: "0.00",
         images: [],
@@ -68,9 +66,6 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
         }
     }, [flash]);
 
-    const [selectedFrequency, setSelectedFrequency] = useState("");
-    const [eventDate, setEventDate] = useState(new Date());
-
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
         post(route("product.create"), {
@@ -78,17 +73,6 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
             preserveState: false,
         });
         reset();
-    };
-
-    const onStartTimeChange: TimePickerProps["onChange"] = (
-        time,
-        timeString
-    ) => {
-        setData("event_start_time", timeString as string);
-    };
-
-    const onEndTimeChange: TimePickerProps["onChange"] = (time, timeString) => {
-        setData("event_end_time", timeString as string);
     };
 
     const onDateTimeChange: RangePickerProps["onCalendarChange"] = (
@@ -330,7 +314,34 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
                                 <div className="py-2">
                                     <InputLabel
                                         htmlFor="event_quantity"
-                                        value="Max Pax"
+                                        value="Min. Pax"
+                                    />
+                                    <TextInput
+                                        id="event_min_quantity"
+                                        name="event_min_quantity"
+                                        type="number"
+                                        maxLength={3}
+                                        min={1}
+                                        value={data.min_quantity}
+                                        className="mt-1 block w-full"
+                                        autoComplete="event_min_quantity"
+                                        onChange={(e) =>
+                                            setData(
+                                                "min_quantity",
+                                                parseInt(e.target.value)
+                                            )
+                                        }
+                                        required
+                                    />
+                                    <InputError
+                                        message={errors.min_quantity}
+                                        className="mt-2"
+                                    />
+                                </div>
+                                <div className="py-2">
+                                    <InputLabel
+                                        htmlFor="event_quantity"
+                                        value="Max. Pax"
                                     />
                                     <TextInput
                                         id="event_quantity"

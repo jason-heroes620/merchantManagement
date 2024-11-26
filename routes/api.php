@@ -9,6 +9,7 @@ use Illuminate\Validation\ValidationException;
 use App\Http\Controllers\API\ChatController;
 use App\Http\Controllers\API\RoomController;
 use App\Http\Controllers\API\UserController;
+use App\Http\Controllers\API\ProductController;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
@@ -46,4 +47,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/unreadChats/', [ChatController::class, 'unreadChats']);
 
     Route::post('/logout', [UserController::class, 'logout']);
+
+    Route::get('/products/current/{page}', [ProductController::class, 'current']);
+    Route::get('/products/history/{page}', [ProductController::class, 'history']);
+    Route::get('/products/comingup/{page}', [ProductController::class, 'comingup']);
 });

@@ -20,6 +20,11 @@ class Merchant extends Model
         'merchant_name',
         'merchant_phone',
         'merchant_email',
+        'person_in_charge',
         'merchant_description',
+    ];
+
+    protected $dispatchesEvents = [
+        'created' => \App\Events\NewMerchantApplication::class,
     ];
 }
