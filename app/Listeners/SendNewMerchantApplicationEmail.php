@@ -25,8 +25,8 @@ class SendNewMerchantApplicationEmail
      */
     public function handle(object $event): void
     {
-        Log::info('New Merchant Application Received email sent to ' . $event->merchant['merchant_email']);
-        $emails = [$event->merchant['merchant_email'], 'merchant.application@heroes.my'];
+        Log::info('New Merchant Application Received');
+        $emails = ['merchant.application@heroes.my', 'felicia.n@heroes.my'];
         Mail::to($emails)->send(new NewMerchantApplicationEmail($event->merchant));
     }
 }
