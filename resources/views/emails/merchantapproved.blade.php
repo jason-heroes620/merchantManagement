@@ -45,7 +45,7 @@
         </table>
 
         <br>
-        <p>We are thrilled to inform you that your merchant application has been approved. You will receive another email to reset your password.</p>
+        <p>We are thrilled to inform you that your application has been approved. You will receive another email to reset your password.</p>
 
 
         <br>

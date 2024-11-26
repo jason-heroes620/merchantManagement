@@ -45,7 +45,7 @@
         </table>
 
         <br>
-        <p>Thank you for your interest to join Heroes merchant program. We will review your application and get back to you within 3 - 5 business days.</p>
+        <p>Thank you for your interest to join Heroes Merchant Program. We will review your application and get back to you within 3 - 5 business days.</p>
         <br>
         <p>
             Best Regards,
