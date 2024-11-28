@@ -60,7 +60,17 @@ class MerchantController extends Controller
         $merchant = Merchant::where('merchants.id', $req->id)
             ->leftJoin('merchant_additional_info', 'merchants.id', '=', 'merchant_additional_info.merchant_id')
             ->leftJoin('merchant_type', 'merchants.merchant_type', '=', 'merchant_type.id')
-            ->first(['merchants.*', 'merchant_additional_info.*', 'merchant_type.type', 'merchant_type.name']);
+            ->first([
+                'merchants.*',
+                'merchant_additional_info.facebook',
+                'merchant_additional_info.instagram',
+                'merchant_additional_info.web',
+                'merchant_additional_info.ic_no',
+                'merchant_additional_info.company_registration',
+                'merchant_additional_info.location',
+                'merchant_type.type',
+                'merchant_type.name'
+            ]);
 
         $types = MerchantType::where('status', 0)->get(['id as value', 'name as label']);
 
@@ -154,7 +164,7 @@ class MerchantController extends Controller
         ]);
 
         $user->assignRole('Merchant');
-        event(new MerchantApplicationApprove($merchant));
+        event(new MerchantApplicationApprove($info));
         Password::sendResetLink(
             $user->only('email')
         );

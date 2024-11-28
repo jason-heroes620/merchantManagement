@@ -27,7 +27,7 @@ const View = ({ auth, flash }: any) => {
         merchant_phone: merchant.merchant_phone,
         merchant_email: merchant.merchant_email,
         merchant_description: merchant_description,
-        id: merchant.merchant_id,
+        id: merchant.id,
         web: merchant.web || "",
         facebook: merchant.facebook || "",
         instagram: merchant.instagram || "",
@@ -400,7 +400,7 @@ const View = ({ auth, flash }: any) => {
                                                                         post(
                                                                             route(
                                                                                 "merchant.reject",
-                                                                                merchant.merchant_id
+                                                                                merchant.id
                                                                             )
                                                                         );
                                                                     }
@@ -425,7 +425,7 @@ const View = ({ auth, flash }: any) => {
                                                                         put(
                                                                             route(
                                                                                 "merchant.approve",
-                                                                                merchant.merchant_id
+                                                                                merchant.id
                                                                             )
                                                                         );
                                                                     }
