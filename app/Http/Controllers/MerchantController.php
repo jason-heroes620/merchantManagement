@@ -154,7 +154,7 @@ class MerchantController extends Controller
         ]);
 
         $user->assignRole('Merchant');
-        event(new MerchantApplicationApprove($user));
+        event(new MerchantApplicationApprove($merchant));
         Password::sendResetLink(
             $user->only('email')
         );
