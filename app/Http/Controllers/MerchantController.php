@@ -140,7 +140,7 @@ class MerchantController extends Controller
 
     public function approve(Merchant $merchant, Request $req): RedirectResponse
     {
-        $merchant->where('id', $req->id)->update([
+        $merchant = Merchant::where('id', $req->id)->update([
             'status' => 0,
         ]);
 

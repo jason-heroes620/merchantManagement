@@ -3,10 +3,12 @@
 namespace App\Providers;
 
 use App\Events\MerchantApplicationApprove;
+use App\Events\MerchantApplicationReject;
 use App\Events\NewMerchantApplication;
 use App\Listeners\SendNewMerchantApplicationEmail;
 use App\Events\NewMerchantApplicationResponse;
 use App\Listeners\SendMerchantApplicationApproveEmail;
+use App\Listeners\SendMerchantApplicationRejectEmail;
 use App\Listeners\SendNewMerchantApplicationResponseEmail;
 
 use Illuminate\Support\Facades\Event;
@@ -41,6 +43,11 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(
             MerchantApplicationApprove::class,
             SendMerchantApplicationApproveEmail::class,
+        );
+
+        Event::listen(
+            MerchantApplicationReject::class,
+            SendMerchantApplicationRejectEmail::class,
         );
     }
 }

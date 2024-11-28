@@ -10,13 +10,13 @@
 </head>
 
 <body>
-    <p>Hello Admin, </p>
-    <p>There is a new merchant application</p>
-    <p>Here are the details:</p>
-    <p>Merchant Name: {{ $merchant->merchant_name }}</p>
-    <p>PIC: {{ $merchant->person_in_charge }}</p>
-    <p>Email: {{ $merchant->merchant_email }}</p>
-    <p>Contact No.: {{ $merchant->merchant_phone }}</p>
+    <p style="font-size: 12px">Hello Admin, </p>
+    <p style="font-size: 12px">There is a new merchant application</p>
+    <p style="font-size: 12px">Here are the details:</p>
+    <p style="font-size: 12px">Merchant Name: {{ $merchant->merchant_name }}</p>
+    <p style="font-size: 12px">PIC: {{ $merchant->person_in_charge }}</p>
+    <p style="font-size: 12px">Email: {{ $merchant->merchant_email }}</p>
+    <p style="font-size: 12px">Contact No.: {{ $merchant->merchant_phone }}</p>
 </body>
 
 </html>

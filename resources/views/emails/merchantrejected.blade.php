@@ -10,19 +10,19 @@
     <style>
         @media screen and (max-width: 480px) {
             .w-screen {
-                margin: 0px 4px 0px 4px;
+                margin: 0px 10px 0px 10px;
             }
         }
 
         @media screen and (max-width: 768px) {
             .w-screen {
-                margin: 0px 10px 0px 10px;
+                margin: 0px 20px 0px 20px;
             }
         }
 
         @media screen and (max-width: 1024px) {
             .w-screen {
-                margin: 0px 20x 0px 20px;
+                margin: 0px 40x 0px 40px;
             }
         }
 
@@ -40,17 +40,17 @@
 
         <table style="table-layout: auto; width: 100%;">
             <tr>
-                <td style=" flex:1; font-size: 18px; justify-content: center">Hi {{ $merchant->person_in_charge }}, </td>
+                <td style="flex: 1; font-size: 18px; justify-content: center">Hi {{ $merchant->person_in_charge }}, </td>
             </tr>
         </table>
 
         <br>
-        <p>Thank you for your interest to join our Heroes Merchant Program. Unfortunately, your profile does not meet our requirements. If you would like to talk to our team, you can email us at <a href="mailto:help@heroes.my">help@heroes.my</a> and we will be glad to review your profile again.</p>
+        <p style="font-size: 14px; text-align: justify">Thank you for your interest to join our Heroes Merchant Program. Unfortunately, your profile does not meet our requirements. If you would like to talk to our team, you can email us at <a href="mailto:help@heroes.my">help@heroes.my</a> and we will be glad to review your profile again.</p>
         <br>
-        <p>
+        <p style="font-size: 14px">
             Best Regards,
         </p>
-        <p>The Heroes Team</p>
+        <p style="font-size: 14px">The Heroes Team</p>
     </div>
 
 </body>

@@ -15,6 +15,8 @@ use App\Events\AblyMessageEvent;
 use Ably\AblyRest;
 use App\Models\Room;
 use App\Models\RoomParticipant;
+use Illuminate\Support\Facades\Log;
+
 
 class ChatController extends Controller
 {
@@ -31,8 +33,8 @@ class ChatController extends Controller
                 ->with('room')
                 ->with('user')
                 ->get()
-                ->append('time');
-
+                ->append('createdAt');
+            Log::info($chats);
             $receiver = Room::with('user')->first();
             return Inertia::render('Chats/Chats', [
                 'chats' => $chats,

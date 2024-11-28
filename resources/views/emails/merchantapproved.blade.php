@@ -10,7 +10,7 @@
     <style>
         @media screen and (max-width: 480px) {
             .w-screen {
-                margin: 0px 4px 0px 4px;
+                margin: 0px 10px 0px 10px;
             }
         }
 
@@ -40,19 +40,17 @@
 
         <table style="table-layout: auto; width: 100%;">
             <tr>
-                <td style=" flex:1; font-size: 18px; justify-content: center">Hi {{ $merchant->person_in_charge }}, </td>
+                <td style="flex: 1; font-size: 18px; justify-content: center">Hi {{ $merchant->person_in_charge }}, </td>
             </tr>
         </table>
 
         <br>
-        <p>We are thrilled to inform you that your application has been approved. You will receive another email to reset your password.</p>
-
-
+        <p style="font-size: 12px; text-align: justify">We are thrilled to inform you that your application has been approved. You will receive an email to reset your password.</p>
         <br>
-        <p>
+        <p style="font-size: 12px">
             Best Regards,
         </p>
-        <p>The Heroes Team</p>
+        <p style="font-size: 12px">The Heroes Team</p>
     </div>
 
 </body>
