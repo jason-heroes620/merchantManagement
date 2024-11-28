@@ -140,14 +140,16 @@ class MerchantController extends Controller
 
     public function approve(Merchant $merchant, Request $req): RedirectResponse
     {
-        $merchant = Merchant::where('id', $req->id)->update([
+        $merchant->where('id', $req->id)->update([
             'status' => 0,
         ]);
 
+        $info = Merchant::where('id', $req->id)->first();
+
         $password = Str::random(10);
         $user = User::create([
-            'name' => $merchant->person_in_charge,
-            'email' => $merchant->merchant_email,
+            'name' => $info->person_in_charge,
+            'email' => $info->merchant_email,
             'password' => $password
         ]);
 
