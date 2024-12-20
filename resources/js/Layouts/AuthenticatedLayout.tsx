@@ -3,8 +3,9 @@ import ApplicationLogo from "@/Components/ApplicationLogo";
 import Dropdown from "@/Components/Dropdown";
 import NavLink from "@/Components/NavLink";
 import ResponsiveNavLink from "@/Components/ResponsiveNavLink";
-import { Link } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
 import { User } from "@/types";
+import Loading from "@/Components/Loading";
 
 export default function Authenticated({
     user,
@@ -13,6 +14,15 @@ export default function Authenticated({
 }: PropsWithChildren<{ user: User; header?: ReactNode }>) {
     const [showingNavigationDropdown, setShowingNavigationDropdown] =
         useState(false);
+    const [loading, setLoading] = useState(false);
+
+    router.on("start", () => {
+        setLoading(true);
+    });
+
+    router.on("finish", (event) => {
+        if (event.detail.visit.completed) setLoading(false);
+    });
 
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
@@ -198,7 +208,10 @@ export default function Authenticated({
                 </header>
             )}
 
-            <main>{children}</main>
+            <main>
+                {loading ? <Loading loading={loading} /> : ""}
+                {children}
+            </main>
         </div>
     );
 }

@@ -7,14 +7,19 @@ export type Props = {
     index: number;
     setSelectedTab: (index: number) => void;
     isActive?: boolean;
+    disabled?: boolean;
 };
 
 const TabTitle = (props: Props): JSX.Element => {
-    const { title, setSelectedTab, index, isActive } = props;
+    const { title, setSelectedTab, index, isActive, disabled } = props;
 
-    const handleOnClick = useCallback(() => {
-        setSelectedTab(index);
-    }, [setSelectedTab, index]);
+    const handleOnClick = useCallback(
+        (e) => {
+            e.preventDefault();
+            setSelectedTab(index);
+        },
+        [setSelectedTab, index]
+    );
 
     return (
         <li
@@ -23,7 +28,9 @@ const TabTitle = (props: Props): JSX.Element => {
   ${isActive ? `border-b-2 border-black opacity-100` : `opacity-40`}
 `}
         >
-            <button onClick={handleOnClick}>{title}</button>
+            <button onClick={handleOnClick} disabled={disabled}>
+                {title}
+            </button>
         </li>
     );
 };

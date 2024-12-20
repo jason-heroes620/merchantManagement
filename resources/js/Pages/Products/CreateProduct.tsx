@@ -28,12 +28,14 @@ const timeFormat = "HH:mm";
 const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
     const { toast } = useToast();
     const [files, setFiles] = useState<File[]>([]);
+    const [mainImage, setMainImage] = useState<File[]>([]);
     const getObjectUrl = useObjectUrls();
 
     const { data, setData, post, processing, errors, reset } = useForm({
         product_name: "",
         category_id: "",
         product_description: "",
+        product_activities: "",
         age_group: "",
         frequency_id: "",
         event_date: dayjs().add(1, "day"),
@@ -47,6 +49,7 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
         quantity: 1,
         price: "0.00",
         images: [],
+        main_image: [],
         week_time: [
             { index: 0, start_time: "", end_time: "" },
             { index: 1, start_time: "", end_time: "" },
@@ -68,11 +71,14 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
+        // console.log(data);
         post(route("product.create"), {
             forceFormData: true,
-            preserveState: false,
+            preserveState: true,
+            onSuccess: () => {
+                reset();
+            },
         });
-        reset();
     };
 
     const onDateTimeChange: RangePickerProps["onCalendarChange"] = (
@@ -88,17 +94,31 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
         setData({ ...data, ...val });
     };
 
+    const handleMainImageUpload = (e) => {
+        const files: File[] = Array.from(e.target.files || []);
+        var canUpload = true;
+        files.map((f: File) => {
+            f.size > 2097152 ? (canUpload = false) : "";
+        });
+        if (canUpload) {
+            setMainImage(files);
+            setData("main_image", [...e.target.files]);
+        } else {
+            alert("Your file exceede the upload limit.");
+        }
+    };
+
     const handleFileUpload = (e) => {
         const files: File[] = Array.from(e.target.files || []);
         var canUpload = true;
         files.map((f: File) => {
-            f.size > 1048576 ? (canUpload = false) : "";
+            f.size > 2097152 ? (canUpload = false) : "";
         });
         if (canUpload) {
             setFiles(files);
             setData("images", [...e.target.files]);
         } else {
-            alert("1 or more files exceed the upload limit.");
+            alert("1 or more files exceeded the upload limit.");
         }
     };
 
@@ -162,6 +182,7 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
                                                 e.target.value
                                             )
                                         }
+                                        maxLength={200}
                                         required
                                     />
                                     <InputError
@@ -199,6 +220,21 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
                                 </div>
                                 <div className="py-2">
                                     <InputLabel
+                                        htmlFor="product_activities"
+                                        value="Activities"
+                                    />
+                                    <RichTextEditor
+                                        value={data.product_activities}
+                                        onChange={setData}
+                                        contentFor={"product_activities"}
+                                    />
+                                    <InputError
+                                        message={errors.product_activities}
+                                        className="mt-2"
+                                    />
+                                </div>
+                                <div className="py-2">
+                                    <InputLabel
                                         htmlFor="age_group"
                                         value="Age Group"
                                     />
@@ -208,6 +244,7 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
                                         value={data.age_group}
                                         className="mt-1 block w-full"
                                         autoComplete="age_group"
+                                        maxLength={50}
                                         onChange={(e) =>
                                             setData("age_group", e.target.value)
                                         }
@@ -250,7 +287,7 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
                                 <div className="py-2">
                                     <InputLabel
                                         htmlFor="event_location"
-                                        value="Event Location"
+                                        value="Location"
                                     />
                                     <TextInput
                                         id="event_location"
@@ -262,6 +299,7 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
                                             setData("location", e.target.value)
                                         }
                                         placeholder="e.g. City, State"
+                                        maxLength={150}
                                         required
                                     />
                                     <InputError
@@ -388,8 +426,43 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
                                 </div>
                                 <div className="py-2">
                                     <InputLabel
+                                        htmlFor="main_image"
+                                        value="Main Image (supported formats .png, .jpg. Image should not be more than 2 MB)"
+                                        className="pb-2"
+                                    />
+                                    <input
+                                        type="file"
+                                        multiple={false}
+                                        accept=".png,.jpg,.jpeg"
+                                        onChange={(e) => {
+                                            handleMainImageUpload(e);
+                                        }}
+                                    />
+                                    {mainImage.length > 0 && (
+                                        <div className="flex flex-row gap-4 py-2 border my-2 ">
+                                            <div className="flex w-32 h-32 justify-center items-center px-2">
+                                                {mainImage.map((file, i) => (
+                                                    <div
+                                                        className="flex w-32 h-32 justify-center items-center px-2"
+                                                        key={i}
+                                                    >
+                                                        <img
+                                                            src={getObjectUrl(
+                                                                file
+                                                            )}
+                                                            alt={file.name}
+                                                            className="object-contain"
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="py-2">
+                                    <InputLabel
                                         htmlFor="images"
-                                        value="Images (.png, .jpg not more than 1 MB)"
+                                        value="Additional Images (supported formats .png, .jpg. Each image should not be more than 2 MB)"
                                         className="pb-2"
                                     />
                                     <input
@@ -400,16 +473,19 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
                                             handleFileUpload(e);
                                         }}
                                     />
-                                    {files && (
-                                        <div className="flex flex-row gap-4 py-2">
-                                            {files.map((file) => (
-                                                <img
-                                                    key={file.name}
-                                                    src={getObjectUrl(file)}
-                                                    alt={file.name}
-                                                    width={80}
-                                                    height={"auto"}
-                                                />
+                                    {files.length > 0 && (
+                                        <div className="flex flex-row flex-wrap gap-4 py-2 border my-2">
+                                            {files.map((file, i) => (
+                                                <div
+                                                    className="flex w-32 h-32 justify-center items-center px-2"
+                                                    key={i}
+                                                >
+                                                    <img
+                                                        src={getObjectUrl(file)}
+                                                        alt={file.name}
+                                                        className="object-contain"
+                                                    />
+                                                </div>
                                             ))}
                                         </div>
                                     )}

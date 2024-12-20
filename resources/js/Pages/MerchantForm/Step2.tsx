@@ -22,7 +22,13 @@ const Step2 = ({
         <div>
             <form onSubmit={submit}>
                 <div>
-                    <InputLabel htmlFor="merchant_name" value="Merchant Name" />
+                    <div className="flex flex-row gap-1">
+                        <InputLabel
+                            htmlFor="merchant_name"
+                            value="Merchant Name"
+                        />
+                        <span className="text-red-500">*</span>
+                    </div>
                     <TextInput
                         id="merchant_name"
                         name="merchant_name"
@@ -41,10 +47,13 @@ const Step2 = ({
                     />
                 </div>
                 <div className="mt-4">
-                    <InputLabel
-                        htmlFor="person_in_charge"
-                        value="Person In Charge"
-                    />
+                    <div className="flex flex-row gap-1">
+                        <InputLabel
+                            htmlFor="person_in_charge"
+                            value="Person In Charge"
+                        />
+                        <span className="text-red-500">*</span>
+                    </div>
                     <TextInput
                         id="person_in_charge"
                         name="person_in_charge"
@@ -62,7 +71,10 @@ const Step2 = ({
                     />
                 </div>
                 <div className="mt-4">
-                    <InputLabel htmlFor="mobile" value="Contact No." />
+                    <div className="flex flex-row gap-1">
+                        <InputLabel htmlFor="mobile" value="Contact No." />
+                        <span className="text-red-500">*</span>
+                    </div>
                     <TextInput
                         id="mobile"
                         name="mobile"
@@ -76,7 +88,10 @@ const Step2 = ({
                     <InputError message={errors.mobile} className="mt-2" />
                 </div>
                 <div className="mt-4">
-                    <InputLabel htmlFor="email" value="Email" />
+                    <div className="flex flex-row gap-1">
+                        <InputLabel htmlFor="email" value="Email" />
+                        <span className="text-red-500">*</span>
+                    </div>
                     <TextInput
                         id="email"
                         name="email"
@@ -89,12 +104,15 @@ const Step2 = ({
                     />
                     <InputError message={errors.email} className="mt-2" />
                 </div>
-                <div className="py-4">
-                    <InputLabel
-                        htmlFor="description"
-                        value="Tell us about yourself"
-                        className="mb-1"
-                    />
+                <div className="mt-4">
+                    <div className="flex flex-row gap-1">
+                        <InputLabel
+                            htmlFor="description"
+                            value="Tell us about yourself"
+                            className="mb-1"
+                        />
+                        <span className="text-red-500">*</span>
+                    </div>
                     <RichTextEditor
                         value={data.description}
                         onChange={setData}
@@ -104,7 +122,7 @@ const Step2 = ({
                 </div>
                 {merchantType === "learningCenter" ? (
                     <div>
-                        <div className="py-4">
+                        <div className="mt-4">
                             <div>
                                 <InputLabel
                                     htmlFor="location"
@@ -132,7 +150,7 @@ const Step2 = ({
                                 />
                             </div>
                         </div>
-                        <div className="py-4">
+                        <div className="mt-4">
                             <div>
                                 <InputLabel
                                     htmlFor="companyRegistration"
@@ -165,13 +183,32 @@ const Step2 = ({
                         </div>
                         <div className="py-4">
                             <InputLabel
-                                htmlFor="companyRegistrationForm"
-                                value="Company Registration Form (.pdf, .png, .jpg)"
+                                htmlFor="companyLogo"
+                                value="Company Logo (.png, .jpg)"
                                 className="pb-2"
                             />
                             <input
                                 type="file"
-                                accept=".pdf,.png,.jpg,.jpeg"
+                                accept=".png,.jpg,.jpeg"
+                                onChange={(e) =>
+                                    setData("merchant_logo", e.target.files[0])
+                                }
+                            />
+                            {progress && (
+                                <progress value={progress.percentage} max="100">
+                                    {progress.percentage}%
+                                </progress>
+                            )}
+                        </div>
+                        <div className="mt-4">
+                            <InputLabel
+                                htmlFor="companyRegistrationForm"
+                                value="Company Registration Form (.pdf)"
+                                className="pb-2"
+                            />
+                            <input
+                                type="file"
+                                accept=".pdf"
                                 onChange={(e) =>
                                     setData(
                                         "companyRegistrationForm",
@@ -189,7 +226,7 @@ const Step2 = ({
                 ) : (
                     ""
                 )}
-                <div className="mt-2">
+                <div className="mt-8">
                     <InputLabel htmlFor="website" value="Web Site" />
                     <TextInput
                         id="website"
@@ -202,7 +239,7 @@ const Step2 = ({
                     />
                     <InputError message={errors.email} className="mt-2" />
                 </div>
-                <div className="mt-2">
+                <div className="mt-4">
                     <InputLabel htmlFor="facebook" value="Facebook Link" />
                     <TextInput
                         id="facebook"
@@ -227,6 +264,12 @@ const Step2 = ({
                         onChange={(e) => setData("instagram", e.target.value)}
                     />
                     <InputError message={errors.instagram} className="mt-2" />
+                </div>
+                <div className="py-2">
+                    <small>
+                        <span className="text-red-500">* </span>
+                        <span>Required field</span>
+                    </small>
                 </div>
                 <div className="flex items-center justify-end mt-8">
                     <button

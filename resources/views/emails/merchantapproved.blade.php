@@ -36,7 +36,7 @@
 
 <body style="flex: 1; padding-top: 100px; width: 100%; background-color: grey">
     <div style="flex: 1; justify-content: center; background-color: white; padding: 6px 10px 6px 10px" class="w-screen">
-        <img src="{{asset('images/heroes-logo.png')}}" alt="" style="padding-top: 20px; padding-bottom: 20px; width: 140px; margin-left: auto; margin-right: auto; display: block">
+        <img src="https://heroes.my/img/heroes-logo.png" alt="" style="padding-top: 20px; padding-bottom: 20px; width: 140px; margin-left: auto; margin-right: auto; display: block">
 
         <table style="table-layout: auto; width: 100%;">
             <tr>
@@ -45,12 +45,12 @@
         </table>
 
         <br>
-        <p style="font-size: 12px; text-align: justify">We are thrilled to inform you that your application has been approved. You will receive an email to reset your password.</p>
+        <p style="font-size: 14px; text-align: justify">We are thrilled to inform you that your application has been approved. You will receive an email to reset your password.</p>
         <br>
-        <p style="font-size: 12px">
+        <p style="font-size: 14px">
             Best Regards,
         </p>
-        <p style="font-size: 12px">The Heroes Team</p>
+        <p style="font-size: 14px">The Heroes Team</p>
     </div>
 
 </body>

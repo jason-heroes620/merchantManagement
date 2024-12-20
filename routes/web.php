@@ -1,7 +1,5 @@
 <?php
 
-use App\Events\NewMerchantApplication;
-use App\Events\NewMerchantApplicationResponse;
 use App\Events\MerchantApplicationApprove;
 use App\Models\MerchantType;
 
@@ -13,18 +11,14 @@ use App\Http\Controllers\MerchantController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductProfitController;
 use App\Http\Controllers\ProductImageController;
 use App\Models\Merchant;
-use App\Models\Role;
-use Illuminate\Auth\Passwords\PasswordBroker;
 use Illuminate\Foundation\Application;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\URL;
 
 
 Route::get('/', function () {
@@ -46,7 +40,7 @@ Route::get('/merchant-form', function () {
 
 // to be removed after test
 Route::get('/test-new-merchant-email', function () {
-    $merchant = Merchant::where('id', 39)->first();
+    $merchant = Merchant::where('id', 27)->first();
     // event(new NewMerchantApplication($merchant));
     // return (new MailMessage)->markdown('emails.newmerchantresponse', compact('merchant'));
 
@@ -61,8 +55,8 @@ Route::get('/test-new-merchant-email', function () {
     // );
 
     // $user->assignRole('Merchant');
-    // event(new MerchantApplicationApprove($user, $link));
-    return (new MailMessage)->markdown('emails.merchantrejected', compact('merchant'));
+    event(new MerchantApplicationApprove($merchant));
+    return (new MailMessage)->markdown('emails.merchantapproved', compact('merchant'));
 });
 
 // Route::get('/test-new-merchant-email', [MerchantController::class, 'testMerchantEmail']);
@@ -126,10 +120,12 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/merchants/{type?}', [MerchantController::class, 'merchants'])->name('merchants');
     Route::get('/merchant/{id}', [MerchantController::class, 'view'])->name('merchant.view');
-    Route::put('/merchant/{id}', [MerchantController::class, 'update'])->name('merchant.update');
+    Route::put('/merchant/{id?}', [MerchantController::class, 'update'])->name('merchant.update');
     Route::put('/merchant/approve/{id}', [MerchantController::class, 'approve'])->name('merchant.approve');
     Route::put('/merchant/reject/{id}', [MerchantController::class, 'reject'])->name('merchant.reject');
-    Route::get('/merchantFileDownload/{id}', [MerchantController::class, 'fileDownload'])->name('fileDownload');
+    Route::get('/merchantFileDownload/{id}', [MerchantController::class, 'fileDownload'])->name('file.download');
+    Route::post('/merchantFileUpload/{id}', [MerchantController::class, 'fileUpload'])->name('file.upload');
+    Route::get('/merchantFileView/{id}', [MerchantController::class, 'fileView'])->name('file.view');
 
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -143,6 +139,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/product/{id}', [ProductController::class, 'update'])->name('product.update');
     Route::put('/product/approve/{id}', [ProductController::class, 'approve'])->name('product.approve');
     Route::put('/product/reject/{id}', [ProductController::class, 'reject'])->name('product.reject');
+
+    Route::post('/productprofit/add_profit/{id}', [ProductProfitController::class, 'add_profit'])->name('product.addprofit');
+    Route::put('/productprofit/edit_profit/{id}', [ProductProfitController::class, 'edit_profit'])->name('product.editprofit');
 
     Route::delete('product-image/delete/{id}', [ProductImageController::class, 'delete'])->name('product_image.delete');
     Route::get('/categories', [CategoryController::class, 'categories']);

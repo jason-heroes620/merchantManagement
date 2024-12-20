@@ -3,17 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Events\MerchantApplicationApprove;
+use App\Events\MerchantApplicationReject;
 use App\Events\NewMerchantApplication;
 use App\Events\NewMerchantApplicationResponse;
 use App\Models\Merchant;
 use App\Models\MerchantType;
 use App\Models\MerchantAdditionalInfo;
 use App\Models\MerchantFiles;
+use App\Models\ProductProfit;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Exceptions;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Password;
 
@@ -69,27 +74,31 @@ class MerchantController extends Controller
                 'merchant_additional_info.company_registration',
                 'merchant_additional_info.location',
                 'merchant_type.type',
-                'merchant_type.name'
+                'merchant_type.name',
             ]);
 
         $types = MerchantType::where('status', 0)->get(['id as value', 'name as label']);
 
         $files = MerchantFiles::where('merchant_id', $req->id)->get();
         foreach ($files as $file) {
-            $file['link'] = Storage::url($file['original_file_name']);
+            $file_name = explode("/", $file['file_path']);
+            $file['link'] = Storage::url($file_name[sizeof($file_name) - 2] . "/" . $file_name[sizeof($file_name) - 1]);
+            $file['type'] = $file->fileType()->first();
         }
+        $merchant_logo = $this->getMerchantLogo($merchant['merchant_logo']);
 
         return Inertia::render('Merchants/View', [
             'merchant' => $merchant,
             'types' => $types,
             'merchant_description' => !empty($merchant['merchant_description']) ? html_entity_decode($merchant['merchant_description'], ENT_QUOTES, 'UTF-8') : '',
             'merchant_files' => $files,
+            'merchant_logo' => $merchant_logo,
         ]);
     }
 
     public function update(Merchant $merchant, MerchantAdditionalInfo $merchantInfo, Request $req): RedirectResponse
     {
-        // dd($req->input('merchant_name'));
+        // dd($req);
         $merchant->where('id', $req->id)->update([
             'merchant_type' => $req->input('merchant_type'),
             'merchant_email' => $req->input('merchant_email'),
@@ -97,6 +106,24 @@ class MerchantController extends Controller
             'person_in_charge' => $req->input('person_in_charge'),
             'merchant_description' => htmlspecialchars($req->merchant_description),
         ]);
+
+        //merchant_logo
+        $merchant_logo = "";
+        $fileUtil = new ProductController();
+        if ($req->file('merchant_logo') && count($req->file('merchant_logo')) > 0) {
+            foreach ($req->file('merchant_logo') as $file) {
+                $merchant_logo = storage_path('app/public/merchantLogos');
+                $file_name = $fileUtil->randomFileNameGenerator(
+                    15,
+                    $fileUtil->getFileExtension($file->getClientOriginalName())
+                );
+                $file->move($merchant_logo, $file_name);
+
+                Merchant::where('id', $req->id)->update([
+                    'merchant_logo' => $merchant_logo . '/' . $file_name,
+                ]);
+            }
+        }
 
         $merchantInfo->where('merchant_id', $req->id)->update([
             'web' => $req->input('web'),
@@ -121,6 +148,24 @@ class MerchantController extends Controller
             ),
         ]);
 
+        //merchant_logo
+        $merchant_logo = "";
+        $fileUtil = new ProductController();
+        if ($req->file('merchant_logo') && count($req->file('merchant_logo')) > 0) {
+            foreach ($req->file('merchant_logo') as $file) {
+                $merchant_logo = storage_path('app/public/merchantLogos');
+                $file_name = $fileUtil->randomFileNameGenerator(
+                    15,
+                    $fileUtil->getFileExtension($file->getClientOriginalName())
+                );
+                $file->move($merchant_logo, $file_name);
+
+                Merchant::where('id', $merchant->id)->update([
+                    'merchant_logo' => $merchant_logo . '/' . $file_name,
+                ]);
+            }
+        }
+
         MerchantAdditionalInfo::create([
             'merchant_id' => $merchant->id,
             'web' => $req->input('website'),
@@ -132,7 +177,7 @@ class MerchantController extends Controller
 
         if (!empty($req->file('companyRegistrationForm'))) {
             $file = $req->file('companyRegistrationForm');
-            $path = storage_path('app/public/companyRegistrationForm');
+            $path = storage_path('app/public/merchantFiles');
             $file->move($path, $req->file('companyRegistrationForm')->getClientOriginalName());
 
             MerchantFiles::create([
@@ -150,18 +195,29 @@ class MerchantController extends Controller
 
     public function approve(Merchant $merchant, Request $req): RedirectResponse
     {
-        $merchant->where('id', $req->id)->update([
-            'status' => 0,
-        ]);
+        try {
+            $info = Merchant::find($req->id);
+            $password = Str::random(10);
 
-        $info = Merchant::where('id', $req->id)->first();
+            $user = User::create([
+                'name' => $info->person_in_charge,
+                'email' => $info->merchant_email,
+                'password' => $password,
+                'merchant_id' => $req->id
+            ]);
 
-        $password = Str::random(10);
-        $user = User::create([
-            'name' => $info->person_in_charge,
-            'email' => $info->merchant_email,
-            'password' => $password
-        ]);
+            $new_merchant = new JourneyMerchantController;
+            $id = $new_merchant->create($info);
+
+            $merchant->where('id', $req->id)->update([
+                'status' => 0,
+                'manufacturer_id' => $id
+            ]);
+        } catch (QueryException $e) {
+            Log::info($e);
+            return
+                Redirect::back()->with(['failed' => "A merchant with the email account already exists. Please use another email."]);
+        }
 
         $user->assignRole('Merchant');
         event(new MerchantApplicationApprove($info));
@@ -177,15 +233,52 @@ class MerchantController extends Controller
             'status' => 2,
         ]);
 
+        $info = Merchant::find($req->id);
+        event(new MerchantApplicationReject($info));
         return Redirect::back()->with(['success' => "Merchant Rejected"]);
     }
 
     public function fileDownload(Request $req)
     {
         $file = MerchantFiles::where('id', $req->id)->first();
+        $file_name = explode('/', $file['file_path']);
         return response()->download(
-            public_path('storage/companyRegistrationForm/' . $file['original_file_name'], $file['original_file_name'])
+            public_path("storage/merchantFiles/" . $file_name[sizeof($file_name) - 1])
         );
+    }
+
+    public function fileView(Request $req)
+    {
+        $file = MerchantFiles::where('id', $req->id)->first();
+        $file_name = explode('/', $file['file_path']);
+        // return response()->file(public_path("storage/merchantFiles/" . $file_name[sizeof($file_name) - 1]));
+        $fileMimeType = Storage::mimeType($file["file_path"]);
+
+        return response(storage_path("storage/merchantFiles/" . $file_name[sizeof($file_name) - 1]), 200)
+            ->header('Content-Type', $fileMimeType);
+    }
+
+    public function fileUpload(Request $req)
+    {
+        $product = new ProductController();
+        if ($req->file('files') && count($req->file('files')) > 0) {
+            foreach ($req->file('files') as $file) {
+                $file_path = storage_path('app/public/merchantFiles');
+                $file_name = $product->randomFileNameGenerator(
+                    15,
+                    $product->getFileExtension($file->getClientOriginalName())
+                );
+                $file->move($file_path, $file_name);
+
+                MerchantFiles::create([
+                    'merchant_id' => $req->id,
+                    'original_file_name' => $file->getClientOriginalName(),
+                    'file_path' => $file_path . '/' . $file_name,
+                    'file_type_id' => 2
+                ]);
+            }
+        }
+        return redirect()->back()->with(['success' => "File(s) uploaded"]);
     }
 
     public function testMerchantEmail()
@@ -195,5 +288,12 @@ class MerchantController extends Controller
 
         // event(new NewMerchantApplication($merchant));
         event(new NewMerchantApplicationResponse($merchant));
+    }
+
+    private function getMerchantLogo($location)
+    {
+        $file_name = explode('/', $location);
+        $image['url'] = asset('storage/merchantLogos/' . $file_name[sizeof($file_name) - 1]);
+        return $image['url'];
     }
 }

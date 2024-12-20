@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Models\Frequency;
 use App\Models\ProductDetail;
 use App\Models\ProductImage;
+use App\Models\ProductProfit;
 
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -28,11 +29,11 @@ class ProductController extends Controller
             $newProducts = Product::with('merchant')->where('status', 1)->paginate(10);
             $products = Product::with('merchant')->where('status', 0)->paginate(10);
         } else {
-            $rejectedProducts = Product::where('merchant_id', $user->id)->with('merchant')
+            $rejectedProducts = Product::where('merchant_id', $user->merchant_id)->with('merchant')
                 ->where('status', 2)->paginate(10);
-            $newProducts = Product::where('merchant_id', $user->id)->with('merchant')
+            $newProducts = Product::where('merchant_id', $user->merchant_id)->with('merchant')
                 ->where('status', 1)->paginate(10);
-            $products = Product::where('merchant_id', $user->id)->with('merchant')
+            $products = Product::where('merchant_id', $user->merchant_id)->with('merchant')
                 ->where('status', 0)->paginate(10);
         }
         // dd($events);
@@ -50,7 +51,7 @@ class ProductController extends Controller
         $user = $req->user();
 
         if ($req->isMethod('get')) {
-            $categories = $this->getProductData();
+            $categories = $this->getProductCategories();
             $frequency = Frequency::orderBy('sort_order', 'ASC')->get(['id as value', 'frequency as label']);
 
             return Inertia::render('Products/CreateProduct', [
@@ -59,16 +60,37 @@ class ProductController extends Controller
             ]);
         } else {
             $product = Product::create([
-                'merchant_id' => $user->id,
+                'merchant_id' => $user->merchant_id,
                 'product_name' => $req->input('product_name'),
                 'product_description' => html_entity_decode(
                     $req->input('product_description'),
                     ENT_QUOTES,
                     'UTF-8'
                 ),
+                'product_activities' => html_entity_decode(
+                    $req->input('product_activities'),
+                    ENT_QUOTES,
+                    'UTF-8'
+                ),
                 'age_group' => $req->input('age_group'),
                 'category_id' => $req->input('category_id'),
             ]);
+
+            $main_image_path = "";
+            if ($req->file('main_image') && count($req->file('main_image')) > 0) {
+                foreach ($req->file('main_image') as $file) {
+                    $main_image_path = storage_path('app/public/productImages');
+                    $file_name = $this->randomFileNameGenerator(
+                        15,
+                        $this->getFileExtension($file->getClientOriginalName())
+                    );
+                    $file->move($main_image_path, $file_name);
+
+                    Product::where('id', $product->id)->update([
+                        'product_image' => $main_image_path . '/' . $file_name,
+                    ]);
+                }
+            }
 
             $week_time = [];
             $index = 0;
@@ -117,23 +139,24 @@ class ProductController extends Controller
             if ($req->file('images') && count($req->file('images')) > 0) {
                 foreach ($req->file('images') as $file) {
                     $path = storage_path('app/public/productImages');
-                    $file->move($path, $file->getClientOriginalName());
-
+                    $file_name = $this->randomFileNameGenerator(15, $this->getFileExtension($file->getClientOriginalName()));
+                    $file->move($path, $file_name);
                     ProductImage::create([
                         'product_id' => $product->id,
-                        'image_path' => $path,
+                        'image_path' => $path . '/' . $file_name,
                         'original_file_name' => $file->getClientOriginalName()
                     ]);
                 }
             }
 
-            return redirect()->back()->with(['success' => "Product Created"]);
+            return redirect()->route('products')->with(['success' => "Product Created"]);
         }
     }
 
     public function update(Request $req, Product $product, ProductDetail $productDetail)
     {
         $user = $req->user();
+
         $product->where('id', $req->id)->update([
             'product_name' => $req->product_name,
             'product_description' => html_entity_decode(
@@ -141,9 +164,30 @@ class ProductController extends Controller
                 ENT_QUOTES,
                 'UTF-8'
             ),
+            'product_activities' => html_entity_decode(
+                $req->product_activities,
+                ENT_QUOTES,
+                'UTF-8'
+            ),
             'age_group' => $req->age_group,
             'category_id' => $req->category_id,
         ]);
+
+        $main_image_path = "";
+        if ($req->file('main_image') && count($req->file('main_image')) > 0) {
+            foreach ($req->file('main_image') as $file) {
+                $main_image_path = storage_path('app/public/productImages');
+                $file_name = $this->randomFileNameGenerator(
+                    15,
+                    $this->getFileExtension($file->getClientOriginalName())
+                );
+                $file->move($main_image_path, $file_name);
+
+                Product::where('id', $req->id)->update([
+                    'product_image' => $main_image_path . '/' . $file_name,
+                ]);
+            }
+        }
 
         $week_time = [];
         $index = 0;
@@ -191,17 +235,20 @@ class ProductController extends Controller
         if ($req->file('images') && count($req->file('images')) > 0) {
             foreach ($req->file('images') as $file) {
                 $path = storage_path('app/public/productImages');
-                $file->move($path, $file->getClientOriginalName());
 
+                $file_name = $this->randomFileNameGenerator(15, $this->getFileExtension($file->getClientOriginalName()));
+                $file->move($path, $file_name);
                 ProductImage::create([
                     'product_id' => $req->id,
-                    'image_path' => $path,
+                    'image_path' => $path . '/' . $file_name,
                     'original_file_name' => $file->getClientOriginalName()
                 ]);
             }
         }
 
-        return redirect()->back()->with(['success' => "Product Updated"]);
+        return redirect()->back()->with([
+            'success' => "Product Updated",
+        ]);
     }
 
     public function newProduct()
@@ -215,7 +262,7 @@ class ProductController extends Controller
         ]);
     }
 
-    private function getProductData()
+    private function getProductCategories()
     {
         $categories = (new CategoryController)->categories();
         return $categories;
@@ -225,14 +272,10 @@ class ProductController extends Controller
     {
         $product = Product::with('merchant')->find($req->id);
         $product_detail = ProductDetail::where('product_id', $req->id)->first();
-        $product_images = ProductImage::where('product_id', $req->id)->get();
-        $categories = $this->getProductData();
+        $product_images = $this->getAdditionalProductImages($req->id);
+        $categories = $this->getProductCategories();
         $frequency = Frequency::orderBy('sort_order', 'ASC')->get(['id as value', 'frequency as label']);
         $product['product_detail'] = $product_detail;
-
-        foreach ($product_images as $p) {
-            $p['url'] = asset('storage/productImages/' . $p['original_file_name']);
-        }
 
         $week_time = [];
         $week_time[0]['index'] = 0;
@@ -259,12 +302,22 @@ class ProductController extends Controller
 
         $product['week_time'] = $week_time;
 
+        $merchant_profit = new ProductProfit();
+        $profit_types = $merchant_profit->getProfitTypes();
+
+        $profit_info = ProductProfit::where('product_id', $req->id)->orderBy('end_date', 'desc')->get();
+
+        $main_image = $this->getMainImage($req->id);
         return Inertia::render('Products/View', [
             'product' => $product,
             'product_description' => html_entity_decode($product['product_description'], ENT_QUOTES, 'UTF-8'),
+            'product_activities' => html_entity_decode($product['product_activities'], ENT_QUOTES, 'UTF-8'),
             'categories' => $categories,
             'frequency' => $frequency,
             'images' => $product_images,
+            'product_main_image' => $main_image,
+            'profit_types' => $profit_types,
+            'profit_info' => $profit_info,
         ]);
     }
 
@@ -285,5 +338,34 @@ class ProductController extends Controller
         ]);
 
         return redirect()->back()->with(['success' => "Product Rejected"]);
+    }
+
+    private function getAdditionalProductImages($product_id)
+    {
+        $images = ProductImage::where('product_id', $product_id)->get();
+        foreach ($images as $p) {
+            $file_name = explode('/', $p['image_path']);
+            $p['url'] = asset('storage/productImages/' . $file_name[sizeof($file_name) - 1]);
+        }
+        return $images;
+    }
+
+    private function getMainImage($product_id)
+    {
+        $image = Product::where('id', $product_id)->first()->only(['product_image']);
+        $file_name = explode('/', $image['product_image']);
+        $image['url'] = asset('storage/productImages/' . $file_name[sizeof($file_name) - 1]);
+        return $image['url'];
+    }
+
+    public function getFileExtension($file)
+    {
+        $extension = explode(".", $file);
+        return end($extension);
+    }
+
+    public function randomFileNameGenerator($length, $extension)
+    {
+        return substr(str_shuffle(str_repeat($x = '0123456789abcdefghijklmnopqrstuvwxyz', ceil($length / strlen($x)))), 1, $length) . '.' . $extension;
     }
 }

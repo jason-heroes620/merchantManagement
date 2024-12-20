@@ -10,15 +10,48 @@ import RichTextEditor from "@/Components/RichTextEditor";
 import { ToastContainer, toast } from "react-toastify";
 import { useState, useEffect } from "react";
 import MerchantFileList from "@/Components/Merchant/MerchantFileList";
+import MerchantProfitTable from "./MerchantProfitTable";
+import dayjs from "dayjs";
+import {
+    DatePicker,
+    TimePicker,
+    DatePickerProps,
+    TimePickerProps,
+    Space,
+} from "antd";
+import type { GetProps } from "antd";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+import { useObjectUrls } from "@/utils/getObjectUrls";
 
 import "react-toastify/dist/ReactToastify.css";
 
+type RangePickerProps = GetProps<typeof DatePicker.RangePicker>;
+
+dayjs.extend(customParseFormat);
+
+const { RangePicker } = DatePicker;
+
+const range = (start: number, end: number) => {
+    const result = [];
+    for (let i = start; i < end; i++) {
+        result.push(i);
+    }
+    return result;
+};
+
 const View = ({ auth, flash }: any) => {
     const [merchantAbout, setMerchantAbout] = useState("");
-    const { merchant, types, merchant_description, merchant_files } = usePage<{
+    const {
+        merchant,
+        types,
+        merchant_description,
+        merchant_files,
+        merchant_logo,
+    } = usePage<{
         merchant: any;
         types: [];
         merchant_description: any;
+        merchant_logo: string;
     }>().props;
 
     const { data, setData, post, put, processing, errors, reset } = useForm({
@@ -33,25 +66,46 @@ const View = ({ auth, flash }: any) => {
         instagram: merchant.instagram || "",
         merchant_type: merchant.merchant_type,
         location: merchant.location || "",
+        merchant_logo: [],
         company_registration: merchant.company_registration || "",
+        ic_no: merchant.ic_no || "",
         _method: "put",
     });
+
+    const getObjectUrl = useObjectUrls();
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (confirm("Confirm to update?")) {
-            e.preventDefault();
-
             // NOTE: We are using POST method here, not PUT/PATCH. See comment above.
-            put(route("merchant.update", merchant.merchant_id));
+            post(route("merchant.update", merchant.id), {
+                forceFormData: true,
+                preserveState: false,
+                method: "put",
+            });
         }
     };
 
     useEffect(() => {
         if (flash.message.success) {
             toast.success(flash.message.success);
+        } else if (flash.message.failed) {
+            toast.error(flash.message.failed);
         }
-    }, [flash]);
+    }, [flash, merchant.status]);
+
+    const handleMainFileUpload = (e) => {
+        const files: File[] = Array.from(e.target.files || []);
+        var canUpload = true;
+        files.map((f: File) => {
+            f.size > 1048576 ? (canUpload = false) : "";
+        });
+        if (canUpload) {
+            setData("merchant_logo", [...e.target.files]);
+        } else {
+            alert("1 or more files exceed the upload limit.");
+        }
+    };
 
     return (
         <AuthenticatedLayout
@@ -185,7 +239,7 @@ const View = ({ auth, flash }: any) => {
                                                             e.target.value
                                                         )
                                                     }
-                                                    // required
+                                                    required
                                                 />
                                             </div>
                                         </div>
@@ -236,6 +290,49 @@ const View = ({ auth, flash }: any) => {
                                         </div>
                                         {merchant.type === "learningCenter" ? (
                                             <div>
+                                                <div className="grid py-2 grid-flow-row-dense gap-6 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
+                                                    <div className="flex items-center md:col-span-1 lg:col-span-2">
+                                                        <InputLabel
+                                                            htmlFor="images"
+                                                            value="Company Logo"
+                                                            className="pb-2"
+                                                        />
+                                                    </div>
+                                                    <div className="flex flex-col md:col-span-5 lg:col-span-10">
+                                                        <input
+                                                            type="file"
+                                                            accept=".png,.jpg,.jpeg"
+                                                            onChange={(e) => {
+                                                                handleMainFileUpload(
+                                                                    e
+                                                                );
+                                                            }}
+                                                        />
+                                                        <small>
+                                                            (supported formats
+                                                            .png, .jpg. Image
+                                                            should not be more
+                                                            than 2 MB)
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                <div className="grid py-2 grid-flow-row-dense gap-6 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
+                                                    <div className="flex items-center md:col-span-1 lg:col-span-2"></div>
+                                                    {merchant_logo && (
+                                                        <div className="flex flex-row gap-4 py-2">
+                                                            <img
+                                                                src={
+                                                                    merchant_logo
+                                                                }
+                                                                alt={
+                                                                    merchant_logo
+                                                                }
+                                                                width={80}
+                                                                height={"auto"}
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </div>
                                                 <div className="grid py-2 grid-flow-row-dense gap-6 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
                                                     <div className="flex items-center md:col-span-1 lg:col-span-2">
                                                         <InputLabel
@@ -290,7 +387,32 @@ const View = ({ auth, flash }: any) => {
                                                 </div>
                                             </div>
                                         ) : (
-                                            ""
+                                            <div>
+                                                <div className="grid py-2 grid-flow-row-dense gap-6 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
+                                                    <div className="flex items-center md:col-span-1 lg:col-span-2">
+                                                        <InputLabel
+                                                            htmlFor="icNo"
+                                                            value="Identification No."
+                                                        />
+                                                    </div>
+                                                    <div className="flex md:col-span-5 lg:col-span-10">
+                                                        <TextInput
+                                                            id="icNo"
+                                                            name="ic_no"
+                                                            value={data.ic_no}
+                                                            className="mt-1 block w-full"
+                                                            autoComplete="icNo"
+                                                            onChange={(e) =>
+                                                                setData(
+                                                                    "ic_no",
+                                                                    e.target
+                                                                        .value
+                                                                )
+                                                            }
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
                                         )}
                                         <div className="grid py-2 grid-flow-row-dense gap-6 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
                                             <div className="flex items-center md:col-span-1 lg:col-span-2">
@@ -362,9 +484,11 @@ const View = ({ auth, flash }: any) => {
                                                 />
                                             </div>
                                         </div>
+
                                         {merchant.type === "learningCenter" ? (
                                             <div>
                                                 <MerchantFileList
+                                                    merchant_id={merchant.id}
                                                     data={merchant_files}
                                                 />
                                             </div>

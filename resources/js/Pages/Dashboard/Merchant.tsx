@@ -9,7 +9,7 @@ const Merchant = ({ product }) => {
                     <DashboardCard
                         header={"Product"}
                         content={product[0]?.count}
-                        type={"New"}
+                        type={"Pending"}
                         links={["products", 0]}
                     />
                 </div>

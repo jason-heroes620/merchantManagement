@@ -26,6 +26,7 @@ const Tabs = (props: Props): JSX.Element => {
                         index={index}
                         isActive={index === selectedTabIndex}
                         setSelectedTab={setSelectedTabIndex}
+                        disabled={item.props.disabled}
                     />
                 ))}
             </ul>

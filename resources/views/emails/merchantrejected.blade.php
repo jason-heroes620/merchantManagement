@@ -36,7 +36,7 @@
 
 <body style="flex: 1; padding-top: 100px; width: 100%; background-color: grey">
     <div style="flex: 1; justify-content: center; background-color: white; padding: 6px 10px 6px 10px" class="w-screen">
-        <img src="{{asset('images/heroes-logo.png')}}" alt="" style="padding-top: 20px; padding-bottom: 20px; width: 140px; margin-left: auto; margin-right: auto; display: block">
+        <img src="https://heroes.my/img/heroes-logo.png" alt="" style="padding-top: 20px; padding-bottom: 20px; width: 140px; margin-left: auto; margin-right: auto; display: block">
 
         <table style="table-layout: auto; width: 100%;">
             <tr>

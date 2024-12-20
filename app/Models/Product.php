@@ -20,6 +20,8 @@ class Product extends Model
         'category_id',
         'age_group',
         'product_description',
+        'product_activities',
+        'product_image',
         'status',
         'reject_comment'
     ];

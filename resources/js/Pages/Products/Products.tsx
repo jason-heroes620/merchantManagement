@@ -1,19 +1,31 @@
+import { useEffect } from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, usePage } from "@inertiajs/react";
 import { PageProps } from "@/types";
-
+import { Toaster } from "@/Components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
 import { PaginatedData, Product } from "@/types";
 import Tabs from "@/Components/Tabs/Tabs";
 import Tab from "@/Components/Tabs/Tab";
 import ProductTab from "@/Components/Tabs/ProductTab";
 
-const Products = ({ auth }: PageProps) => {
+const Products = ({ auth, flash }: PageProps) => {
+    const { toast } = useToast();
+
     const { newProducts, products, rejectedProducts, role, type } = usePage<{
         newProducts: PaginatedData<Product>;
         products: PaginatedData<Product>;
         rejectedProducts: PaginatedData<Product>;
         type: string;
     }>().props;
+
+    useEffect(() => {
+        if (flash.message.success) {
+            toast({
+                description: flash.message.success,
+            });
+        }
+    }, [flash]);
 
     const index = type === "Current" ? 1 : type === "Rejected" ? 2 : 0;
     return (
@@ -26,6 +38,7 @@ const Products = ({ auth }: PageProps) => {
             }
         >
             <Head title="Products" />
+            <Toaster />
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">

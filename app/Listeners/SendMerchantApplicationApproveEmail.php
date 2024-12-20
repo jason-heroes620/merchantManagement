@@ -24,6 +24,7 @@ class SendMerchantApplicationApproveEmail
      */
     public function handle(MerchantApplicationApprove $event): void
     {
+        // dd($event->merchant['merchant_email']);
         Log::info('Merchant approved mail sent to ' . $event->merchant['merchant_email']);
         $emails = [$event->merchant['merchant_email'], 'merchant.approve@heroes.my'];
         Mail::to($emails)->send(new MerchantApplicationApproveEmail($event->merchant));

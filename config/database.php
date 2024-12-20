@@ -70,7 +70,7 @@ return [
             'unix_socket' => env('JOURNEY_DB_SOCKET', ''),
             'charset' => env('JOURNEY_DB_CHARSET', 'utf8mb4'),
             'collation' => env('JOURNEY_DB_COLLATION', 'utf8mb4_unicode_ci'),
-            'prefix' => env('JOURNEY_PREFIX', ''),
+            'prefix' => env('JOURNEY_PREFIX', 'oc_'),
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,

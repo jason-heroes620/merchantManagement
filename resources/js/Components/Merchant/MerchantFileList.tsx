@@ -1,11 +1,38 @@
-import React from "react";
+import { useState } from "react";
+import { router, Link } from "@inertiajs/react";
 import Table from "../Table/Table";
 import { Trash2 } from "lucide-react";
-import { Link } from "@inertiajs/react";
+import InputLabel from "../InputLabel";
+import { Button } from "../ui/button";
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "../ui/dialog";
+import { Upload } from "lucide-react";
+
 import axios from "axios";
 
-const MerchantFileList = ({ data }: any) => {
-    const { original_file_name, deleted_at } = data;
+const MerchantFileList = ({ merchant_id, data }: any) => {
+    const [files, setFiles] = useState<File[]>([]);
+
+    const handleFileUpload = (e) => {
+        const files: File[] = Array.from(e.target.files || []);
+        var canUpload = true;
+        files.map((f: File) => {
+            f.size > 2097152 ? (canUpload = false) : "";
+        });
+        if (canUpload) {
+            setFiles(files);
+        } else {
+            alert("1 or more files exceeded the upload limit.");
+        }
+    };
 
     const downloadFile = async (id, fileName) => {
         try {
@@ -15,7 +42,6 @@ const MerchantFileList = ({ data }: any) => {
                 method: "GET",
                 responseType: "blob", // Important for downloading files
             });
-
             // Create a link to download the file
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement("a");
@@ -23,7 +49,6 @@ const MerchantFileList = ({ data }: any) => {
             link.setAttribute("download", fileName); // The name of the file
             document.body.appendChild(link);
             link.click();
-
             // Clean up the link
             link.remove();
         } catch (error) {
@@ -31,9 +56,63 @@ const MerchantFileList = ({ data }: any) => {
         }
     };
 
+    const handleUpload = (e) => {
+        e.preventDefault();
+        if (files) {
+            router.post(
+                `/merchantFileUpload/${merchant_id}`,
+                {
+                    files: files,
+                },
+                {
+                    forceFormData: true,
+                    preserveState: false,
+                }
+            );
+        }
+    };
+
     return (
-        <div>
-            <div className="pt-4">
+        <div className="py-4">
+            <hr />
+            <div className="flex justify-end pt-4">
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <Button className="gap-2">
+                            <Upload size={16} /> Add File
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Upload File(s)</DialogTitle>
+                        </DialogHeader>
+                        <DialogDescription></DialogDescription>
+                        <div>
+                            <input
+                                type="file"
+                                multiple
+                                accept=".pdf, .jpg, .jped, .png"
+                                onChange={(e) => {
+                                    handleFileUpload(e);
+                                }}
+                            />
+                            <InputLabel
+                                htmlFor="file"
+                                value="(supported formats .pdf, .png, .jpg. File(s) should not be more than 2 MB)"
+                                className="pt-2"
+                            />
+                        </div>
+                        <div className="flex justify-end py-2">
+                            <Button onClick={handleUpload} className="gap-2">
+                                <Upload size={16} />
+                                Upload
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            </div>
+
+            <div className="pt-2">
                 {data && (
                     <div>
                         <Table
@@ -58,7 +137,7 @@ const MerchantFileList = ({ data }: any) => {
                                     name: "type",
                                     renderCell: (row: any) => (
                                         <>
-                                            <>{row.file_type}</>
+                                            <>{row.type.file_type_name}</>
                                             {row.deleted_at && (
                                                 <Trash2
                                                     size={16}
@@ -71,9 +150,21 @@ const MerchantFileList = ({ data }: any) => {
                                 {
                                     label: "",
                                     name: "download",
+
                                     renderCell: (row: any) => (
                                         <>
-                                            <>
+                                            <div className="flex flex-row gap-2">
+                                                <button
+                                                    className="border text-sm border-black py-2 px-4 rounded-md hover:bg-black hover:text-white"
+                                                    onClick={() =>
+                                                        window.open(
+                                                            row.link,
+                                                            "_blank"
+                                                        )
+                                                    }
+                                                >
+                                                    View
+                                                </button>
                                                 <button
                                                     className="border text-sm border-black py-2 px-4 rounded-md hover:bg-black hover:text-white"
                                                     onClick={() =>
@@ -85,7 +176,7 @@ const MerchantFileList = ({ data }: any) => {
                                                 >
                                                     Download
                                                 </button>
-                                            </>
+                                            </div>
                                         </>
                                     ),
                                 },
