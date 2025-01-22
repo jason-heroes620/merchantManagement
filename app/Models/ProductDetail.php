@@ -17,8 +17,6 @@ class ProductDetail extends Model
     public $timestamps = false;
     protected $fillable = [
         'product_id',
-        'location',
-        'price',
         'google_map_location',
         'min_quantity',
         'quantity',

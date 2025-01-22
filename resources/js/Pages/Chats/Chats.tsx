@@ -11,6 +11,7 @@ import {
     MessageList,
     MessageHeader,
 } from "@minchat/react-chat-ui";
+import { Button } from "@/Components/ui/button";
 
 var ably = new Ably.Realtime({
     key: import.meta.env.VITE_ABLY_KEY,
@@ -52,7 +53,6 @@ const Chats = ({ auth }: PageProps) => {
 
     const subscribe = async () => {
         channel.subscribe("AblyMessageEvent", (message) => {
-            console.log("subscribed To Channel => ", message.data);
             setAllMessages((prevAllMessages: any) => [
                 ...prevAllMessages,
                 JSON.parse(message.data),
@@ -78,13 +78,14 @@ const Chats = ({ auth }: PageProps) => {
             header={
                 <div className="flex flex-row gap-8">
                     <div>
-                        <Link
-                            href={route("chatrooms")}
-                            onClick={() => channel.unsubscribe("message")}
-                            className="text-indigo-600 hover:text-white border rounded-md hover:bg-red-800 py-2 px-4"
-                        >
-                            Back
-                        </Link>
+                        <Button variant="destructive">
+                            <Link
+                                href={route("chatrooms")}
+                                onClick={() => channel.unsubscribe("message")}
+                            >
+                                Back
+                            </Link>
+                        </Button>
                     </div>
                     <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight"></h2>
                 </div>

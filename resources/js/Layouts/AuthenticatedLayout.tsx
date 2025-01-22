@@ -68,6 +68,30 @@ export default function Authenticated({
                                         Chats
                                     </NavLink>
                                 )}
+                                {user.roles.find((u) => u === "admin") && (
+                                    <>
+                                        <NavLink
+                                            href={route("schools")}
+                                            active={route().current("schools")}
+                                        >
+                                            Schools
+                                        </NavLink>
+                                        <NavLink
+                                            href={route("quotations")}
+                                            active={route().current(
+                                                "quotations"
+                                            )}
+                                        >
+                                            Quotations
+                                        </NavLink>
+                                        <NavLink
+                                            href={route("invoices")}
+                                            active={route().current("invoices")}
+                                        >
+                                            Invoices
+                                        </NavLink>
+                                    </>
+                                )}
                             </div>
                         </div>
 

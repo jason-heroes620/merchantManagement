@@ -11,6 +11,8 @@ interface ImportMetaEnv {
     readonly VITE_PUSHER_APP_CLUSTER: string;
 
     readonly VITE_ABLY_KEY: string;
+
+    readonly VITE_GOOGLE_KEY: string;
 }
 
 interface ImportMeta {

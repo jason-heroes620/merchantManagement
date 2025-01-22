@@ -1,13 +1,13 @@
 import { useEffect } from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, usePage } from "@inertiajs/react";
-import { PageProps } from "@/types";
 import { Toaster } from "@/Components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
-import { PaginatedData, Product } from "@/types";
+import { PageProps, PaginatedData, Product } from "@/types";
 import Tabs from "@/Components/Tabs/Tabs";
 import Tab from "@/Components/Tabs/Tab";
 import ProductTab from "@/Components/Tabs/ProductTab";
+import { Button } from "@/Components/ui/button";
 
 const Products = ({ auth, flash }: PageProps) => {
     const { toast } = useToast();
@@ -48,10 +48,18 @@ const Products = ({ auth, flash }: PageProps) => {
                                 <Link
                                     href={route("product.form")}
                                     type="button"
-                                    className="py-2 px-4 border bg-green-600 hover:bg-green-800 text-white font-bold text-sm rounded-md"
+                                    className="py-2 px-4 border bg-green-800 hover:bg-green-800/60 text-white font-bold text-sm rounded-md"
                                 >
                                     Create Product
                                 </Link>
+                                {/* <Button
+                                    variant="primary"
+                                    onClick={() => {
+                                        route("product.form");
+                                    }}
+                                >
+                                    create
+                                </Button> */}
                             </div>
                             <div>
                                 <Tabs preSelectedTabIndex={index}>

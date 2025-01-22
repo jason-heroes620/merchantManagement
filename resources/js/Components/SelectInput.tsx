@@ -26,7 +26,7 @@ export default function SelectInput({
                     : ""
             }`}
         >
-            <option key={0} value="0">
+            <option key={""} value="">
                 Choose
             </option>
             {options?.map(({ value, label }, index) => (

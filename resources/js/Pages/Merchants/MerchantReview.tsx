@@ -10,6 +10,7 @@ import { ToastContainer, toast } from "react-toastify";
 import { useState, useEffect } from "react";
 
 import "react-toastify/dist/ReactToastify.css";
+import { Button } from "@/Components/ui/button";
 
 const MerchantReview = ({ auth, flash }: PageProps) => {
     const [merchantAbout, setMerchantAbout] = useState("");
@@ -53,12 +54,9 @@ const MerchantReview = ({ auth, flash }: PageProps) => {
             header={
                 <div className="flex flex-row gap-8">
                     <div>
-                        <Link
-                            href={route("merchants")}
-                            className="text-indigo-600 hover:text-white border rounded-md hover:bg-red-800 py-2 px-4"
-                        >
-                            Back
-                        </Link>
+                        <Button asChild variant="destructive">
+                            <Link href={route("merchants")}>Back</Link>
+                        </Button>
                     </div>
                     <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                         Merchant

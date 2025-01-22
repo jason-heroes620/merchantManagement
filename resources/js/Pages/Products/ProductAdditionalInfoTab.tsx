@@ -35,8 +35,8 @@ const ProductAdditionalInfoTab = ({ id, profit_info, profit_types, role }) => {
     const [profit, setProfit] = useState({
         profit_type: "",
         profit_value: "",
-        start_date: "",
-        end_date: "",
+        start_date: dayjs().format("YYYY-MM-DD"),
+        end_date: dayjs().add(1, "year").format("YYYY-MM-DD"),
     });
 
     useEffect(() => {}, [profit_info]);
@@ -129,9 +129,21 @@ const ProductAdditionalInfoTab = ({ id, profit_info, profit_types, role }) => {
                             <div className="flex md:col-span-5 lg:col-span-10">
                                 <Space direction="vertical" size={12}>
                                     <RangePicker
-                                        onCalendarChange={(v) =>
-                                            onDateTimeChange(v)
+                                        onCalendarChange={(
+                                            date,
+                                            dateString,
+                                            info
+                                        ) =>
+                                            onDateTimeChange(
+                                                date,
+                                                dateString,
+                                                info
+                                            )
                                         }
+                                        defaultValue={[
+                                            dayjs(),
+                                            dayjs().add(1, "year"),
+                                        ]}
                                         format="DD/MM/YYYY"
                                     />
                                 </Space>

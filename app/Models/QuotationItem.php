@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Role extends \Spatie\Permission\Models\Role
+class QuotationItem extends Model
 {
     use HasFactory;
 
-    const ROLE_ADMINISTRATOR = 1;
-    const ROLE_MERCHANT = 2;
-    const ROLE_SCHOOL = 3;
+    protected $connection = 'trip';
+    protected $table = "quotation_item";
+    public $timestamps = false;
 }

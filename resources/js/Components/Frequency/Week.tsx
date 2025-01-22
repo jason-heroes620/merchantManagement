@@ -9,7 +9,7 @@ import InputLabel from "../InputLabel";
 import { TimePicker, TimePickerProps, DatePicker, DatePickerProps } from "antd";
 import type { GetProps } from "antd";
 import dayjs from "dayjs";
-import { GiConsoleController } from "react-icons/gi";
+import Checkbox from "../Checkbox";
 
 type RangePickerProps = GetProps<typeof DatePicker.RangePicker>;
 
@@ -78,7 +78,21 @@ const Week = ({
     onWeekStartTimeChange,
     onWeekEndTimeChange,
     values,
+    frequency,
 }) => {
+    const [sameTime, setSameTime] = useState(false);
+
+    const onStartTimeChange = (e) => {
+        days.map((d) => {
+            onWeekStartTimeChange(d.index, e);
+        });
+    };
+
+    const onEndTimeChange = (e) => {
+        days.map((d) => {
+            onWeekEndTimeChange(d.index, e);
+        });
+    };
     return (
         <div className="border rounded-sm py-4 px-4">
             <div className="flex flex-row gap-6">
@@ -105,74 +119,113 @@ const Week = ({
                         }
                     />
                 </div>
+                <div className="flex items-center">
+                    {frequency === "1" && (
+                        <div className="flex flex-row items-center gap-2">
+                            <Checkbox
+                                name="sametime"
+                                checked={sameTime}
+                                onChange={() => setSameTime(!sameTime)}
+                            />
+
+                            <span>Same time for everyday</span>
+                        </div>
+                    )}
+                </div>
             </div>
-            <Accordion type="multiple" className="w-full py-4">
-                {days.map((d) => {
-                    return (
-                        <AccordionItem value={d.short} key={d.short}>
-                            <AccordionTrigger
-                                style={{
-                                    backgroundColor: "lightgray",
-                                    padding: 10,
-                                }}
-                            >
-                                {d.day}
-                            </AccordionTrigger>
-                            <AccordionContent>
-                                <div className="flex flex-row gap-6 px-4 py-2">
-                                    <div>
-                                        <InputLabel>Start Time</InputLabel>
-                                        <TimePicker
-                                            format={"HH:mm"}
-                                            disabledTime={disabledTime}
-                                            onChange={(e) =>
-                                                onWeekStartTimeChange(
-                                                    d.index,
-                                                    e
-                                                )
-                                            }
-                                            defaultValue={
-                                                values.week_time[d.index]
-                                                    .start_time
-                                                    ? dayjs(
-                                                          values.event_start_date +
-                                                              " " +
-                                                              values.week_time[
-                                                                  d.index
-                                                              ].start_time
-                                                      )
-                                                    : null
-                                            }
-                                        ></TimePicker>
+            {sameTime ? (
+                <div className="flex flex-row gap-6 px-4 py-2">
+                    <div>
+                        <InputLabel>Start Time</InputLabel>
+                        <TimePicker
+                            format={"HH:mm"}
+                            disabledTime={disabledTime}
+                            onChange={(e) => onStartTimeChange(e)}
+                        />
+                    </div>
+                    <div>
+                        <InputLabel>End Time</InputLabel>
+                        <TimePicker
+                            format={"HH:mm"}
+                            disabledTime={disabledTime}
+                            onChange={(e) => onEndTimeChange(e)}
+                        />
+                    </div>
+                </div>
+            ) : (
+                <Accordion type="multiple" className="w-full py-4">
+                    {days.map((d) => {
+                        return (
+                            <AccordionItem value={d.short} key={d.short}>
+                                <AccordionTrigger
+                                    style={{
+                                        backgroundColor: "lightgray",
+                                        padding: 10,
+                                    }}
+                                >
+                                    {d.day}
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                    <div className="flex flex-row gap-6 px-4 py-2">
+                                        <div>
+                                            <InputLabel>Start Time</InputLabel>
+                                            <TimePicker
+                                                format={"HH:mm"}
+                                                disabledTime={disabledTime}
+                                                onChange={(e) =>
+                                                    onWeekStartTimeChange(
+                                                        d.index,
+                                                        e
+                                                    )
+                                                }
+                                                defaultValue={
+                                                    values.week_time[d.index]
+                                                        .start_time
+                                                        ? dayjs(
+                                                              values.event_start_date +
+                                                                  " " +
+                                                                  values
+                                                                      .week_time[
+                                                                      d.index
+                                                                  ].start_time
+                                                          )
+                                                        : null
+                                                }
+                                            ></TimePicker>
+                                        </div>
+                                        <div>
+                                            <InputLabel>End Time</InputLabel>
+                                            <TimePicker
+                                                format={"HH:mm"}
+                                                disabledTime={disabledTime}
+                                                onChange={(e) =>
+                                                    onWeekEndTimeChange(
+                                                        d.index,
+                                                        e
+                                                    )
+                                                }
+                                                defaultValue={
+                                                    values.week_time[d.index]
+                                                        .end_time
+                                                        ? dayjs(
+                                                              values.event_start_date +
+                                                                  " " +
+                                                                  values
+                                                                      .week_time[
+                                                                      d.index
+                                                                  ].end_time
+                                                          )
+                                                        : null
+                                                }
+                                            ></TimePicker>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <InputLabel>End Time</InputLabel>
-                                        <TimePicker
-                                            format={"HH:mm"}
-                                            disabledTime={disabledTime}
-                                            onChange={(e) =>
-                                                onWeekEndTimeChange(d.index, e)
-                                            }
-                                            defaultValue={
-                                                values.week_time[d.index]
-                                                    .end_time
-                                                    ? dayjs(
-                                                          values.event_start_date +
-                                                              " " +
-                                                              values.week_time[
-                                                                  d.index
-                                                              ].end_time
-                                                      )
-                                                    : null
-                                            }
-                                        ></TimePicker>
-                                    </div>
-                                </div>
-                            </AccordionContent>
-                        </AccordionItem>
-                    );
-                })}
-            </Accordion>
+                                </AccordionContent>
+                            </AccordionItem>
+                        );
+                    })}
+                </Accordion>
+            )}
         </div>
     );
 };

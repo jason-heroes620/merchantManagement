@@ -33,6 +33,7 @@ const Frequency = ({
                         onWeekStartTimeChange={onWeekStartTimeChange}
                         onWeekEndTimeChange={onWeekEndTimeChange}
                         values={values}
+                        frequency={frequency}
                     />
                 </div>
             )}

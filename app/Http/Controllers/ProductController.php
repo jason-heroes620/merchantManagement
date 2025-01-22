@@ -16,6 +16,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
 use App\Http\Controllers\CategoryController;
 
+use function PHPUnit\Framework\isEmpty;
+use function PHPUnit\Framework\isNull;
 
 class ProductController extends Controller
 {
@@ -59,6 +61,9 @@ class ProductController extends Controller
                 'frequency' => $frequency
             ]);
         } else {
+            $hours = $req->input('hours') * 60 * 60;
+            $minutes = $req->input('minutes') * 60;
+
             $product = Product::create([
                 'merchant_id' => $user->merchant_id,
                 'product_name' => $req->input('product_name'),
@@ -73,7 +78,13 @@ class ProductController extends Controller
                     'UTF-8'
                 ),
                 'age_group' => $req->input('age_group'),
+                'location' => $req->input('location'),
+                'child_price' => $req->input('child_price'),
+                'adult_price' => $req->input('adult_price'),
                 'category_id' => $req->input('category_id'),
+                'min_quantity' => $req->input('min_quantity'),
+                'max_quantity' => $req->input('max_quantity'),
+                'duration' => $hours + $minutes,
             ]);
 
             $main_image_path = "";
@@ -102,11 +113,8 @@ class ProductController extends Controller
 
             ProductDetail::create([
                 'product_id' => $product->id,
-                'location' => $req->input('location'),
-                'price' => $req->input('price'),
                 'google_map_location' => $req->input('google_map_location'),
-                'min_quantity' => $req->input('min_quantity'),
-                'quantity' => $req->input('quantity'),
+
                 'event_start_date' =>  date('Y-m-d', strtotime(str_replace('/', '-', $req->input('event_start_date')))),
                 'event_end_date' => date(
                     'Y-m-d',
@@ -156,6 +164,8 @@ class ProductController extends Controller
     public function update(Request $req, Product $product, ProductDetail $productDetail)
     {
         $user = $req->user();
+        $hours = $req->input('hours') * 60 * 60;
+        $minutes = $req->input('minutes') * 60;
 
         $product->where('id', $req->id)->update([
             'product_name' => $req->product_name,
@@ -170,7 +180,13 @@ class ProductController extends Controller
                 'UTF-8'
             ),
             'age_group' => $req->age_group,
+            'location' => $req->location,
+            'child_price' => $req->child_price,
+            'adult_price' => $req->adult_price,
             'category_id' => $req->category_id,
+            'min_quantity' => $req->min_quantity,
+            'max_quantity' => $req->max_quantity,
+            'duration' => $hours + $minutes,
         ]);
 
         $main_image_path = "";
@@ -199,11 +215,7 @@ class ProductController extends Controller
 
         $productDetail->where('product_id', $req->id)->update([
             'product_id' => $req->id,
-            'location' => $req->location,
-            'price' => $req->price,
             'google_map_location' => $req->google_map_location,
-            'min_quantity' => $req->min_quantity,
-            'quantity' => $req->quantity,
             'event_start_date' =>  date('Y-m-d', strtotime(str_replace('/', '-', $req->event_start_date))),
             'event_end_date' => date(
                 'Y-m-d',
@@ -301,6 +313,9 @@ class ProductController extends Controller
         $week_time[6]['end_time']   = $product_detail['saturday_end_time'] ?? '';
 
         $product['week_time'] = $week_time;
+        $duration = $this->getHoursAndMinutes($product['duration']);
+        $product['hours'] = $duration['hours'];
+        $product['minutes'] = $duration['minutes'];
 
         $merchant_profit = new ProductProfit();
         $profit_types = $merchant_profit->getProfitTypes();
@@ -308,6 +323,7 @@ class ProductController extends Controller
         $profit_info = ProductProfit::where('product_id', $req->id)->orderBy('end_date', 'desc')->get();
 
         $main_image = $this->getMainImage($req->id);
+
         return Inertia::render('Products/View', [
             'product' => $product,
             'product_description' => html_entity_decode($product['product_description'], ENT_QUOTES, 'UTF-8'),
@@ -353,9 +369,14 @@ class ProductController extends Controller
     private function getMainImage($product_id)
     {
         $image = Product::where('id', $product_id)->first()->only(['product_image']);
-        $file_name = explode('/', $image['product_image']);
-        $image['url'] = asset('storage/productImages/' . $file_name[sizeof($file_name) - 1]);
-        return $image['url'];
+        // dd($image['product_image']);
+        if ($image['product_image']) {
+            $file_name = explode('/', $image['product_image']);
+            $image['url'] = asset('storage/productImages/' . $file_name[sizeof($file_name) - 1]);
+
+            return $image['url'];
+        }
+        return;
     }
 
     public function getFileExtension($file)
@@ -367,5 +388,13 @@ class ProductController extends Controller
     public function randomFileNameGenerator($length, $extension)
     {
         return substr(str_shuffle(str_repeat($x = '0123456789abcdefghijklmnopqrstuvwxyz', ceil($length / strlen($x)))), 1, $length) . '.' . $extension;
+    }
+
+    private function getHoursAndMinutes($duration)
+    {
+        $hours = floor($duration / 3600);
+        $minutes = floor($duration % 3600) / 60;
+
+        return compact('hours', 'minutes');
     }
 }

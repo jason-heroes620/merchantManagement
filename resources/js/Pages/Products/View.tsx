@@ -2,7 +2,6 @@ import { useEffect, useState, FormEventHandler } from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Link, Head, useForm, router } from "@inertiajs/react";
 import InputLabel from "@/Components/InputLabel";
-import TextInput from "@/Components/TextInput";
 import TextArea from "@/Components/TextArea";
 import LoadingButton from "@/Components/Button/LoadingButton";
 import DangerButton from "@/Components/DangerButton";
@@ -13,6 +12,7 @@ import Tabs from "@/Components/Tabs/Tabs";
 import Tab from "@/Components/Tabs/Tab";
 import ProductDetailTab from "./ProductDetailTab";
 import ProductAdditionalInfoTab from "./ProductAdditionalInfoTab";
+import { Button } from "@/Components/ui/button";
 
 const View = ({
     auth,
@@ -77,20 +77,21 @@ const View = ({
         event_end_time: product.product_detail?.event_end_time
             ? product.product_detail.event_end_time
             : "",
-        location: product.product_detail?.location
-            ? product.product_detail.location
-            : "",
+        location: product?.location ? product.location : "",
         google_map_location: product.product_detail?.google_map_location
             ? product.product_detail.google_map_location
             : "",
-        min_quantity: product.product_detail?.min_quantity,
-        quantity: product.product_detail?.quantity,
-        price: product.product_detail?.price,
+        min_quantity: product.min_quantity,
+        max_quantity: product.max_quantity,
+        child_price: product?.child_price,
+        adult_price: product?.adult_price,
         main_image: [],
         images: [],
         existing_main_image: product_main_image,
         existing_images: images,
         week_time: product.week_time,
+        hours: product.hours,
+        minutes: product.minutes,
     });
 
     useEffect(() => {
@@ -120,14 +121,11 @@ const View = ({
         <AuthenticatedLayout
             user={auth.user}
             header={
-                <div className="flex flex-row gap-8">
+                <div className="flex flex-row gap-8 items-center">
                     <div>
-                        <Link
-                            href={route("products")}
-                            className="text-indigo-600 hover:text-white border rounded-md hover:bg-red-800 py-2 px-4"
-                        >
-                            Back
-                        </Link>
+                        <Button asChild variant="destructive">
+                            <Link href={route("products")}>Back</Link>
+                        </Button>
                     </div>
                     <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                         Product
@@ -240,8 +238,8 @@ const View = ({
                                             </LoadingButton>
                                         </div>
                                         {product.status === 1 ? (
-                                            <div className="flex justify-end flex-col md:flex-row">
-                                                <div className="flex items-center px-4 py-2 bg-gray-100 border-t dark:bg-gray-800 dark:border-gray-800 border-gray-200">
+                                            <div className="flex justify-end md:flex-row">
+                                                <div className="flex items-center px-6 py-4 bg-gray-100 border-t dark:bg-gray-800 dark:border-gray-800 border-gray-200">
                                                     <DangerButton
                                                         type="button"
                                                         className="ml-auto border py-2 px-4 rounded-md text-sm"

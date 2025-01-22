@@ -1,6 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, Link, useForm, usePage, router } from "@inertiajs/react";
-import { PageProps, Merchant } from "@/types";
+import { Head, Link, useForm, usePage } from "@inertiajs/react";
 import InputLabel from "@/Components/InputLabel";
 import TextInput from "@/Components/TextInput";
 import SelectInput from "@/Components/SelectInput";
@@ -8,28 +7,15 @@ import LoadingButton from "@/Components/Button/LoadingButton";
 import DangerButton from "@/Components/Button/DangerButton";
 import RichTextEditor from "@/Components/RichTextEditor";
 import { ToastContainer, toast } from "react-toastify";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import MerchantFileList from "@/Components/Merchant/MerchantFileList";
-import MerchantProfitTable from "./MerchantProfitTable";
 import dayjs from "dayjs";
-import {
-    DatePicker,
-    TimePicker,
-    DatePickerProps,
-    TimePickerProps,
-    Space,
-} from "antd";
-import type { GetProps } from "antd";
 import customParseFormat from "dayjs/plugin/customParseFormat";
-import { useObjectUrls } from "@/utils/getObjectUrls";
 
 import "react-toastify/dist/ReactToastify.css";
-
-type RangePickerProps = GetProps<typeof DatePicker.RangePicker>;
+import { Button } from "@/Components/ui/button";
 
 dayjs.extend(customParseFormat);
-
-const { RangePicker } = DatePicker;
 
 const range = (start: number, end: number) => {
     const result = [];
@@ -40,7 +26,6 @@ const range = (start: number, end: number) => {
 };
 
 const View = ({ auth, flash }: any) => {
-    const [merchantAbout, setMerchantAbout] = useState("");
     const {
         merchant,
         types,
@@ -71,8 +56,6 @@ const View = ({ auth, flash }: any) => {
         ic_no: merchant.ic_no || "",
         _method: "put",
     });
-
-    const getObjectUrl = useObjectUrls();
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -113,12 +96,9 @@ const View = ({ auth, flash }: any) => {
             header={
                 <div className="flex flex-row gap-8">
                     <div>
-                        <Link
-                            href={route("merchants")}
-                            className="text-indigo-600 hover:text-white border rounded-md hover:bg-red-800 py-2 px-4"
-                        >
-                            Back
-                        </Link>
+                        <Button asChild variant="destructive">
+                            <Link href={route("merchants")}>Back</Link>
+                        </Button>
                     </div>
                     <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                         Merchant Detail
@@ -143,7 +123,7 @@ const View = ({ auth, flash }: any) => {
                                         onSubmit={handleSubmit}
                                         className="py-4"
                                     >
-                                        <div className="grid py-2 grid-flow-row-dense gap-4 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
+                                        <div className="grid py-2 grid-flow-row-dense grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
                                             <div className="flex items-center md:col-span-1 lg:col-span-2">
                                                 <InputLabel
                                                     htmlFor="merchantType"
@@ -165,7 +145,7 @@ const View = ({ auth, flash }: any) => {
                                                 />
                                             </div>
                                         </div>
-                                        <div className="grid py-2 grid-flow-row-dense gap-6 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
+                                        <div className="grid py-2 grid-flow-row-dense grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
                                             <div className="flex items-center md:col-span-1 lg:col-span-2">
                                                 <InputLabel
                                                     htmlFor="merchant_name"
@@ -191,7 +171,7 @@ const View = ({ auth, flash }: any) => {
                                                 />
                                             </div>
                                         </div>
-                                        <div className="grid py-2 grid-flow-row-dense gap-6 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
+                                        <div className="grid py-2 grid-flow-row-dense grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
                                             <div className="flex items-center md:col-span-1 lg:col-span-2">
                                                 <InputLabel
                                                     htmlFor="person_in_charge"
@@ -216,7 +196,7 @@ const View = ({ auth, flash }: any) => {
                                                 />
                                             </div>
                                         </div>
-                                        <div className="grid py-2 grid-flow-row-dense gap-4 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
+                                        <div className="grid py-2 grid-flow-row-dense grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
                                             <div className="flex items-center md:col-span-1 lg:col-span-2">
                                                 <InputLabel
                                                     htmlFor="merchant_email"
@@ -243,7 +223,7 @@ const View = ({ auth, flash }: any) => {
                                                 />
                                             </div>
                                         </div>
-                                        <div className="grid py-2 grid-flow-row-dense gap-4 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
+                                        <div className="grid py-2 grid-flow-row-dense grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
                                             <div className="flex items-center md:col-span-1 lg:col-span-2">
                                                 <InputLabel
                                                     htmlFor="merchant_phone"
@@ -271,7 +251,7 @@ const View = ({ auth, flash }: any) => {
                                                 />
                                             </div>
                                         </div>
-                                        <div className="grid py-2 grid-flow-row-dense gap-4 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
+                                        <div className="grid py-2 grid-flow-row-dense grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
                                             <div className="flex items-start md:col-span-1 lg:col-span-2">
                                                 <InputLabel
                                                     htmlFor="merchant_description"
@@ -290,7 +270,7 @@ const View = ({ auth, flash }: any) => {
                                         </div>
                                         {merchant.type === "learningCenter" ? (
                                             <div>
-                                                <div className="grid py-2 grid-flow-row-dense gap-6 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
+                                                <div className="grid py-2 grid-flow-row-dense grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
                                                     <div className="flex items-center md:col-span-1 lg:col-span-2">
                                                         <InputLabel
                                                             htmlFor="images"
@@ -316,7 +296,7 @@ const View = ({ auth, flash }: any) => {
                                                         </small>
                                                     </div>
                                                 </div>
-                                                <div className="grid py-2 grid-flow-row-dense gap-6 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
+                                                <div className="grid py-2 grid-flow-row-dense grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
                                                     <div className="flex items-center md:col-span-1 lg:col-span-2"></div>
                                                     {merchant_logo && (
                                                         <div className="flex flex-row gap-4 py-2">
@@ -333,7 +313,7 @@ const View = ({ auth, flash }: any) => {
                                                         </div>
                                                     )}
                                                 </div>
-                                                <div className="grid py-2 grid-flow-row-dense gap-6 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
+                                                <div className="grid py-2 grid-flow-row-dense grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
                                                     <div className="flex items-center md:col-span-1 lg:col-span-2">
                                                         <InputLabel
                                                             htmlFor="location"
@@ -359,7 +339,7 @@ const View = ({ auth, flash }: any) => {
                                                         />
                                                     </div>
                                                 </div>
-                                                <div className="grid py-2 grid-flow-row-dense gap-6 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
+                                                <div className="grid py-2 grid-flow-row-dense grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
                                                     <div className="flex items-center md:col-span-1 lg:col-span-2">
                                                         <InputLabel
                                                             htmlFor="companyRegistration"
@@ -388,7 +368,7 @@ const View = ({ auth, flash }: any) => {
                                             </div>
                                         ) : (
                                             <div>
-                                                <div className="grid py-2 grid-flow-row-dense gap-6 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
+                                                <div className="grid py-2 grid-flow-row-dense grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
                                                     <div className="flex items-center md:col-span-1 lg:col-span-2">
                                                         <InputLabel
                                                             htmlFor="icNo"
@@ -414,7 +394,7 @@ const View = ({ auth, flash }: any) => {
                                                 </div>
                                             </div>
                                         )}
-                                        <div className="grid py-2 grid-flow-row-dense gap-6 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
+                                        <div className="grid py-2 grid-flow-row-dense grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
                                             <div className="flex items-center md:col-span-1 lg:col-span-2">
                                                 <InputLabel
                                                     htmlFor="website"
@@ -438,7 +418,7 @@ const View = ({ auth, flash }: any) => {
                                                 />
                                             </div>
                                         </div>
-                                        <div className="grid py-2 grid-flow-row-dense gap-6 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
+                                        <div className="grid py-2 grid-flow-row-dense grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
                                             <div className="flex items-center md:col-span-1 lg:col-span-2">
                                                 <InputLabel
                                                     htmlFor="facebook"
@@ -461,7 +441,7 @@ const View = ({ auth, flash }: any) => {
                                                 />
                                             </div>
                                         </div>
-                                        <div className="grid py-2 grid-flow-row-dense gap-6 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
+                                        <div className="grid py-2 grid-flow-row-dense grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
                                             <div className="flex items-center md:col-span-1 lg:col-span-2">
                                                 <InputLabel
                                                     htmlFor="instagram"
@@ -507,7 +487,7 @@ const View = ({ auth, flash }: any) => {
                                                     </LoadingButton>
                                                 </div>
                                                 {merchant.status === 1 ? (
-                                                    <div className="flex justify-end flex-col md:flex-row">
+                                                    <div className="flex justify-end flex-row">
                                                         <div className="flex items-center px-4 py-2 bg-gray-100 border-t dark:bg-gray-800 dark:border-gray-800 border-gray-200">
                                                             <DangerButton
                                                                 loading={

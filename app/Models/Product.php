@@ -19,11 +19,17 @@ class Product extends Model
         'product_name',
         'category_id',
         'age_group',
+        'location',
+        'child_price',
+        'adult_price',
+        'duration',
         'product_description',
         'product_activities',
         'product_image',
         'status',
-        'reject_comment'
+        'reject_comment',
+        'min_quantity',
+        'max_quantity'
     ];
 
     public function merchant(): BelongsTo

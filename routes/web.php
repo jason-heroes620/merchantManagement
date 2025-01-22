@@ -7,19 +7,23 @@ use App\Http\Controllers\RoomController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DiscountController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MerchantController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductProfitController;
 use App\Http\Controllers\ProductImageController;
+use App\Http\Controllers\QuotationController;
+use App\Http\Controllers\QuotationItemController;
+use App\Http\Controllers\SchoolController;
 use App\Models\Merchant;
 use Illuminate\Foundation\Application;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Artisan;
-
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -145,6 +149,24 @@ Route::middleware('auth')->group(function () {
 
     Route::delete('product-image/delete/{id}', [ProductImageController::class, 'delete'])->name('product_image.delete');
     Route::get('/categories', [CategoryController::class, 'categories']);
+
+
+    // Schools
+    Route::get('/schools/{type?}', [SchoolController::class, 'index'])->name('schools');
+    Route::get('/school/{id?}', [SchoolController::class, 'view'])->name('school.view');
+
+    // Quotations
+    Route::get('/quotations', [QuotationController::class, 'index'])->name('quotations');
+    Route::get('/quotation/{id}', [QuotationController::class, 'view'])->name('quotation.view');
+    Route::put('/quotation/{id}', [QuotationController::class, 'update'])->name('quotation.update');
+
+    Route::put('/quotationItem/{id}', [QuotationItemController::class, 'transportation_update'])->name('quotation.transportation.update');
+
+    // Invoices
+    Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices');
+
+    // Discount
+    Route::post('/discount', [DiscountController::class, 'create'])->name('discount.create');
 });
 
 require __DIR__ . '/auth.php';

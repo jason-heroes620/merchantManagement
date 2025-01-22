@@ -18,6 +18,7 @@ import GoogleMapInstruction from "@/Components/GoogleMapInstruction";
 import { RangePickerProps } from "antd/es/date-picker";
 import dayjs from "dayjs";
 import { useObjectUrls } from "@/utils/getObjectUrls";
+import Duration from "@/Components/Duration";
 
 const dateFormat = "DD/MM/YYYY";
 const timeFormat = "HH:mm";
@@ -121,7 +122,7 @@ const ProductDetailTab = ({
                 <TextInput
                     id="merchant_name"
                     name="merchant_name"
-                    value={data.merchant_name}
+                    defaultValue={data.merchant_name}
                     className="mt-1 block w-full"
                     disabled
                 />
@@ -264,50 +265,98 @@ const ProductDetailTab = ({
                     className="mt-2"
                 />
             </div>
-            <div className="py-2">
-                <InputLabel htmlFor="min_quantity" value="Min. Pax" />
-                <TextInput
-                    id="min_quantity"
-                    name="min_quantity"
-                    type="number"
-                    maxLength={3}
-                    min={1}
-                    value={data.min_quantity}
-                    className="mt-1 block w-full"
-                    autoComplete="min_quantity"
-                    onChange={(e) => setData("min_quantity", e.target.value)}
-                    required
-                />
-                <InputError message={errors.min_quantity} className="mt-2" />
+
+            <div className="flex flex-1 flex-col md:grid md:grid-cols-2 md:gap-6 py-2">
+                <div className=" py-2">
+                    <InputLabel htmlFor="min_quantity" value="Min. Pax" />
+                    <TextInput
+                        id="min_quantity"
+                        name="min_quantity"
+                        type="number"
+                        maxLength={3}
+                        min={1}
+                        value={data.min_quantity}
+                        className="mt-1 block w-full"
+                        autoComplete="min_quantity"
+                        onChange={(e) =>
+                            setData("min_quantity", e.target.value)
+                        }
+                        required
+                    />
+                    <InputError
+                        message={errors.min_quantity}
+                        className="mt-2"
+                    />
+                </div>
+                <div className=" py-2">
+                    <InputLabel htmlFor="quantity" value="Max. Pax" />
+                    <TextInput
+                        id="max_quantity"
+                        name="max_quantity"
+                        type="number"
+                        maxLength={3}
+                        min={1}
+                        value={data.max_quantity}
+                        className="mt-1 block w-full"
+                        autoComplete="max_quantity"
+                        onChange={(e) =>
+                            setData("max_quantity", e.target.value)
+                        }
+                        required
+                    />
+                    <InputError
+                        message={errors.max_quantity}
+                        className="mt-2"
+                    />
+                </div>
             </div>
-            <div className="py-2">
-                <InputLabel htmlFor="quantity" value="Max. Pax" />
-                <TextInput
-                    id="quantity"
-                    name="quantity"
-                    type="number"
-                    maxLength={3}
-                    min={1}
-                    value={data.quantity}
-                    className="mt-1 block w-full"
-                    autoComplete="quantity"
-                    onChange={(e) => setData("quantity", e.target.value)}
-                    required
-                />
-                <InputError message={errors.quantity} className="mt-2" />
+            <div className="py-3">
+                <Duration data={data} setData={setData} errors={errors} />
             </div>
-            <div className="py-2">
-                <InputLabel htmlFor="price" value="Price" />
-                <TextInput
-                    id="price"
-                    name="price"
-                    value={data.price}
-                    className="mt-1 block w-full"
-                    autoComplete="price"
-                    onChange={(e) => setData("price", e.target.value)}
-                    required
-                />
-                <InputError message={errors.price} className="mt-2" />
+            <div className="py-2 border rounded-md mt-2 mb-2">
+                <div className="px-4">
+                    <span className="font-bold">Price</span>
+                </div>
+                <div className="flex flex-col gap-4 md:grid md:grid-cols-2 md:justify-between md:gap-10 px-4 py-4 ">
+                    <div>
+                        <InputLabel htmlFor="price" value="Child" />
+                        <TextInput
+                            id="child_price"
+                            name="child_price"
+                            value={data.child_price}
+                            type="number"
+                            className="mt-1 block w-full"
+                            autoComplete="child_price"
+                            onChange={(e) =>
+                                setData("child_price", e.target.value)
+                            }
+                            required
+                        />
+                        <InputError
+                            message={errors.child_price}
+                            className="mt-2"
+                        />
+                    </div>
+                    <div className="">
+                        <InputLabel htmlFor="price" value="Adult" />
+                        <TextInput
+                            id="adult_price"
+                            name="adult_price"
+                            value={data.adult_price}
+                            type="number"
+                            className="mt-1 block w-full"
+                            autoComplete="adult_price"
+                            onChange={(e) =>
+                                setData("adult_price", e.target.value)
+                            }
+                            required
+                        />
+                        <InputError
+                            message={errors.adult_price}
+                            className="mt-2"
+                        />
+                    </div>
+                </div>
             </div>
 
             <div className="py-2">
