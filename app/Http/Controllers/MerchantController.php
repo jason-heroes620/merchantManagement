@@ -125,7 +125,7 @@ class MerchantController extends Controller
             }
         }
 
-        $merchantInfo->where('merchant_id', $req->id)->updateOrCreate([
+        $merchantInfo->where('merchant_id', $req->id)->update([
             'web' => $req->input('web'),
             'facebook' => $req->input('facebook'),
             'instagram' => $req->input('instagram'),
