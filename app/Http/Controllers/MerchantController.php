@@ -129,6 +129,7 @@ class MerchantController extends Controller
             'web' => $req->input('web'),
             'facebook' => $req->input('facebook'),
             'instagram' => $req->input('instagram'),
+            'location' => $req->input('location'),
             'company_registration' => $req->input('company_registration')
         ]);
 
