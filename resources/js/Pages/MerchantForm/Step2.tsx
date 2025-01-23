@@ -18,6 +18,20 @@ const Step2 = ({
     useEffect(() => {
         window.scrollTo(0, 0);
     }, []);
+
+    const handleUploadImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files: File[] = Array.from(e.target.files || []);
+        var canUpload = true;
+        files.map((f: File) => {
+            f.size > 2097152 ? (canUpload = false) : "";
+        });
+        if (canUpload) {
+            setData("merchant_logo", [...e.target.files]);
+        } else {
+            alert("Your file exceede the upload limit.");
+        }
+    };
+
     return (
         <div>
             <form onSubmit={submit}>
@@ -190,9 +204,7 @@ const Step2 = ({
                             <input
                                 type="file"
                                 accept=".png,.jpg,.jpeg"
-                                onChange={(e) =>
-                                    setData("merchant_logo", e.target.files[0])
-                                }
+                                onChange={(e) => handleUploadImage(e)}
                             />
                             {progress && (
                                 <progress value={progress.percentage} max="100">

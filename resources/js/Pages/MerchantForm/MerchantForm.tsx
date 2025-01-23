@@ -22,6 +22,7 @@ export default function MerchantForm({ flash }: any) {
             instagram: "",
             companyRegistration: "",
             companyRegistrationForm: null,
+            merchant_logo: [],
             location: "",
             merchantType: "",
         });
@@ -31,14 +32,20 @@ export default function MerchantForm({ flash }: any) {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        post(route("merchant.register"), { forceFormData: true });
+        post(route("merchant.register"), {
+            forceFormData: true,
+            preserveState: false,
+            onSuccess: () => {
+                toast.success(flash.message.success);
+                setShowModal(true);
+            },
+            onError: () => {},
+        });
         reset();
     };
 
     useEffect(() => {
         if (flash.message.success) {
-            toast.success(flash.message.success);
-            setShowModal(true);
         }
     }, [flash]);
 
@@ -49,7 +56,10 @@ export default function MerchantForm({ flash }: any) {
             <Modal
                 maxWidth="md"
                 show={showModal}
-                onClose={() => setShowModal(false)}
+                onClose={() => {
+                    setShowModal(false);
+                    route("home");
+                }}
             >
                 <span>
                     Thank you for you submission. We will review your

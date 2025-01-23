@@ -32,7 +32,7 @@ Route::get('/', function () {
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
     ]);
-});
+})->name('home');
 
 Route::get('/merchant-form', function () {
     $types = MerchantType::where('status', 0)->get();
