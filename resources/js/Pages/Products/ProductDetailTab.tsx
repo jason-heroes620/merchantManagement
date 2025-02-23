@@ -19,6 +19,7 @@ import { RangePickerProps } from "antd/es/date-picker";
 import dayjs from "dayjs";
 import { useObjectUrls } from "@/utils/getObjectUrls";
 import Duration from "@/Components/Duration";
+import Checkbox from "@/Components/Checkbox";
 
 const dateFormat = "DD/MM/YYYY";
 const timeFormat = "HH:mm";
@@ -35,7 +36,9 @@ const ProductDetailTab = ({
 }) => {
     const [files, setFiles] = useState<File[]>([]);
     const [main_image, setMainImage] = useState<File[]>([]);
-
+    const [allowed, setAllowed] = useState(
+        data.food_allowed === 0 ? true : false
+    );
     const getObjectUrl = useObjectUrls();
 
     const onStartDateChange: DatePickerProps["onChange"] = (
@@ -178,7 +181,7 @@ const ProductDetailTab = ({
             <div className="py-2">
                 <InputLabel htmlFor="product_activities" value="Activitites" />
                 <RichTextEditor
-                    value={data.activities}
+                    value={data.product_activities}
                     onChange={setData}
                     contentFor={"product_activities"}
                 />
@@ -357,6 +360,18 @@ const ProductDetailTab = ({
                         />
                     </div>
                 </div>
+            </div>
+
+            <div className="py-2">
+                <Checkbox
+                    name="foodAllowed"
+                    onChange={(e) => {
+                        setData("food_allowed", e.target.checked);
+                        setAllowed(!allowed);
+                    }}
+                    checked={allowed}
+                />
+                <span className="pl-2 font-bold">Food Allowed</span>
             </div>
 
             <div className="py-2">

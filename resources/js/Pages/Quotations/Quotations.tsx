@@ -7,14 +7,27 @@ import Tab from "@/Components/Tabs/Tab";
 import { PaginatedData, Quotation } from "@/types";
 
 const Quotations = ({ auth }) => {
-    const { new_quotations, quotations, accepted_quotations, type } = usePage<{
+    const {
+        new_quotations,
+        quotations,
+        accepted_quotations,
+        order_issued,
+        type,
+    } = usePage<{
         new_quotations: PaginatedData<Quotation>;
         quotations: PaginatedData<Quotation>;
         accepted_quotations: PaginatedData<Quotation>;
         type: string;
     }>().props;
 
-    const index = type === "Current" ? 1 : type === "Accepted" ? 2 : 0;
+    const index =
+        type === "Current"
+            ? 1
+            : type === "Accepted"
+            ? 2
+            : type === "Order Issued"
+            ? 3
+            : 0;
 
     return (
         <AuthenticatedLayout
@@ -47,6 +60,11 @@ const Quotations = ({ auth }) => {
                                     <Tab title="Accepted">
                                         <QuotationTab
                                             quotations={accepted_quotations}
+                                        />
+                                    </Tab>
+                                    <Tab title="Order Issued">
+                                        <QuotationTab
+                                            quotations={order_issued}
                                         />
                                     </Tab>
                                 </Tabs>

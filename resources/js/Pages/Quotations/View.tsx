@@ -1,12 +1,21 @@
 import { useState, useEffect, useMemo } from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Link, usePage, Head } from "@inertiajs/react";
-import { Quotation } from "@/types";
+import {
+    Quotation,
+    Proposal,
+    QuotationDiscount,
+    QuotationItem,
+    QuotationProductPrices,
+    Fees,
+    QuotationFees,
+    QuotationProduct,
+} from "@/types";
 import { toast, ToastContainer } from "react-toastify";
 import InputLabel from "@/Components/InputLabel";
 import moment from "moment";
 import { formattedNumber } from "../../utils/formatNumber";
-import { MapPin, Hourglass } from "lucide-react";
+import { MapPin, Hourglass, UsersRound, CalendarIcon } from "lucide-react";
 import TextInput from "@/Components/TextInput";
 import { Button } from "@/Components/ui/button";
 import axios from "axios";
@@ -21,6 +30,24 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/Components/ui/alert-dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogClose,
+} from "@/Components/ui/dialog";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/Components/ui/select";
+
 import { Minus, Plus } from "lucide-react";
 import SelectInput from "@/Components/SelectInput";
 import {
@@ -28,53 +55,76 @@ import {
     useLoadScript,
     DirectionsRenderer,
 } from "@react-google-maps/api";
-
 import "react-toastify/dist/ReactToastify.css";
 import { secondsToHms } from "@/utils/secondsToHms";
+import { router } from "@inertiajs/react";
+import { Calendar } from "@/Components/ui/calendar";
+import dayjs from "dayjs";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/Components/ui/popover";
+import Checkbox from "@/Components/Checkbox";
+import { count } from "console";
 
 const discountType = [
     { label: "Fix Amount", value: "F" },
     { label: "Percentage %", value: "P" },
 ];
 
-let subTotal = 0.0;
+let productTotal = 0.0;
 let optionTotal = 0.0;
+let feeTotal = 0.0;
+let discountTotal = 0.0;
 let total = 0.0;
 
 const View = ({ auth }) => {
-    const { quotation } = usePage<{
+    const {
+        quotation,
+        proposal,
+        quotation_product,
+        quotation_item,
+        prices,
+        quotation_discount,
+        fees,
+        quotation_fees,
+    } = usePage<{
         quotation: Quotation;
+        proposal: Proposal;
+        quotation_product: Array<QuotationProduct>;
+        quotation_item: Array<QuotationItem>;
+        prices: Array<QuotationProductPrices>;
+        quotation_discount: QuotationDiscount;
+        fees: Array<Fees>;
+        quotation_fees: Array<QuotationFees>;
     }>().props;
 
-    const [quotationProduct, setQuotationProduct] = useState(
-        quotation.quotation_product
-    );
-    const [quotationItem, setQuotationItem] = useState(
-        quotation.quotation_item
-    );
+    const [quotationProduct, setQuotationProduct] = useState(quotation_product);
+    const [quotationItem, setQuotationItem] = useState(quotation_item);
 
     const [discount, setDiscount] = useState({
-        discounttype: quotation.quotation_discount?.discount_type,
-        discountamount: quotation.quotation_discount?.discount_amount,
+        discounttype: quotation_discount?.discount_type,
+        discountamount: quotation_discount?.discount_amount,
     });
 
     const [travelInfo, setTravelInfo] = useState({
         travelDuration:
-            quotation.proposal.travel_duration !== 0
-                ? quotation.proposal.travel_duration
-                : 0,
+            proposal.travel_duration !== 0 ? proposal.travel_duration : 0,
         travelDistance:
-            quotation.proposal.travel_distance > 0
-                ? quotation.proposal.travel_distance
-                : 0,
+            proposal.travel_distance > 0 ? proposal.travel_distance : 0,
     });
+
+    const [quotationFees, setQuotationFees] = useState(
+        quotation_fees.length > 0 ? quotation_fees : fees
+    );
 
     const calculateTotal = (newQuotationItem, newDiscount) => {
         const item =
             newQuotationItem === null ? quotationItem : newQuotationItem;
         const disc = newDiscount === null ? discount : newDiscount;
 
-        subTotal = quotation.prices.reduce(
+        productTotal = prices.reduce(
             (sum: number, p: any) => sum + parseFloat(p.unit_price) * p.qty,
             0.0
         );
@@ -85,16 +135,26 @@ const View = ({ auth }) => {
             0.0
         );
 
-        total =
-            subTotal +
-            optionTotal -
-            (parseFloat(disc.discountamount) > 0
+        feeTotal = quotationFees.reduce(
+            (sum: number, p: any) =>
+                sum +
+                (p.fee_type === "P"
+                    ? ((productTotal + optionTotal) *
+                          parseFloat(p.fee_amount)) /
+                      100
+                    : parseFloat(p.fee_amount)),
+            0.0
+        );
+
+        discountTotal =
+            parseFloat(disc.discountamount) > 0
                 ? disc.discounttype === "P"
-                    ? ((subTotal + optionTotal) *
+                    ? ((productTotal + optionTotal + feeTotal) *
                           parseFloat(disc.discountamount)) /
                       100
                     : parseFloat(disc.discountamount)
-                : 0);
+                : 0;
+        total = productTotal + optionTotal + feeTotal - discountTotal;
     };
 
     calculateTotal(null, null);
@@ -143,13 +203,13 @@ const View = ({ auth }) => {
 
     const handleTransportationPriceChange = (e, itemId, quotationItemId) => {
         let newItem = quotationItem.map((q) => {
-            if (q.quotation_item_id === quotationItemId) {
+            if (q.item_id === itemId) {
                 return { ...q, unit_price: e.target.value };
             } else {
                 return q;
             }
         });
-
+        // console.log(newItem);
         setQuotationItem(newItem);
         calculateTotal(newItem, null);
     };
@@ -158,10 +218,43 @@ const View = ({ auth }) => {
         e.preventDefault();
 
         axios
-            .put(route("quotation.update", quotation.quotation_id))
+            .put(route("quotation.confirm", quotation.quotation_id), {
+                fees: quotationFees,
+            })
             .then((resp) => {
                 if (resp.data.success) {
                     toast.success(resp.data.success);
+                    router.visit(
+                        route("quotation.view", quotation.quotation_id)
+                    );
+                } else {
+                    toast.error(resp.data.error);
+                }
+                setOpen(false);
+            });
+    };
+
+    const handleGenerateOrder = (e) => {
+        e.preventDefault();
+
+        axios
+            .post(route("order.create"), {
+                quotation_id: quotation.quotation_id,
+                quotation_amount: total,
+                order_type: orderType,
+                deposit: depositAmount,
+                balance: balance,
+                subTotal: productTotal + optionTotal,
+                discountTotal: discountTotal,
+                feeTotal: feeTotal,
+                depositDueDate: depositDueDate,
+                balanceDueDate: balanceDueDate,
+            })
+            .then((resp) => {
+                setOpenConfirm(false);
+                if (resp.status === 200) {
+                    router.visit(route("orders"));
+                    toast.success("Order created!");
                 } else {
                     toast.error(resp.data.error);
                 }
@@ -170,6 +263,8 @@ const View = ({ auth }) => {
     };
 
     const [open, setOpen] = useState(false);
+    const [openConfirm, setOpenConfirm] = useState(false);
+
     const confirmDialog = () => {
         return (
             <AlertDialog open={open} onOpenChange={setOpen}>
@@ -177,7 +272,7 @@ const View = ({ auth }) => {
                     <Button
                         variant="default"
                         disabled={
-                            quotation.quotation_status > 0 ? false : false
+                            quotation.quotation_status === 1 ? true : false
                         }
                     >
                         Confirm Quotation
@@ -202,6 +297,285 @@ const View = ({ auth }) => {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+        );
+    };
+
+    const [orderType, setOrderType] = useState("");
+    const [depositAmount, setDepositAmount] = useState((total * 50) / 100);
+    const [balance, setBalance] = useState(total - (total * 50) / 100);
+
+    const calculateBalance = (deposit: number) => {
+        setBalance(total - deposit);
+    };
+
+    const handleCalculateBalance = (deposit: number) => {
+        if (deposit < total) {
+            setDepositAmount(deposit);
+            calculateBalance(deposit);
+        } else {
+            setDepositAmount(total);
+        }
+    };
+
+    const [depositDueDate, setDepositDueDate] = useState(
+        dayjs().add(14, "days").isBefore(proposal.proposal_date)
+            ? dayjs().add(14, "days").toDate()
+            : dayjs().toDate()
+    );
+    const [balanceDueDate, setBalanceDueDate] = useState(
+        dayjs(proposal.proposal_date).add(-14, "days").isAfter(dayjs()) &&
+            dayjs(proposal.proposal_date)
+                .add(-14, "days")
+                .isAfter(depositDueDate)
+            ? dayjs(proposal.proposal_date).add(-14, "days").toDate()
+            : depositDueDate
+    );
+
+    const generateOrder = () => {
+        return (
+            <Dialog>
+                <DialogTrigger asChild>
+                    <Button
+                        variant="primary"
+                        disabled={quotation.quotation_status < 3 ? false : true}
+                    >
+                        Create Order
+                    </Button>
+                </DialogTrigger>
+                <DialogContent
+                    className="sm:max-w-[425px]"
+                    onInteractOutside={(e) => {
+                        e.preventDefault();
+                    }}
+                >
+                    <DialogHeader>
+                        <DialogTitle>Create Order</DialogTitle>
+                        <DialogDescription></DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-2">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Select
+                                onValueChange={(value) => setOrderType(value)}
+                            >
+                                <SelectTrigger className="w-[200px]">
+                                    <SelectValue placeholder="Choose your order type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="deposit">
+                                        Deposit & Balance
+                                    </SelectItem>
+                                    <SelectItem value="single">
+                                        Single Order
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        {orderType === "deposit" ? (
+                            <div>
+                                <div className="flex flex-row gap-4">
+                                    <div>
+                                        <InputLabel>Deposit Amount</InputLabel>
+                                        <TextInput
+                                            type={"number"}
+                                            placeholder="Deposit Amount"
+                                            onChange={(e) =>
+                                                handleCalculateBalance(
+                                                    parseFloat(e.target.value)
+                                                )
+                                            }
+                                            max={total}
+                                            min={0}
+                                            step={10}
+                                            defaultValue={depositAmount.toFixed(
+                                                2
+                                            )}
+                                            className="w-[193px]"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <InputLabel>
+                                            Deposit Due Date
+                                        </InputLabel>
+                                        <Popover modal={true}>
+                                            <PopoverTrigger
+                                                asChild
+                                                className="flex items-center h-[42px]"
+                                            >
+                                                <Button variant={"outline"}>
+                                                    <CalendarIcon
+                                                        size={14}
+                                                        className="pr-1"
+                                                    />
+                                                    {depositDueDate ? (
+                                                        moment(
+                                                            depositDueDate
+                                                        ).format("DD/MM/YYYY")
+                                                    ) : (
+                                                        <span>Pick a date</span>
+                                                    )}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent
+                                                className="w-auto p-0"
+                                                align="start"
+                                            >
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={depositDueDate}
+                                                    onSelect={(date) =>
+                                                        setDepositDueDate(date)
+                                                    }
+                                                    fromDate={moment().toDate()}
+                                                    className="rounded-md border"
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                    </div>
+                                </div>
+                                <div className="flex flex-row gap-4">
+                                    <div className="py-4">
+                                        <InputLabel>Balance</InputLabel>
+                                        <TextInput
+                                            type={"number"}
+                                            placeholder="Balance Amount"
+                                            disabled
+                                            value={balance.toFixed(2)}
+                                        />
+                                    </div>
+                                    <div className="py-4">
+                                        <InputLabel>
+                                            Balance Due Date
+                                        </InputLabel>
+                                        <Popover modal={true}>
+                                            <PopoverTrigger
+                                                asChild
+                                                className="flex items-center h-[42px]"
+                                            >
+                                                <Button variant={"outline"}>
+                                                    <CalendarIcon
+                                                        size={14}
+                                                        className="pr-1"
+                                                    />
+                                                    {balanceDueDate ? (
+                                                        moment(
+                                                            balanceDueDate
+                                                        ).format("DD/MM/YYYY")
+                                                    ) : (
+                                                        <span>Pick a date</span>
+                                                    )}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent
+                                                className="w-auto p-0"
+                                                align="start"
+                                            >
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={balanceDueDate}
+                                                    onSelect={(date) => {
+                                                        console.log(
+                                                            "date => ",
+                                                            date
+                                                        );
+                                                        setBalanceDueDate(date);
+                                                    }}
+                                                    fromDate={moment().toDate()}
+                                                    className="rounded-md border"
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex flex-row gap-4">
+                                <div className="py-4">
+                                    <InputLabel>Balance</InputLabel>
+                                    <TextInput
+                                        type={"number"}
+                                        placeholder="Balance Amount"
+                                        disabled
+                                        value={total.toFixed(2)}
+                                    />
+                                </div>
+                                <div className="py-4">
+                                    <InputLabel>Balance Due Date</InputLabel>
+                                    <Popover modal={true}>
+                                        <PopoverTrigger
+                                            asChild
+                                            className="flex items-center h-[42px]"
+                                        >
+                                            <Button variant={"outline"}>
+                                                <CalendarIcon
+                                                    size={14}
+                                                    className="pr-1"
+                                                />
+                                                {balanceDueDate ? (
+                                                    moment(
+                                                        balanceDueDate
+                                                    ).format("DD/MM/YYYY")
+                                                ) : (
+                                                    <span>Pick a date</span>
+                                                )}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent
+                                            className="w-auto p-0"
+                                            align="start"
+                                        >
+                                            <Calendar
+                                                mode="single"
+                                                selected={balanceDueDate}
+                                                onSelect={(date) =>
+                                                    setBalanceDueDate(date)
+                                                }
+                                                fromDate={moment().toDate()}
+                                                className="rounded-md border"
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button type="button" variant="secondary">
+                                Close
+                            </Button>
+                        </DialogClose>
+                        <AlertDialog
+                            open={openConfirm}
+                            onOpenChange={setOpenConfirm}
+                        >
+                            <AlertDialogTrigger asChild>
+                                <Button variant="default">Confirm</Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle></AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Ready to create order? Once confirmed, a
+                                        notification will be sent to the user
+                                        email to notify them.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>
+                                        Cancel
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                        onClick={(e) => handleGenerateOrder(e)}
+                                    >
+                                        Continue
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         );
     };
 
@@ -243,8 +617,8 @@ const View = ({ auth }) => {
     const calculateDistances = async (locations) => {
         const service = new google.maps.DirectionsService();
 
-        const origin = quotation.proposal.origin; // Replace with your origin
-        const destinations = quotation.proposal.origin; // Replace with your destinations
+        const origin = proposal.origin; // Replace with your origin
+        const destinations = proposal.origin; // Replace with your destinations
         const waypoints = locations; // Replace with your destinations
 
         await service.route(
@@ -266,7 +640,7 @@ const View = ({ auth }) => {
     };
 
     useEffect(() => {
-        let travelLocations = quotation.quotation_product.map((p: any) => {
+        let travelLocations = quotation_product.map((p: any) => {
             return { location: p.product.location, stopover: true };
         });
 
@@ -318,18 +692,32 @@ const View = ({ auth }) => {
                                 </div>
                             </div>
                             <hr />
-                            <div className="py-4">
+                            <div className="py-2">
                                 {/* school info */}
-                                <div className="px-2">
-                                    <InputLabel
-                                        htmlFor="school_name"
-                                        value="School"
-                                        className="py-2"
-                                    />
-                                    <span className="py-4">
-                                        {quotation.proposal.school_name}
-                                    </span>
+                                <div className="flex flex-col md:grid md:grid-cols-2 py-2">
+                                    <div className="px-2">
+                                        <InputLabel
+                                            htmlFor="school_name"
+                                            value="School"
+                                            className="py-2"
+                                        />
+                                        <span className="py-4">
+                                            {proposal.school_name}
+                                        </span>
+                                    </div>
+                                    <div className="px-2">
+                                        <InputLabel
+                                            value="Proposed Visitation Date"
+                                            className="py-2"
+                                        />
+                                        <span className="py-4">
+                                            {moment(
+                                                proposal.proposal_date
+                                            ).format("DD/MM/YYYY")}
+                                        </span>
+                                    </div>
                                 </div>
+
                                 <div className="flex flex-col md:grid md:grid-cols-2 py-2">
                                     <div className="px-2">
                                         <InputLabel
@@ -338,7 +726,7 @@ const View = ({ auth }) => {
                                             className="py-2"
                                         />
                                         <span className="py-4">
-                                            {quotation.proposal.contact_person}
+                                            {proposal.contact_person}
                                         </span>
                                     </div>
                                     <div className="px-2">
@@ -348,8 +736,8 @@ const View = ({ auth }) => {
                                             className="py-2"
                                         />
                                         <span className="py-4">
-                                            {quotation.proposal.contact_no} /{" "}
-                                            {quotation.proposal.mobile_no}
+                                            {proposal.contact_no} /{" "}
+                                            {proposal.mobile_no}
                                         </span>
                                     </div>
                                 </div>
@@ -361,7 +749,7 @@ const View = ({ auth }) => {
                                             className="py-2"
                                         />
                                         <span className="py-4">
-                                            {quotation.proposal.city}
+                                            {proposal.city}
                                         </span>
                                     </div>
                                 </div>
@@ -373,7 +761,7 @@ const View = ({ auth }) => {
                                             className="py-2"
                                         />
                                         <span className="py-4">
-                                            {quotation.proposal.qty_student}
+                                            {proposal.qty_student}
                                         </span>
                                     </div>
                                     <div className="px-2">
@@ -383,7 +771,7 @@ const View = ({ auth }) => {
                                             className="py-2"
                                         />
                                         <span className="py-4">
-                                            {quotation.proposal.qty_teacher}
+                                            {proposal.qty_teacher}
                                         </span>
                                     </div>
                                 </div>
@@ -421,18 +809,31 @@ const View = ({ auth }) => {
                                                             {p.product.location}
                                                         </small>
                                                     </div>
-                                                    {p.product.duration && (
-                                                        <div className="flex flex-row gap-2 items-center">
+                                                </div>
+                                                <div className="grid grid-cols-2 py-2">
+                                                    <div className="flex flex-row items-center gap-2">
+                                                        <UsersRound size={16} />
+                                                        <span className="text-sm">
+                                                            {
+                                                                p.product
+                                                                    .age_group
+                                                            }
+                                                        </span>
+                                                    </div>
+                                                    {p.product.duration ? (
+                                                        <div className="flex flex-row items-center gap-2">
                                                             <Hourglass
                                                                 size={16}
                                                             />
-                                                            <small>
+                                                            <span className="text-sm">
                                                                 {secondsToHms(
                                                                     p.product
                                                                         .duration
                                                                 )}
-                                                            </small>
+                                                            </span>
                                                         </div>
+                                                    ) : (
+                                                        ""
                                                     )}
                                                 </div>
 
@@ -479,7 +880,7 @@ const View = ({ auth }) => {
                                 </div>
                                 <div className="flex justify-end px-4">
                                     <span className="font-bold text-lg">
-                                        Sub Total: {formattedNumber(subTotal)}
+                                        {formattedNumber(productTotal)}
                                     </span>
                                 </div>
                             </div>
@@ -549,87 +950,116 @@ const View = ({ auth }) => {
                                                             {p.item.item_name}
                                                         </span>
                                                     </div>
-                                                    <div className="mr-2 flex flex-row items-center gap-2 py-2">
+                                                    {quotation.quotation_status <
+                                                    1 ? (
+                                                        <div className="flex flex-row gap-2">
+                                                            <div className="mr-2 flex flex-row items-center gap-2 py-2">
+                                                                <button
+                                                                    className="rounded-md bg-gray-200 px-2 py-2"
+                                                                    onClick={() =>
+                                                                        handleItemQtyChange(
+                                                                            p.item_id,
+                                                                            "minus"
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <Minus />
+                                                                </button>
+
+                                                                <span className="px-2 text-lg font-bold">
+                                                                    {p.item_qty}
+                                                                </span>
+
+                                                                <button
+                                                                    className="rounded-md bg-gray-200 px-2 py-2"
+                                                                    onClick={() =>
+                                                                        handleItemQtyChange(
+                                                                            p.item_id,
+                                                                            "add"
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <Plus />
+                                                                </button>
+                                                            </div>
+                                                            <div className="flex flex-col md:flex-row md:items-center gap-4">
+                                                                <div className="flex flex-row md:items-center gap-2">
+                                                                    <span className="flex items-center text-lg font-bold">
+                                                                        RM
+                                                                    </span>
+                                                                    <TextInput
+                                                                        id="transportation"
+                                                                        name="transportation"
+                                                                        type="number"
+                                                                        defaultValue={
+                                                                            p.unit_price
+                                                                        }
+                                                                        className="mt-1 block w-full"
+                                                                        autoComplete="transportation"
+                                                                        maxLength={
+                                                                            10
+                                                                        }
+                                                                        onChange={(
+                                                                            e
+                                                                        ) => {
+                                                                            handleTransportationPriceChange(
+                                                                                e,
+                                                                                p.item_id,
+                                                                                p.quotation_item_id
+                                                                            );
+                                                                        }}
+                                                                        required
+                                                                    />
+                                                                </div>
+                                                                <div className="flex justify-end">
+                                                                    <Button
+                                                                        variant={
+                                                                            "primary"
+                                                                        }
+                                                                        onClick={(
+                                                                            e
+                                                                        ) =>
+                                                                            handleUpdateTransportationPrice(
+                                                                                e
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        Update
+                                                                    </Button>
+                                                                </div>
+                                                                <div className="flex justify-end">
+                                                                    <span className="font-bold text-lg">
+                                                                        {formattedNumber(
+                                                                            p.item_qty *
+                                                                                p.unit_price
+                                                                        )}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
                                                         <div>
-                                                            <button
-                                                                className="rounded-md bg-gray-200 px-2 py-2"
-                                                                onClick={() =>
-                                                                    handleItemQtyChange(
-                                                                        p.item_id,
-                                                                        "minus"
-                                                                    )
-                                                                }
-                                                            >
-                                                                <Minus />
-                                                            </button>
-                                                        </div>
-                                                        <span className="px-2 text-lg font-bold">
-                                                            {p.item_qty}
-                                                        </span>
-                                                        <div>
-                                                            <button
-                                                                className="rounded-md bg-gray-200 px-2 py-2"
-                                                                onClick={() =>
-                                                                    handleItemQtyChange(
-                                                                        p.item_id,
-                                                                        "add"
-                                                                    )
-                                                                }
-                                                            >
-                                                                <Plus />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex flex-col md:flex-row md:items-center gap-4">
-                                                        <div className="flex flex-row md:items-center gap-2">
-                                                            <span className="flex items-center text-lg font-bold">
-                                                                RM{" "}
-                                                            </span>
-                                                            <TextInput
-                                                                id="transportation"
-                                                                name="transportation"
-                                                                type="number"
-                                                                defaultValue={
-                                                                    p.unit_price
-                                                                }
-                                                                className="mt-1 block w-full"
-                                                                autoComplete="transportation"
-                                                                maxLength={10}
-                                                                onChange={(
-                                                                    e
-                                                                ) => {
-                                                                    handleTransportationPriceChange(
-                                                                        e,
-                                                                        p.item_id,
-                                                                        p.quotation_item_id
-                                                                    );
-                                                                }}
-                                                                required
-                                                            />
-                                                        </div>
-                                                        <div className="flex justify-end">
-                                                            <Button
-                                                                variant={
-                                                                    "primary"
-                                                                }
-                                                                onClick={(e) =>
-                                                                    handleUpdateTransportationPrice(
-                                                                        e
-                                                                    )
-                                                                }
-                                                            >
-                                                                Update
-                                                            </Button>
-                                                        </div>
-                                                        <div className="flex justify-end">
-                                                            <span className="font-bold text-lg">
-                                                                {formattedNumber(
-                                                                    p.item_qty *
+                                                            <div className="flex flex-col md:flex-row md:items-center gap-4">
+                                                                <span>
+                                                                    (
+                                                                    {p.item_qty}{" "}
+                                                                    X RM{" "}
+                                                                    {
                                                                         p.unit_price
-                                                                )}
-                                                            </span>
+                                                                    }{" "}
+                                                                    / {p.uom})
+                                                                </span>
+                                                                <div className="flex flex-row md:items-center gap-2 justify-end">
+                                                                    <span className="flex items-center text-lg font-bold">
+                                                                        {formattedNumber(
+                                                                            p.unit_price *
+                                                                                p.item_qty
+                                                                        )}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                    </div>
+                                                    )}
                                                 </div>
                                             );
                                         })}
@@ -715,76 +1145,127 @@ const View = ({ auth }) => {
                             </div>
                             <hr />
                             <div className="px-4 py-4">
+                                <div className="flex justify-end">
+                                    <span className="text-lg font-bold">
+                                        Sub Total{" "}
+                                        {formattedNumber(
+                                            productTotal + optionTotal
+                                        )}
+                                    </span>
+                                </div>
+                            </div>
+                            <hr />
+                            <div className="px-4 py-4">
+                                <div className="text-lg font-bold">Fees</div>
+                                <div className="py-2">
+                                    {quotationFees.map((f: any) => {
+                                        return (
+                                            <div
+                                                className="flex flex-row justify-between items-center"
+                                                key={f.fee_id}
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <Checkbox
+                                                        name="checkbox"
+                                                        defaultChecked
+                                                        className=""
+                                                    />
+                                                    <span>
+                                                        {f.fee_description}{" "}
+                                                        {f.fee_type === "P"
+                                                            ? "(" +
+                                                              parseInt(
+                                                                  f.fee_amount
+                                                              ) +
+                                                              "%)"
+                                                            : formattedNumber(
+                                                                  f.fee_amount
+                                                              )}
+                                                    </span>
+                                                </div>
+                                                <span className="text-lg font-bold">
+                                                    {f.fee_type === "P"
+                                                        ? formattedNumber(
+                                                              ((productTotal +
+                                                                  optionTotal) *
+                                                                  f.fee_amount) /
+                                                                  100
+                                                          )
+                                                        : f.fee_amount}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                            <hr />
+
+                            <div className="px-4 py-4">
                                 <div>
-                                    <span className="font-bold text-lg">
+                                    <span className="text-lg font-bold">
                                         Discount
                                     </span>
                                 </div>
-                                <div className="flex flex-col  md:flex-row md:justify-end py-4 gap-4">
-                                    <div>
-                                        <SelectInput
-                                            options={discountType}
-                                            defaultValue={
-                                                discount.discounttype
-                                                    ? discount.discounttype
-                                                    : ""
-                                            }
-                                            onChange={(e) =>
-                                                handleDiscountChange(
-                                                    "type",
-                                                    e.target.value
-                                                )
-                                            }
-                                        ></SelectInput>
+                                {quotation.quotation_status < 2 && (
+                                    <div className="flex flex-col  md:flex-row md:justify-end py-4 gap-4">
+                                        <div>
+                                            <SelectInput
+                                                options={discountType}
+                                                defaultValue={
+                                                    discount.discounttype
+                                                        ? discount.discounttype
+                                                        : ""
+                                                }
+                                                onChange={(e) =>
+                                                    handleDiscountChange(
+                                                        "type",
+                                                        e.target.value
+                                                    )
+                                                }
+                                            ></SelectInput>
+                                        </div>
+                                        <div>
+                                            <TextInput
+                                                name="discount_amount"
+                                                type="number"
+                                                defaultValue={
+                                                    discount.discountamount
+                                                }
+                                                onChange={(e) =>
+                                                    handleDiscountChange(
+                                                        "amount",
+                                                        e.target.value
+                                                    )
+                                                }
+                                                maxLength={6}
+                                                min={0}
+                                                className=""
+                                            />
+                                        </div>
+                                        <div className="flex items-center">
+                                            <Button
+                                                variant="primary"
+                                                onClick={() =>
+                                                    handleUpdateDiscount()
+                                                }
+                                                disabled={
+                                                    quotation.quotation_status <
+                                                    1
+                                                        ? false
+                                                        : true
+                                                }
+                                            >
+                                                Save Discount
+                                            </Button>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <TextInput
-                                            name="discount_amount"
-                                            type="number"
-                                            defaultValue={
-                                                discount.discountamount
-                                            }
-                                            onChange={(e) =>
-                                                handleDiscountChange(
-                                                    "amount",
-                                                    e.target.value
-                                                )
-                                            }
-                                            maxLength={6}
-                                            min={0}
-                                            className=""
-                                        />
-                                    </div>
-                                    <div className="flex items-center">
-                                        <Button
-                                            variant="primary"
-                                            onClick={() =>
-                                                handleUpdateDiscount()
-                                            }
-                                        >
-                                            Save Discount
-                                        </Button>
-                                    </div>
-                                </div>
-                                <div className="flex justify-end">
+                                )}
+                                <div className="flex flex-row gap-4 justify-end">
                                     <span className="font-bold text-lg text-red-600">
-                                        {parseFloat(discount?.discountamount) >
-                                        0
-                                            ? discount.discounttype === "P"
-                                                ? formattedNumber(
-                                                      ((subTotal +
-                                                          optionTotal) *
-                                                          parseFloat(
-                                                              discount.discountamount
-                                                          )) /
-                                                          100
-                                                  )
-                                                : formattedNumber(
-                                                      parseFloat(
-                                                          discount.discountamount
-                                                      )
-                                                  )
-                                            : "RM 0.00"}
+                                        Discount
+                                    </span>
+                                    <span className="font-bold text-lg text-red-600">
+                                        -{formattedNumber(discountTotal)}
                                     </span>
                                 </div>
                             </div>
@@ -808,7 +1289,11 @@ const View = ({ auth }) => {
                             </div>
                             <hr />
                             <div className="flex flex-row-reverse  py-4">
-                                <div className="">{confirmDialog()}</div>
+                                {quotation.quotation_status < 2 ? (
+                                    <div className="">{confirmDialog()}</div>
+                                ) : (
+                                    <div className="">{generateOrder()}</div>
+                                )}
                             </div>
                         </div>
                     </div>

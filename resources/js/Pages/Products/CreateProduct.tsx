@@ -23,6 +23,7 @@ import GoogleMapInstruction from "@/Components/GoogleMapInstruction";
 import { RangePickerProps } from "antd/es/date-picker";
 import { Button } from "@/Components/ui/button";
 import Duration from "@/Components/Duration";
+import Checkbox from "@/Components/Checkbox";
 
 const dateFormat = "DD/MM/YYYY";
 const timeFormat = "HH:mm";
@@ -64,6 +65,7 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
         ],
         hours: 0,
         minutes: 0,
+        food_allowed: false,
     });
 
     useEffect(() => {
@@ -473,6 +475,21 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+                                <div className="py-2">
+                                    <Checkbox
+                                        name="foodAllowed"
+                                        onChange={(e) =>
+                                            setData(
+                                                "food_allowed",
+                                                e.target.checked
+                                            )
+                                        }
+                                        defaultChecked
+                                    />
+                                    <span className="pl-2 font-bold">
+                                        Food Allowed
+                                    </span>
                                 </div>
                                 <div className="py-2">
                                     <InputLabel

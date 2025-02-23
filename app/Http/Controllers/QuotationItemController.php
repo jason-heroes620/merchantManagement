@@ -16,7 +16,7 @@ class QuotationItemController extends Controller
         try {
             $transportations = $req->input('transportation');
             foreach ($transportations as $t) {
-                QuotationItem::where('quotation_item_id', $t['quotation_item_id'])->update([
+                ProposalItem::where('proposal_item_id', $t['proposal_item_id'])->update([
                     'unit_price' => $t['unit_price']
                 ]);
 

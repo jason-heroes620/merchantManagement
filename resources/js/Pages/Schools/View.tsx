@@ -1,8 +1,8 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { usePage, Link, Head, useForm } from "@inertiajs/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { School } from "@/types";
-import { ToastContainer, toast } from "react-toastify";
+// import { ToastContainer, toast } from "react-toastify";
 import InputLabel from "@/Components/InputLabel";
 import TextInput from "@/Components/TextInput";
 import SelectInput from "@/Components/SelectInput";
@@ -17,17 +17,33 @@ import { FiHelpCircle } from "react-icons/fi";
 import GoogleMapInstruction from "@/Components/GoogleMapInstruction";
 import { useObjectUrls } from "@/utils/getObjectUrls";
 import { Button } from "@/Components/ui/button";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/Components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { Toaster } from "@/Components/ui/toaster";
+
+import "react-toastify/dist/ReactToastify.css";
+import axios from "axios";
 
 const states = States.sort((a, b) => (a > b ? 1 : -1)).map((s) => {
     return { label: s, value: s };
 });
 
-const View = ({ auth }) => {
+const View = ({ auth, flash }: any) => {
     const { school, school_logo } = usePage<{
         school: School;
-        school_logo: string;
+        school_logo: any;
     }>().props;
-
+    const { toast } = useToast();
     const { data, setData, post, put, processing, errors, reset } = useForm({
         school_name: school.school_name,
         address_1: school.address_1,
@@ -40,9 +56,9 @@ const View = ({ auth }) => {
         email: school.email,
         contact_no: school.contact_no || "",
         mobile_no: school.mobile_no || "",
-        school_logo: [],
+        school_logo: school_logo,
         school_status: school.school_status,
-        google_map_location: school.google_map_location,
+        google_place_name: school.google_place_name,
         _method: "put",
     });
     const [logo, setLogo] = useState<File>();
@@ -60,7 +76,49 @@ const View = ({ auth }) => {
         }
     };
 
-    const handleSubmit = () => {};
+    const [open, setOpen] = useState(false);
+    const [openReject, setOpenReject] = useState(false);
+
+    const handleApprove = () => {
+        axios.put(route("school.approve", school.school_id)).then((resp) => {
+            console.log(resp.data);
+            if (resp.data.success) {
+                toast({
+                    variant: "default",
+                    description: resp.data.success,
+                });
+            } else {
+                toast({
+                    variant: "destructive",
+                    description: resp.data.error,
+                });
+            }
+        });
+    };
+
+    const handleReject = () => {
+        axios.put(route("school.reject", school.school_id)).then((resp) => {
+            if (resp.data.success) {
+                toast({
+                    variant: "default",
+                    description: resp.data.success,
+                });
+            } else {
+                toast({
+                    variant: "destructive",
+                    description: resp.data.error,
+                });
+            }
+        });
+    };
+    const handleSubmit = () => {
+        put(route("school.update", school.school_id));
+    };
+
+    useEffect(() => {
+        if (flash.message.success) {
+        }
+    }, [flash]);
 
     return (
         <AuthenticatedLayout
@@ -79,7 +137,8 @@ const View = ({ auth }) => {
             }
         >
             <Head title="School" />
-            <ToastContainer limit={3} />
+            {/* <ToastContainer limit={3} /> */}
+            <Toaster />
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
@@ -163,7 +222,7 @@ const View = ({ auth }) => {
                                                         id="address_2"
                                                         name="address_2"
                                                         type="text"
-                                                        value={data.address_1}
+                                                        value={data.address_2}
                                                         className="mt-1 block w-full"
                                                         autoComplete="address_2"
                                                         onChange={(e) =>
@@ -193,7 +252,7 @@ const View = ({ auth }) => {
                                                         id="address_3"
                                                         name="address_3"
                                                         type="text"
-                                                        value={data.address_1}
+                                                        value={data.address_3}
                                                         className="mt-1 block w-full"
                                                         autoComplete="address_3"
                                                         onChange={(e) =>
@@ -399,19 +458,46 @@ const View = ({ auth }) => {
                                             </div>
                                             <div className="grid py-2 grid-flow-row-dense grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
                                                 <div className="flex items-center md:col-span-1 lg:col-span-2"></div>
-                                                {logo && (
+                                                {school_logo && (
                                                     <div className="flex w-32 h-32 justify-center items-center px-2">
                                                         <img
-                                                            src={getObjectUrl(
-                                                                logo
-                                                            )}
-                                                            alt={logo.name}
+                                                            src={school_logo}
                                                             className="object-contain"
+                                                            // onClick={() => {
+                                                            //     setSelectedImage(
+                                                            //         data.existing_main_image
+                                                            //     );
+                                                            //     setShowImageModal(
+                                                            //         true
+                                                            //     );
+                                                            // }}
                                                         />
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className="py-2">
+                                            <div>
+                                                <InputLabel
+                                                    htmlFor="google_place_name"
+                                                    value="Google Place Name"
+                                                />
+                                                <TextInput
+                                                    id="google_place_name"
+                                                    name="google_place_name"
+                                                    value={
+                                                        data.google_place_name
+                                                    }
+                                                    className="mt-1 block w-full"
+                                                    autoComplete="google_place_name"
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            "google_place_name",
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    maxLength={200}
+                                                />
+                                            </div>
+                                            {/* <div className="py-2">
                                                 <div className="flex flex-grow align-center">
                                                     <InputLabel
                                                         htmlFor="google_map_location"
@@ -465,7 +551,7 @@ const View = ({ auth }) => {
                                                     }
                                                     className="mt-2"
                                                 />
-                                            </div>
+                                            </div> */}
                                             <hr />
                                             <div className="flex flex-col md:flex-row py-4 gap-8 justify-end">
                                                 <div className="py-4">
@@ -475,12 +561,78 @@ const View = ({ auth }) => {
                                                 </div>
                                                 {school.school_status >= 1 && (
                                                     <div className="flex flex-row gap-4 bg-gray-200 px-6 py-4">
-                                                        <Button variant="primary">
-                                                            Approve
-                                                        </Button>
-                                                        <Button variant="destructive">
-                                                            Reject
-                                                        </Button>
+                                                        <AlertDialog
+                                                            open={open}
+                                                            onOpenChange={
+                                                                setOpen
+                                                            }
+                                                        >
+                                                            <AlertDialogTrigger
+                                                                asChild
+                                                            >
+                                                                <Button variant="primary">
+                                                                    Approve
+                                                                </Button>
+                                                            </AlertDialogTrigger>
+                                                            <AlertDialogContent>
+                                                                <AlertDialogHeader>
+                                                                    <AlertDialogTitle></AlertDialogTitle>
+                                                                    <AlertDialogDescription>
+                                                                        Confirm
+                                                                        to
+                                                                        approve?
+                                                                    </AlertDialogDescription>
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogFooter>
+                                                                    <AlertDialogCancel>
+                                                                        Cancel
+                                                                    </AlertDialogCancel>
+                                                                    <AlertDialogAction
+                                                                        onClick={() =>
+                                                                            handleApprove()
+                                                                        }
+                                                                    >
+                                                                        Confirm
+                                                                    </AlertDialogAction>
+                                                                </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialog>
+                                                        <AlertDialog
+                                                            open={openReject}
+                                                            onOpenChange={
+                                                                setOpenReject
+                                                            }
+                                                        >
+                                                            <AlertDialogTrigger
+                                                                asChild
+                                                            >
+                                                                <Button variant="destructive">
+                                                                    Reject
+                                                                </Button>
+                                                            </AlertDialogTrigger>
+                                                            <AlertDialogContent>
+                                                                <AlertDialogHeader>
+                                                                    <AlertDialogTitle></AlertDialogTitle>
+                                                                    <AlertDialogDescription>
+                                                                        Confirm
+                                                                        to
+                                                                        reject?
+                                                                    </AlertDialogDescription>
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogFooter>
+                                                                    <AlertDialogCancel>
+                                                                        Cancel
+                                                                    </AlertDialogCancel>
+                                                                    <AlertDialogAction
+                                                                        onClick={() =>
+                                                                            handleReject()
+                                                                        }
+                                                                    >
+                                                                        Confirm
+                                                                    </AlertDialogAction>
+                                                                </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialog>
                                                     </div>
                                                 )}
                                             </div>

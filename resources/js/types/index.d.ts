@@ -48,6 +48,7 @@ export interface Product {
     duration: number;
     min_quantity: number;
     max_quantity: number;
+    age_group: string;
 }
 
 export interface Chat {
@@ -71,7 +72,7 @@ export interface School {
     contact_no: string;
     mobile_no: string;
     school_logo: string;
-    google_map_location: string;
+    google_place_name: string;
     school_status: number;
 }
 
@@ -90,6 +91,7 @@ export interface Quotation {
     quotation_item: Array<QuotationItem>;
     prices: Array<QuotationProductPrices>;
     quotation_discount: QuotationDiscount;
+    fees: Array<Fees>;
 }
 
 export interface QuotationDiscount {
@@ -122,6 +124,14 @@ export interface QuotationItem {
     item: Item;
 }
 
+export interface QuotationFees {
+    proposal_fee_id: number;
+    proposal_id: string;
+    fee_id: number;
+    fee_type: string;
+    proposal_fee: number;
+}
+
 export interface Proposal {
     proposal_id: string;
     proposal_name: string;
@@ -139,6 +149,33 @@ export interface Proposal {
     origin: string;
     travel_duration: number;
     travel_distance: number;
+}
+
+export interface Order {
+    order_id: string;
+    order_no: string;
+    order_date: Date;
+    due_date: Date;
+    order_status: number;
+    quotation_id: string;
+}
+
+export interface Invoice {
+    quotation_id: string;
+    invoice_no: string;
+    invoice_date: Date;
+    due_date: Date;
+    invoice_status: number;
+    proposal: Proposal;
+    quotation_product: Array<QuotationProduct>;
+    quotation_item: Array<QuotationItem>;
+    prices: Array<QuotationProductPrices>;
+}
+
+export interface Fees {
+    fee_id: number;
+    fee_type: string;
+    fee_amount: number;
 }
 
 export type PageProps<

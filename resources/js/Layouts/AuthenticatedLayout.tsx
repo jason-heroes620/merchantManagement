@@ -85,6 +85,12 @@ export default function Authenticated({
                                             Quotations
                                         </NavLink>
                                         <NavLink
+                                            href={route("orders")}
+                                            active={route().current("orders")}
+                                        >
+                                            Orders
+                                        </NavLink>
+                                        <NavLink
                                             href={route("invoices")}
                                             active={route().current("invoices")}
                                         >

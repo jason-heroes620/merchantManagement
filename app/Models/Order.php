@@ -6,21 +6,24 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Invoice extends Model
+class Order extends Model
 {
     use HasFactory, HasUuids;
 
-    protected $table = 'invoice';
+    protected $table = 'orders';
     protected $connection = 'trip';
-    protected $primaryKey = 'invoice_id';
-
+    protected $primaryKey = 'order_id';
     protected $fillable = [
         'order_id',
+        'quotation_id',
         'user_id',
-        'invoice_no',
-        'invoice_date',
-        'invoice_amount',
+        'order_no',
+        'order_date',
+        'order_amount',
         'due_date',
-        'invoice_status'
+        'order_status',
+        'order_type',
+        'proposal_id',
+        'order_description'
     ];
 }

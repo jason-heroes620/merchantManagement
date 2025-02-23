@@ -29,7 +29,8 @@ class Product extends Model
         'status',
         'reject_comment',
         'min_quantity',
-        'max_quantity'
+        'max_quantity',
+        'food_allowed',
     ];
 
     public function merchant(): BelongsTo

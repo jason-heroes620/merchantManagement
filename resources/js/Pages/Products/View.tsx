@@ -58,7 +58,7 @@ const View = ({
         category_id: product.category_id,
         age_group: product.age_group,
         product_description: product_description,
-        activities: product_activities,
+        product_activities: product_activities,
         frequency_id: product.product_detail?.frequency_id
             ? product.product_detail.frequency_id
             : "",
@@ -92,6 +92,7 @@ const View = ({
         week_time: product.week_time,
         hours: product.hours,
         minutes: product.minutes,
+        food_allowed: product.food_allowed,
     });
 
     useEffect(() => {

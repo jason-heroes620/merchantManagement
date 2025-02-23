@@ -5,7 +5,7 @@ import { usePage } from "@inertiajs/react";
 const Admin = ({ product, merchant }) => {
     return (
         <div className="flex px-4 py-4">
-            <div id="header" className="flex flex-row gap-4 overflow-x-auto	">
+            <div id="header" className="flex flex-row gap-4 overflow-x-auto">
                 <div>
                     <DashboardCard
                         header={"Merchant"}

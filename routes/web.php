@@ -1,6 +1,8 @@
 <?php
 
 use App\Events\MerchantApplicationApprove;
+use App\Events\QuotationConfirmEvent;
+use App\Events\SchoolRejectEvent;
 use App\Models\MerchantType;
 
 use App\Http\Controllers\RoomController;
@@ -10,6 +12,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MerchantController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ProductController;
@@ -19,11 +22,14 @@ use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\QuotationItemController;
 use App\Http\Controllers\SchoolController;
 use App\Models\Merchant;
+use App\Models\Quotation;
+use App\Models\School;
 use Illuminate\Foundation\Application;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Artisan;
+
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -61,6 +67,19 @@ Route::get('/test-new-merchant-email', function () {
     // $user->assignRole('Merchant');
     event(new MerchantApplicationApprove($merchant));
     return (new MailMessage)->markdown('emails.merchantapproved', compact('merchant'));
+});
+
+Route::get('/test-school-reject-email', function () {
+    $school = School::where('school_id', '386ad418-d904-4644-a73b-7185b03a1d36')->first();
+    event(new SchoolRejectEvent($school));
+    return (new MailMessage)->markdown('emails.schoolRejected', compact('school'));
+});
+
+Route::get('/test-school-quotation-confirm', function () {
+    $school = School::where('school_id', '5a4bfed5-7d01-4ace-919c-a1c7572fc9b9')->first();
+    $quotation = Quotation::select(["quotation_no"])->where('quotation_id', '22a79c5c-ed97-4907-b2d6-c19829b1e05d')->first();
+    event(new QuotationConfirmEvent($school, $quotation));
+    return (new MailMessage)->markdown('emails.quotationConfirm', compact('school', 'quotation'));
 });
 
 // Route::get('/test-new-merchant-email', [MerchantController::class, 'testMerchantEmail']);
@@ -154,16 +173,27 @@ Route::middleware('auth')->group(function () {
     // Schools
     Route::get('/schools/{type?}', [SchoolController::class, 'index'])->name('schools');
     Route::get('/school/{id?}', [SchoolController::class, 'view'])->name('school.view');
+    Route::put('/school/{id?}', [SchoolController::class, 'update'])->name('school.update');
+    Route::put('/school_approve/{id?}', [SchoolController::class, 'approve'])->name('school.approve');
+    Route::put('/school_reject/{id?}', [SchoolController::class, 'reject'])->name('school.reject');
 
     // Quotations
     Route::get('/quotations', [QuotationController::class, 'index'])->name('quotations');
     Route::get('/quotation/{id}', [QuotationController::class, 'view'])->name('quotation.view');
-    Route::put('/quotation/{id}', [QuotationController::class, 'update'])->name('quotation.update');
+    Route::put('/quotation/{id}', [QuotationController::class, 'confirm'])->name('quotation.confirm');
 
     Route::put('/quotationItem/{id}', [QuotationItemController::class, 'transportation_update'])->name('quotation.transportation.update');
 
     // Invoices
     Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices');
+    Route::post('/invoice/create', [InvoiceController::class, 'create'])->name('invoice.create');
+    Route::get('/invoice/{id}', [InvoiceController::class, 'view'])->name('invoice.view');
+
+    // Orders
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders');
+    Route::get('/order/{id}', [OrderController::class, 'view'])->name('order.view');
+    Route::post('/order', [OrderController::class, 'create'])->name('order.create');
+
 
     // Discount
     Route::post('/discount', [DiscountController::class, 'create'])->name('discount.create');
