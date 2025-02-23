@@ -121,8 +121,8 @@ class SchoolController extends Controller
         if ($image['school_logo']) {
             $file_name = explode('/', $image['school_logo']);
             // $image['url'] = asset('storage/schoolLogos/' . $file_name[sizeof($file_name) - 1]);
-            $image['url'] = 'http://localhost:8001/storage/schoolLogos/' . $file_name[sizeof($file_name) - 1];
-
+            $image['url'] = config('custom.trip_host') . 'storage/schoolLogos/' . $file_name[sizeof($file_name) - 1];
+            print_r(config('custom.trip_host'));
             return $image['url'];
         }
         return;
