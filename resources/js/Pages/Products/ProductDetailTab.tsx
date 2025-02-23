@@ -366,8 +366,8 @@ const ProductDetailTab = ({
                 <Checkbox
                     name="foodAllowed"
                     onChange={(e) => {
-                        setData("food_allowed", e.target.checked);
-                        setAllowed(!allowed);
+                        setData("food_allowed", !e.target.checked);
+                        setAllowed(e.target.checked);
                     }}
                     checked={allowed}
                 />

@@ -188,7 +188,7 @@ class ProductController extends Controller
             'min_quantity' => $req->min_quantity,
             'max_quantity' => $req->max_quantity,
             'duration' => $hours + $minutes,
-            'food_allowed' => $req->input('food_allowed') === 'true' ? 0 : 1,
+            'food_allowed' => $req->input('food_allowed'),
         ]);
 
         $main_image_path = "";
