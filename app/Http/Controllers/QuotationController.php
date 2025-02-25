@@ -134,4 +134,19 @@ class QuotationController extends Controller
         }
         return $quotations;
     }
+
+    public function updateVisitationDate(Request $req)
+    {
+        try {
+            Proposal::where('proposal_id', $req->id)->update([
+                'proposal_date' => $req->input('date')
+            ]);
+            $data['success'] = "Proposed Date Updated.";
+            return response()->json($data);
+        } catch (Exceptions $e) {
+            Log::error('Error: visitation date update error. ' . $req->id . " " . $e);
+            $data['error'] = "Error updating visitation date.";
+            return response()->json($data);
+        }
+    }
 }

@@ -149,6 +149,7 @@ export interface Proposal {
     origin: string;
     travel_duration: number;
     travel_distance: number;
+    special_request: string;
 }
 
 export interface Order {

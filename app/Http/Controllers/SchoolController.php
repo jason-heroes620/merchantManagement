@@ -8,6 +8,7 @@ use App\Models\School;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Exceptions;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
@@ -79,9 +80,10 @@ class SchoolController extends Controller
                 ]);
                 $user->assignRole('School');
                 event(new SchoolApproveEvent($school));
-                Password::sendResetLink(
-                    $user->only('email')
-                );
+                Http::post(config('custom.trip_host') . 'api/sendPasswordResetLink', $user);
+                // Password::sendResetLink(
+                //     $user->only('email')
+                // );
                 School::where('school_id', $req->id)->update([
                     'user_id' => $user->id
                 ]);

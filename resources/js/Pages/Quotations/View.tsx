@@ -47,7 +47,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/Components/ui/select";
-
 import { Minus, Plus } from "lucide-react";
 import SelectInput from "@/Components/SelectInput";
 import {
@@ -331,6 +330,10 @@ const View = ({ auth }) => {
             : depositDueDate
     );
 
+    const [visitionDate, setVisitationDate] = useState<Date | undefined>(
+        moment(proposal.proposal_date).toDate()
+    );
+
     const generateOrder = () => {
         return (
             <Dialog>
@@ -402,7 +405,10 @@ const View = ({ auth }) => {
                                                 asChild
                                                 className="flex items-center h-[42px]"
                                             >
-                                                <Button variant={"outline"}>
+                                                <Button
+                                                    variant={"outline"}
+                                                    className="w-full justify-start text-left font-normal"
+                                                >
                                                     <CalendarIcon
                                                         size={14}
                                                         className="pr-1"
@@ -614,7 +620,7 @@ const View = ({ auth }) => {
 
     const [results, setResults] = useState(null);
 
-    const calculateDistances = async (locations) => {
+    const calculateDistances = async (locations: any) => {
         const service = new google.maps.DirectionsService();
 
         const origin = proposal.origin; // Replace with your origin
@@ -648,6 +654,21 @@ const View = ({ auth }) => {
     }, []);
     if (!isLoaded) return <div>Loading...</div>;
 
+    const handleUpdateVisitationDate = (e) => {
+        //e.preventDefault();
+
+        axios
+            .put(route("quotation.visitation_date", proposal.proposal_id), {
+                date: moment(visitionDate).format("YYYY-MM-DD"),
+            })
+            .then((resp) => {
+                if (resp.data.success) {
+                    toast.success("Visitation Date Updated");
+                } else {
+                    toast.error("Issue updating date.");
+                }
+            });
+    };
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -710,11 +731,82 @@ const View = ({ auth }) => {
                                             value="Proposed Visitation Date"
                                             className="py-2"
                                         />
-                                        <span className="py-4">
-                                            {moment(
-                                                proposal.proposal_date
-                                            ).format("DD/MM/YYYY")}
-                                        </span>
+                                        <div className="flex items-center gap-4">
+                                            <Popover>
+                                                <PopoverTrigger
+                                                    asChild
+                                                    className="mt-1"
+                                                >
+                                                    <Button
+                                                        variant={"outline"}
+                                                        className="w-[50%] justify-start text-left font-normal"
+                                                    >
+                                                        <CalendarIcon className="pr-2" />
+                                                        {visitionDate ? (
+                                                            moment(
+                                                                visitionDate
+                                                            ).format(
+                                                                "DD/MM/YYYY"
+                                                            )
+                                                        ) : (
+                                                            <span>
+                                                                Pick a date
+                                                            </span>
+                                                        )}
+                                                    </Button>
+                                                </PopoverTrigger>
+                                                <PopoverContent
+                                                    className="w-auto p-0"
+                                                    align="start"
+                                                >
+                                                    <Calendar
+                                                        mode="single"
+                                                        selected={visitionDate}
+                                                        fromDate={moment()
+                                                            .add(5, "days")
+                                                            .toDate()}
+                                                        onSelect={(date) => {
+                                                            setVisitationDate(
+                                                                date
+                                                            );
+                                                        }}
+                                                        defaultMonth={
+                                                            visitionDate
+                                                        }
+                                                    />
+                                                </PopoverContent>
+                                            </Popover>
+                                            <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button variant="primary">
+                                                        Update
+                                                    </Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle></AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                            Confirm to update
+                                                            visitation date?
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>
+                                                            Cancel
+                                                        </AlertDialogCancel>
+                                                        <AlertDialogAction
+                                                            onClick={(e) =>
+                                                                handleUpdateVisitationDate(
+                                                                    3
+                                                                )
+                                                            }
+                                                        >
+                                                            Continue
+                                                        </AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1142,6 +1234,16 @@ const View = ({ auth }) => {
                                             );
                                         })}
                                 </div>
+                            </div>
+                            <div className="flex flex-col">
+                                <span>Special Request</span>
+                                <textarea
+                                    name="special_request"
+                                    id=""
+                                    value={proposal.special_request}
+                                    disabled={true}
+                                    rows={4}
+                                />
                             </div>
                             <hr />
                             <div className="px-4 py-4">
