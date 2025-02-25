@@ -78,6 +78,9 @@ const View = ({
             ? product.product_detail.event_end_time
             : "",
         location: product?.location ? product.location : "",
+        google_location: product?.google_location
+            ? product.google_location
+            : "",
         google_map_location: product.product_detail?.google_map_location
             ? product.product_detail.google_map_location
             : "",

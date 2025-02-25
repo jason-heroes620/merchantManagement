@@ -47,6 +47,7 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
         event_start_time: "",
         event_end_time: "",
         location: "",
+        google_location: "",
         google_map_location: "",
         min_quantity: 1,
         max_quantity: 1,
@@ -308,6 +309,31 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
                                     />
                                     <InputError
                                         message={errors.location}
+                                        className="mt-2"
+                                    />
+                                </div>
+                                <div className="py-2">
+                                    <InputLabel
+                                        htmlFor="event_google_location"
+                                        value="Google Location"
+                                    />
+                                    <TextInput
+                                        id="event_google_location"
+                                        name="event_google_location"
+                                        value={data.google_location}
+                                        className="mt-1 block w-full"
+                                        autoComplete="event_google_location"
+                                        onChange={(e) =>
+                                            setData(
+                                                "google_location",
+                                                e.target.value
+                                            )
+                                        }
+                                        maxLength={150}
+                                        required
+                                    />
+                                    <InputError
+                                        message={errors.google_location}
                                         className="mt-2"
                                     />
                                 </div>

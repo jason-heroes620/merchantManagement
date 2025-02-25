@@ -20,6 +20,7 @@ class Product extends Model
         'category_id',
         'age_group',
         'location',
+        'google_location',
         'child_price',
         'adult_price',
         'duration',

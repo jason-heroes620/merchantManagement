@@ -85,7 +85,7 @@ const ProductDetailTab = ({
         const files: File[] = Array.from(e.target.files || []);
         var canUpload = true;
         files.map((f: File) => {
-            f.size > 1048576 ? (canUpload = false) : "";
+            f.size > 2097152 ? (canUpload = false) : "";
         });
         if (canUpload) {
             setFiles(files);
@@ -99,7 +99,7 @@ const ProductDetailTab = ({
         const files: File[] = Array.from(e.target.files || []);
         var canUpload = true;
         files.map((f: File) => {
-            f.size > 1048576 ? (canUpload = false) : "";
+            f.size > 2097152 ? (canUpload = false) : "";
         });
         if (canUpload) {
             setMainImage(files);
@@ -222,6 +222,19 @@ const ProductDetailTab = ({
                     required
                 />
                 <InputError message={errors.location} className="mt-2" />
+            </div>
+            <div className="py-4">
+                <InputLabel htmlFor="google_location" value="Google Location" />
+                <TextInput
+                    id="google_location"
+                    name="google_location"
+                    value={data.google_location}
+                    className="mt-1 block w-full"
+                    autoComplete="google_location"
+                    onChange={(e) => setData("google_location", e.target.value)}
+                    required
+                />
+                <InputError message={errors.google_location} className="mt-2" />
             </div>
             <div className="py-2">
                 <div className="flex flex-grow align-center">
