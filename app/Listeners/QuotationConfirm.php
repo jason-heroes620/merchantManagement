@@ -25,7 +25,7 @@ class QuotationConfirm
     public function handle(QuotationConfirmEvent $event): void
     {
         Log::info('Quotation confirm mail sent to ' . $event->school['email']);
-        $emails = [$event->school['email'], 'jason.w@heroes.my'];
+        $emails = [$event->school['email'], 'jason.w@heroes.my', 'admin@heroes.my'];
         Mail::to($emails)->send(new QuotationConfirmEmail($event->school, $event->quotation));
     }
 }
