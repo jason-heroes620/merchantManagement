@@ -1234,6 +1234,54 @@ const View = ({ auth }) => {
                                             );
                                         })}
                                 </div>
+                                {quotationItem.some(
+                                    (q: any) => q.item.item_type === "GUIDE"
+                                ) && (
+                                    <div className="py-4">
+                                        <span className="text-lg font-bold">
+                                            GUIDE
+                                        </span>
+                                        {quotationItem
+                                            .filter((p) => {
+                                                return (
+                                                    p.item.item_type === "GUIDE"
+                                                );
+                                            })
+                                            .map((p) => {
+                                                return (
+                                                    <div
+                                                        key={p.item_id}
+                                                        className="flex flex-col md:flex-row md:justify-between"
+                                                    >
+                                                        <div className="flex items-center">
+                                                            <span>
+                                                                {
+                                                                    p.item
+                                                                        .item_name
+                                                                }
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex flex-col md:flex-row md:items-center gap-4">
+                                                            <span>
+                                                                ({p.item_qty} X
+                                                                RM{" "}
+                                                                {p.unit_price} /{" "}
+                                                                {p.uom})
+                                                            </span>
+                                                            <div className="flex flex-row md:items-center gap-2 justify-end">
+                                                                <span className="flex items-center text-lg font-bold">
+                                                                    {formattedNumber(
+                                                                        p.unit_price *
+                                                                            p.item_qty
+                                                                    )}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                    </div>
+                                )}
                             </div>
                             <div className="flex flex-col">
                                 <span>Special Request</span>

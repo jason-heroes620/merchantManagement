@@ -68,16 +68,14 @@ const ProductDetailTab = ({
     const onWeekStartTimeChange = (i, val) => {
         const newTime = [...data.week_time];
         const time = newTime.find((t) => t.index === i);
-        time.start_time = dayjs(val).format("HH:mm");
-
+        time.start_time = val !== null ? dayjs(val).format("HH:mm") : null;
         setData("week_time", newTime);
     };
 
     const onWeekEndTimeChange = (i, val) => {
         const newTime = [...data.week_time];
         const time = newTime.find((t) => t.index === i);
-        time.end_time = dayjs(val).format("HH:mm");
-
+        time.end_time = val !== null ? dayjs(val).format("HH:mm") : null;
         setData("week_time", newTime);
     };
 
@@ -224,7 +222,10 @@ const ProductDetailTab = ({
                 <InputError message={errors.location} className="mt-2" />
             </div>
             <div className="py-4">
-                <InputLabel htmlFor="google_location" value="Google Location" />
+                <InputLabel
+                    htmlFor="google_location"
+                    value="Google Place Name"
+                />
                 <TextInput
                     id="google_location"
                     name="google_location"

@@ -315,7 +315,7 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
                                 <div className="py-2">
                                     <InputLabel
                                         htmlFor="event_google_location"
-                                        value="Google Location"
+                                        value="Google Place Name"
                                     />
                                     <TextInput
                                         id="event_google_location"
