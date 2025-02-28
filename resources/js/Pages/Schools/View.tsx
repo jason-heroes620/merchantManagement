@@ -1,20 +1,12 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { usePage, Link, Head, useForm } from "@inertiajs/react";
+import { usePage, Head, useForm, router } from "@inertiajs/react";
 import { useState, useEffect } from "react";
 import { School } from "@/types";
-// import { ToastContainer, toast } from "react-toastify";
 import InputLabel from "@/Components/InputLabel";
 import TextInput from "@/Components/TextInput";
 import SelectInput from "@/Components/SelectInput";
 import States from "@/Components/states.json";
 import InputError from "@/Components/InputError";
-import {
-    HoverCard,
-    HoverCardContent,
-    HoverCardTrigger,
-} from "@/Components/ui/hover-card";
-import { FiHelpCircle } from "react-icons/fi";
-import GoogleMapInstruction from "@/Components/GoogleMapInstruction";
 import { useObjectUrls } from "@/utils/getObjectUrls";
 import { Button } from "@/Components/ui/button";
 import {
@@ -38,7 +30,7 @@ const states = States.sort((a, b) => (a > b ? 1 : -1)).map((s) => {
     return { label: s, value: s };
 });
 
-const View = ({ auth, flash }: any) => {
+const View = ({ auth, flash, previousUrl }: any) => {
     const { school, school_logo } = usePage<{
         school: School;
         school_logo: any;
@@ -48,17 +40,17 @@ const View = ({ auth, flash }: any) => {
         school_name: school.school_name,
         address_1: school.address_1,
         address_2: school.address_2,
-        address_3: school.address_3,
-        city: school.city,
-        postcode: school.postcode,
-        state: school.state,
+        address_3: school.address_3 || "",
+        city: school.city || "",
+        postcode: school.postcode || "",
+        state: school.state || "",
         contact_person: school.contact_person,
         email: school.email,
         contact_no: school.contact_no || "",
         mobile_no: school.mobile_no || "",
         school_logo: school_logo,
         school_status: school.school_status,
-        google_place_name: school.google_place_name,
+        google_place_name: school.google_place_name || "",
         _method: "put",
     });
     const [logo, setLogo] = useState<File>();
@@ -81,7 +73,6 @@ const View = ({ auth, flash }: any) => {
 
     const handleApprove = () => {
         axios.put(route("school.approve", school.school_id)).then((resp) => {
-            console.log(resp.data);
             if (resp.data.success) {
                 toast({
                     variant: "default",
@@ -126,8 +117,11 @@ const View = ({ auth, flash }: any) => {
             header={
                 <div className="flex flex-row gap-8">
                     <div>
-                        <Button asChild variant="destructive">
-                            <Link href={route("schools")}>Back</Link>
+                        <Button
+                            variant="destructive"
+                            onClick={() => router.visit(previousUrl.toString())}
+                        >
+                            Back
                         </Button>
                     </div>
                     <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">

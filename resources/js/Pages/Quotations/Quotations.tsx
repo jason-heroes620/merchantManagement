@@ -2,9 +2,9 @@ import React from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, usePage } from "@inertiajs/react";
 import QuotationTab from "@/Components/Tabs/QuotationTab";
-import Tabs from "@/Components/Tabs/Tabs";
 import Tab from "@/Components/Tabs/Tab";
 import { PaginatedData, Quotation } from "@/types";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/Components/ui/tabs";
 
 const Quotations = ({ auth }) => {
     const {
@@ -19,15 +19,6 @@ const Quotations = ({ auth }) => {
         accepted_quotations: PaginatedData<Quotation>;
         type: string;
     }>().props;
-
-    const index =
-        type === "Current"
-            ? 1
-            : type === "Accepted"
-            ? 2
-            : type === "Order Issued"
-            ? 3
-            : 0;
 
     return (
         <AuthenticatedLayout
@@ -47,26 +38,39 @@ const Quotations = ({ auth }) => {
                         <div className="p-6 text-gray-900 dark:text-gray-100">
                             <div className="flex justify-end px-8 py-2"></div>
                             <div>
-                                <Tabs preSelectedTabIndex={index}>
-                                    <Tab title="Pending">
+                                <Tabs defaultValue={type} className="w-full">
+                                    <TabsList>
+                                        <TabsTrigger value="pending">
+                                            Pending
+                                        </TabsTrigger>
+                                        <TabsTrigger value="current">
+                                            Current
+                                        </TabsTrigger>
+                                        <TabsTrigger value="accepted">
+                                            Accepted
+                                        </TabsTrigger>
+                                        <TabsTrigger value="issued">
+                                            Order Issued
+                                        </TabsTrigger>
+                                    </TabsList>
+                                    <TabsContent value="pending">
                                         <QuotationTab
                                             quotations={new_quotations}
                                         />
-                                    </Tab>
-
-                                    <Tab title={"Current"}>
+                                    </TabsContent>
+                                    <TabsContent value="current">
                                         <QuotationTab quotations={quotations} />
-                                    </Tab>
-                                    <Tab title="Accepted">
+                                    </TabsContent>
+                                    <TabsContent value="accepted">
                                         <QuotationTab
                                             quotations={accepted_quotations}
                                         />
-                                    </Tab>
-                                    <Tab title="Order Issued">
+                                    </TabsContent>
+                                    <TabsContent value="issued">
                                         <QuotationTab
                                             quotations={order_issued}
                                         />
-                                    </Tab>
+                                    </TabsContent>
                                 </Tabs>
                             </div>
                         </div>

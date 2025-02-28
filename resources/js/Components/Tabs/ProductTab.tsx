@@ -5,6 +5,7 @@ import dayjs from "dayjs";
 
 const ProductTab = ({ products }: any) => {
     const { data, links } = products;
+
     return (
         <div>
             <div className="pt-4">

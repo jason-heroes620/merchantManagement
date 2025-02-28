@@ -25,8 +25,11 @@ const View = ({
     product_main_image,
     profit_types,
     profit_info,
+    tour_guide_price,
     flash,
+    previousUrl,
 }: any) => {
+    console.log(previousUrl);
     const { toast } = useToast();
     const [dark, setDark] = useState(
         window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -87,7 +90,7 @@ const View = ({
         min_quantity: product.min_quantity,
         max_quantity: product.max_quantity,
         child_price: product?.child_price,
-        adult_price: product?.adult_price,
+        teacher_price: product?.teacher_price,
         main_image: [],
         images: [],
         existing_main_image: product_main_image,
@@ -96,6 +99,8 @@ const View = ({
         hours: product.hours,
         minutes: product.minutes,
         food_allowed: product.food_allowed,
+        tour_guide: product.tour_guide,
+        tour_guide_price: tour_guide_price,
     });
 
     useEffect(() => {
@@ -127,8 +132,11 @@ const View = ({
             header={
                 <div className="flex flex-row gap-8 items-center">
                     <div>
-                        <Button asChild variant="destructive">
-                            <Link href={route("products")}>Back</Link>
+                        <Button
+                            variant={"destructive"}
+                            onClick={() => router.visit(previousUrl.toString())}
+                        >
+                            Back
                         </Button>
                     </div>
                     <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">

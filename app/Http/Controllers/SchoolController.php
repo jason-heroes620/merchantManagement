@@ -18,11 +18,25 @@ class SchoolController extends Controller
 {
     public function index(Request $req)
     {
-        $schools = School::where('school_status', 0)->paginate(10);
-        $new_schools = School::where('school_status', 1)->paginate(10);
-        $rejected_schools = School::where('school_status', 2)->paginate(10);
+        $type = $req->input('tab', 'pending');
 
-        $type = $req->type;
+        $schools = School::where('school_status', 0)->paginate(
+            10,
+            ['*'],
+            'CurrentPage'
+        )->appends(['tab' => 'current']);
+        $new_schools = School::where('school_status', 1)->paginate(
+            10,
+            ['*'],
+            'PendingPage'
+        )->appends(['tab' => 'pending']);
+        $rejected_schools = School::where('school_status', 2)->paginate(
+            10,
+            ['*'],
+            'RejectedPage'
+        )->appends(['tab' => 'rejected']);
+
+        $type = $type;
 
         return Inertia::render('Schools/Schools', compact('schools', 'new_schools', 'rejected_schools', 'type'));
     }

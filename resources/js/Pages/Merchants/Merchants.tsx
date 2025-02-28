@@ -2,9 +2,8 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, usePage } from "@inertiajs/react";
 import { PageProps, Merchant } from "@/types";
 import { PaginatedData } from "@/types";
-import Tabs from "@/Components/Tabs/Tabs";
-import Tab from "@/Components/Tabs/Tab";
 import MerchantTab from "@/Components/Tabs/MerchantTab";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/Components/ui/tabs";
 
 const Merchants = ({ auth }: PageProps) => {
     const { merchants, pendingMerchants, rejectedMerchants, type } = usePage<{
@@ -13,7 +12,6 @@ const Merchants = ({ auth }: PageProps) => {
         rejectedMerchants: PaginatedData<Merchant>;
         type: string;
     }>().props;
-    const index = type === "Current" ? 1 : type === "Rejected" ? 2 : 0;
 
     return (
         <AuthenticatedLayout
@@ -31,20 +29,31 @@ const Merchants = ({ auth }: PageProps) => {
                     <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-gray-100">
                             <div className="py-4 border-1 border-gray-100">
-                                <Tabs preSelectedTabIndex={index}>
-                                    <Tab title="Pending">
+                                <Tabs defaultValue={type} className="w-full">
+                                    <TabsList>
+                                        <TabsTrigger value="pending">
+                                            Pending
+                                        </TabsTrigger>
+                                        <TabsTrigger value="current">
+                                            Current
+                                        </TabsTrigger>
+                                        <TabsTrigger value="rejected">
+                                            Rejected
+                                        </TabsTrigger>
+                                    </TabsList>
+                                    <TabsContent value="pending">
                                         <MerchantTab
                                             merchants={pendingMerchants}
                                         />
-                                    </Tab>
-                                    <Tab title={"Current"}>
+                                    </TabsContent>
+                                    <TabsContent value="current">
                                         <MerchantTab merchants={merchants} />
-                                    </Tab>
-                                    <Tab title={"Rejected"}>
+                                    </TabsContent>
+                                    <TabsContent value="rejected">
                                         <MerchantTab
                                             merchants={rejectedMerchants}
                                         />
-                                    </Tab>
+                                    </TabsContent>
                                 </Tabs>
                             </div>
                         </div>

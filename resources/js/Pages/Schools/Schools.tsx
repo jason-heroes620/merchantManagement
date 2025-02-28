@@ -1,11 +1,8 @@
-import React from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, usePage } from "@inertiajs/react";
-import { Button } from "@/Components/ui/button";
 import SchoolTab from "@/Components/Tabs/SchoolTab";
-import Tabs from "@/Components/Tabs/Tabs";
-import Tab from "@/Components/Tabs/Tab";
 import { PaginatedData, School } from "@/types";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/Components/ui/tabs";
 
 const Schools = ({ auth }) => {
     const { new_schools, schools, rejected_schools, type } = usePage<{
@@ -14,7 +11,7 @@ const Schools = ({ auth }) => {
         rejected_schools: PaginatedData<School>;
         type: string;
     }>().props;
-    const index = type === "Current" ? 1 : type === "Rejected" ? 2 : 0;
+
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -31,17 +28,27 @@ const Schools = ({ auth }) => {
                         <div className="p-6 text-gray-900 dark:text-gray-100">
                             <div className="flex justify-end px-8 py-2"></div>
                             <div>
-                                <Tabs preSelectedTabIndex={index}>
-                                    <Tab title="Pending">
+                                <Tabs defaultValue={type} className="w-full">
+                                    <TabsList>
+                                        <TabsTrigger value="pending">
+                                            Pending
+                                        </TabsTrigger>
+                                        <TabsTrigger value="current">
+                                            Current
+                                        </TabsTrigger>
+                                        <TabsTrigger value="rejected">
+                                            Rejected
+                                        </TabsTrigger>
+                                    </TabsList>
+                                    <TabsContent value="pending">
                                         <SchoolTab schools={new_schools} />
-                                    </Tab>
-
-                                    <Tab title={"Current"}>
+                                    </TabsContent>
+                                    <TabsContent value="current">
                                         <SchoolTab schools={schools} />
-                                    </Tab>
-                                    <Tab title="Rejected">
+                                    </TabsContent>
+                                    <TabsContent value="rejected">
                                         <SchoolTab schools={rejected_schools} />
-                                    </Tab>
+                                    </TabsContent>
                                 </Tabs>
                             </div>
                         </div>

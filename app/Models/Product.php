@@ -22,7 +22,7 @@ class Product extends Model
         'location',
         'google_location',
         'child_price',
-        'adult_price',
+        'teacher_price',
         'duration',
         'product_description',
         'product_activities',
@@ -32,6 +32,7 @@ class Product extends Model
         'min_quantity',
         'max_quantity',
         'food_allowed',
+        'tour_guide',
     ];
 
     public function merchant(): BelongsTo

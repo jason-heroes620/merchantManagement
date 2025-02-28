@@ -11,26 +11,26 @@ import {
 
 const DashboardCard = ({ header, content, type, links }) => {
     const borderColor =
-        type === "Pending"
+        type === "pending"
             ? "bg-orange-300"
-            : type === "Current"
+            : type === "current"
             ? "bg-green-300"
             : "bg-red-300";
     return (
         <Link href={route(links[0], type)}>
             <Card className={`border ${borderColor} `}>
-                <CardHeader>
-                    <CardTitle>{header}</CardTitle>
-                </CardHeader>
-                <CardContent>
+                <CardContent className="py-4">
+                    <div>
+                        <span className="font-bold">{header}</span>
+                    </div>
                     <div
                         id="content"
-                        className="flex px-2 py gap-10 justify-between"
+                        className="flex px-2 py py gap-10 justify-between"
                     >
-                        <span className="text-lg font-extrabold italic">
+                        <span className="text-sm font-semibold italic capitalize">
                             {type}
                         </span>
-                        <span className="text-xl font-bold">{content}</span>
+                        <span className="text-sm font-bold">{content}</span>
                     </div>
                 </CardContent>
             </Card>

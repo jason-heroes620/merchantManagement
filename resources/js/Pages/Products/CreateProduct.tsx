@@ -52,7 +52,7 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
         min_quantity: 1,
         max_quantity: 1,
         child_price: "0.00",
-        adult_price: "0.00",
+        teacher_price: "0.00",
         images: [],
         main_image: [],
         week_time: [
@@ -67,6 +67,8 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
         hours: 0,
         minutes: 0,
         food_allowed: false,
+        tour_guide: false,
+        tour_guide_price: "0.00",
     });
 
     useEffect(() => {
@@ -76,6 +78,9 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
             });
         }
     }, [flash]);
+
+    const [tourGuideOption, setTourGuideOption] = useState(data.tour_guide);
+    const [tourGuidePrice, setTourGuidePrice] = useState(data.tour_guide_price);
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
@@ -475,19 +480,19 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
                                             </div>
                                             <div>
                                                 <InputLabel
-                                                    htmlFor="adult_price"
-                                                    value="Adult Price"
+                                                    htmlFor="teacher_price"
+                                                    value="Teacher Price"
                                                 />
                                                 <TextInput
-                                                    id="adult_price"
-                                                    name="adult_price"
-                                                    value={data.adult_price}
+                                                    id="teacher_price"
+                                                    name="teacher_price"
+                                                    value={data.teacher_price}
                                                     type="number"
                                                     className="mt-1 block w-full"
-                                                    autoComplete="adult_price"
+                                                    autoComplete="teacher_price"
                                                     onChange={(e) =>
                                                         setData(
-                                                            "adult_price",
+                                                            "teacher_price",
                                                             e.target.value
                                                         )
                                                     }
@@ -495,27 +500,79 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
                                                     required
                                                 />
                                                 <InputError
-                                                    message={errors.adult_price}
+                                                    message={
+                                                        errors.teacher_price
+                                                    }
                                                     className="mt-2"
                                                 />
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="py-2">
-                                    <Checkbox
-                                        name="foodAllowed"
-                                        onChange={(e) =>
-                                            setData(
-                                                "food_allowed",
-                                                e.target.checked
-                                            )
-                                        }
-                                        defaultChecked
-                                    />
-                                    <span className="pl-2 font-bold">
-                                        Food Allowed
-                                    </span>
+                                <div className="py-2 px-2 border rounded-md">
+                                    <div className="py-2">
+                                        <Checkbox
+                                            name="foodAllowed"
+                                            onChange={(e) =>
+                                                setData(
+                                                    "food_allowed",
+                                                    e.target.checked
+                                                )
+                                            }
+                                            defaultChecked
+                                        />
+                                        <span className="pl-2 font-bold">
+                                            Food Allowed
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <Checkbox
+                                            name="tourGuideOption"
+                                            onChange={(e) => {
+                                                setData(
+                                                    "tour_guide",
+                                                    !e.target.checked
+                                                );
+                                                setTourGuideOption(
+                                                    e.target.checked
+                                                );
+                                            }}
+                                            checked={tourGuideOption}
+                                        />
+                                        <span className="pl-2 font-bold">
+                                            Tour Guide Provided
+                                        </span>
+                                        {tourGuideOption && (
+                                            <div className="px-4 py-2">
+                                                <InputLabel
+                                                    htmlFor="tour_guide_price"
+                                                    value="Tour Guide Cost"
+                                                />
+                                                <div className="flex flex-row w-full md:w-[50%]">
+                                                    <TextInput
+                                                        id="tour_guide_price"
+                                                        name="tour_guide_price"
+                                                        value={
+                                                            data.tour_guide_price
+                                                        }
+                                                        type="number"
+                                                        className="mt-1 block w-full"
+                                                        autoComplete="tour_guide_price"
+                                                        onChange={(e) => {
+                                                            setTourGuidePrice(
+                                                                e.target.value
+                                                            );
+                                                            setData(
+                                                                "tour_guide_price",
+                                                                e.target.value
+                                                            );
+                                                        }}
+                                                        min={0}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="py-2">
                                     <InputLabel

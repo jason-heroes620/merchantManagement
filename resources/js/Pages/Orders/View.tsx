@@ -301,7 +301,7 @@ const View = ({
                                                             id="invoice_no"
                                                             name="invoice_no"
                                                             className="mt-1 block w-full"
-                                                            autoComplete="adult_price"
+                                                            autoComplete="invoice_no"
                                                             onChange={(e) =>
                                                                 setInvoiceNo(
                                                                     e.target

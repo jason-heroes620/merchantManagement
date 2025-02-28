@@ -25,10 +25,12 @@ class OrderController extends Controller
 {
     public function index(Request $req)
     {
+        $type = $req->input('tab', 'pending');
+
         $user = $req->user();
         $pending_payment = $this->getOrders(0);
         $paid = $this->getOrders(2);
-        $type = $req->type;
+        $type = $type;
         return Inertia::render('Orders/Orders', compact('pending_payment', 'paid', 'type'));
     }
 
@@ -216,9 +218,22 @@ class OrderController extends Controller
 
     private function getOrders($status)
     {
+        $page = "";
+        $tab = "";
+        if ($status === 0) {
+            $page = "PendingPage";
+            $tab = "pending";
+        } else {
+            $page = "PaidPage";
+            $tab = "paid";
+        }
         $orders = Order::where('order_status', $status)
             ->orderBy('created_at', 'DESC')
-            ->paginate(10);
+            ->paginate(
+                10,
+                ['*'],
+                $page
+            )->appends(['tab' => $tab]);
 
         foreach ($orders as $order) {
             $school = School::select(['school_name'])->where('user_id', $order['user_id'])->first();

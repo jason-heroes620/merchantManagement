@@ -19,7 +19,7 @@ const View = ({
     payment,
 }) => {
     const toast = useToast();
-    console.log(orderTotal);
+
     return (
         <AuthenticatedLayout
             user={auth.user}

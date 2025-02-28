@@ -24,12 +24,30 @@ class QuotationController extends Controller
 {
     public function index(Request $req)
     {
-        $new_quotations = $this->getQuotations(0);
-        $quotations = $this->getQuotations(1);
-        $accepted_quotations = $this->getQuotations(2);
-        $order_issued = $this->getQuotations(3);
+        $type = $req->input('tab', 'pending');
 
-        $type = $req->type;
+        $new_quotations = $this->getQuotations(
+            0,
+            ['*'],
+            'CurrentPage'
+        )->appends(['tab' => 'current']);
+        $quotations = $this->getQuotations(
+            1,
+            ['*'],
+            'PendingPage'
+        )->appends(['tab' => 'pending']);
+        $accepted_quotations = $this->getQuotations(
+            2,
+            ['*'],
+            'AcceptedPage'
+        )->appends(['tab' => 'accepted']);
+        $order_issued = $this->getQuotations(
+            3,
+            ['*'],
+            'OrderIssuedPage'
+        )->appends(['tab' => 'issued']);
+
+        $type = $type;
         return Inertia::render('Quotations/Quotations', compact('new_quotations', 'quotations', 'accepted_quotations', 'order_issued', 'type'));
     }
 

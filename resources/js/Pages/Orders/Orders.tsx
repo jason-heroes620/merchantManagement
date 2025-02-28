@@ -1,9 +1,9 @@
 import { Head, usePage } from "@inertiajs/react";
 import { Order, PaginatedData } from "@/types";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import Tabs from "@/Components/Tabs/Tabs";
 import Tab from "@/Components/Tabs/Tab";
 import OrderTab from "@/Components/Tabs/OrderTab";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/Components/ui/tabs";
 
 const Orders = ({ auth }) => {
     const { pending_payment, paid, type } = usePage<{
@@ -11,8 +11,6 @@ const Orders = ({ auth }) => {
         paid: PaginatedData<Order>;
         type: string;
     }>().props;
-
-    const index = type === "Paid" ? 1 : 0;
 
     return (
         <AuthenticatedLayout
@@ -32,14 +30,21 @@ const Orders = ({ auth }) => {
                         <div className="p-6 text-gray-900 dark:text-gray-100">
                             <div className="flex justify-end px-8 py-2"></div>
                             <div>
-                                <Tabs preSelectedTabIndex={index}>
-                                    <Tab title="Pending Payment">
+                                <Tabs defaultValue={type} className="w-full">
+                                    <TabsList>
+                                        <TabsTrigger value="pending">
+                                            Pending
+                                        </TabsTrigger>
+                                        <TabsTrigger value="paid">
+                                            Paid
+                                        </TabsTrigger>
+                                    </TabsList>
+                                    <TabsContent value="pending">
                                         <OrderTab orders={pending_payment} />
-                                    </Tab>
-
-                                    <Tab title={"Paid"}>
+                                    </TabsContent>
+                                    <TabsContent value="paid">
                                         <OrderTab orders={paid} />
-                                    </Tab>
+                                    </TabsContent>
                                 </Tabs>
                             </div>
                         </div>

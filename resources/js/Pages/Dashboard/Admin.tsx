@@ -10,7 +10,7 @@ const Admin = ({ product, merchant }) => {
                     <DashboardCard
                         header={"Merchant"}
                         content={merchant[0].count}
-                        type={"Pending"}
+                        type={"pending"}
                         links={["merchants", 0]}
                     />
                 </div>
@@ -18,7 +18,7 @@ const Admin = ({ product, merchant }) => {
                     <DashboardCard
                         header={"Merchant"}
                         content={merchant[1].count}
-                        type={"Current"}
+                        type={"current"}
                         links={["merchants", 1]}
                     />
                 </div>
@@ -26,7 +26,7 @@ const Admin = ({ product, merchant }) => {
                     <DashboardCard
                         header={"Merchant"}
                         content={merchant[2].count}
-                        type={"Rejected"}
+                        type={"rejected"}
                         links={["merchants", 2]}
                     />
                 </div>
@@ -34,7 +34,7 @@ const Admin = ({ product, merchant }) => {
                     <DashboardCard
                         header={"Product"}
                         content={product[0].count}
-                        type={"Pending"}
+                        type={"pending"}
                         links={["products", 0]}
                     />
                 </div>
@@ -42,7 +42,7 @@ const Admin = ({ product, merchant }) => {
                     <DashboardCard
                         header={"Product"}
                         content={product[1].count}
-                        type={"Current"}
+                        type={"current"}
                         links={["products", 1]}
                     />
                 </div>
@@ -50,7 +50,7 @@ const Admin = ({ product, merchant }) => {
                     <DashboardCard
                         header={"Product"}
                         content={product[2].count}
-                        type={"Rejected"}
+                        type={"rejected"}
                         links={["products", 2]}
                     />
                 </div>

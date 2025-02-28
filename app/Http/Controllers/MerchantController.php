@@ -29,12 +29,17 @@ class MerchantController extends Controller
 {
     public function merchants(Request $req): Response
     {
+        $type = $req->input('tab', $req->type ?? 'pending');
         $merchants =
             Merchant::select('merchants.id', 'merchants.merchant_name', 'merchants.person_in_charge', 'merchants.merchant_email', 'merchants.merchant_phone', 'merchant_type.name as merchant_type')
             ->leftJoin('merchant_type', 'merchants.merchant_type', '=', 'merchant_type.id')
             ->where('merchants.status', 0)
             ->orderBy('merchant_name', 'ASC')
-            ->paginate(10);
+            ->paginate(
+                10,
+                ['*'],
+                'CurrentPage'
+            )->appends(['tab' => 'current']);
         // print_r($merchants);
 
         $pendingMerchants =
@@ -42,20 +47,28 @@ class MerchantController extends Controller
             ->leftJoin('merchant_type', 'merchants.merchant_type', '=', 'merchant_type.id')
             ->where('merchants.status', 1)
             ->orderBy('merchant_name', 'ASC')
-            ->paginate(10);
+            ->paginate(
+                10,
+                ['*'],
+                'PendingPage'
+            )->appends(['tab' => 'pending']);
 
         $rejectedMerchants =
             Merchant::select('merchants.id', 'merchants.merchant_name', 'merchants.person_in_charge', 'merchants.merchant_email', 'merchants.merchant_phone', 'merchant_type.name as merchant_type')
             ->leftJoin('merchant_type', 'merchants.merchant_type', '=', 'merchant_type.id')
             ->where('merchants.status', 2)
             ->orderBy('merchant_name', 'ASC')
-            ->paginate(10);
+            ->paginate(
+                10,
+                ['*'],
+                'RejectedPage'
+            )->appends(['tab' => 'rejected']);
 
         return Inertia::render('Merchants/Merchants', [
             'merchants' => $merchants,
             'pendingMerchants' => $pendingMerchants,
             'rejectedMerchants' => $rejectedMerchants,
-            'type' => $req->type
+            'type' => $type
         ]);
     }
 

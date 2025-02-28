@@ -5,7 +5,7 @@ import dayjs from "dayjs";
 
 const InvoiceTab = ({ invoices }: any) => {
     const { data, links } = invoices;
-    console.log(invoices);
+
     return (
         <div>
             <div className="pt-4">

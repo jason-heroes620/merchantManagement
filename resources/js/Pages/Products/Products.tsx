@@ -4,10 +4,8 @@ import { Head, Link, usePage } from "@inertiajs/react";
 import { Toaster } from "@/Components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
 import { PageProps, PaginatedData, Product } from "@/types";
-import Tabs from "@/Components/Tabs/Tabs";
-import Tab from "@/Components/Tabs/Tab";
 import ProductTab from "@/Components/Tabs/ProductTab";
-import { Button } from "@/Components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/Components/ui/tabs";
 
 const Products = ({ auth, flash }: PageProps) => {
     const { toast } = useToast();
@@ -27,7 +25,6 @@ const Products = ({ auth, flash }: PageProps) => {
         }
     }, [flash]);
 
-    const index = type === "Current" ? 1 : type === "Rejected" ? 2 : 0;
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -52,35 +49,31 @@ const Products = ({ auth, flash }: PageProps) => {
                                 >
                                     Create Product
                                 </Link>
-                                {/* <Button
-                                    variant="primary"
-                                    onClick={() => {
-                                        route("product.form");
-                                    }}
-                                >
-                                    create
-                                </Button> */}
                             </div>
                             <div>
-                                <Tabs preSelectedTabIndex={index}>
-                                    <Tab title="Pending">
+                                <Tabs defaultValue={type} className="w-full">
+                                    <TabsList>
+                                        <TabsTrigger value="pending">
+                                            Pending
+                                        </TabsTrigger>
+                                        <TabsTrigger value="current">
+                                            Current
+                                        </TabsTrigger>
+                                        <TabsTrigger value="rejected">
+                                            Rejected
+                                        </TabsTrigger>
+                                    </TabsList>
+                                    <TabsContent value="pending">
                                         <ProductTab products={newProducts} />
-                                    </Tab>
-
-                                    <Tab
-                                        title={
-                                            role === "admin"
-                                                ? "Current"
-                                                : "My Products"
-                                        }
-                                    >
+                                    </TabsContent>
+                                    <TabsContent value="current">
                                         <ProductTab products={products} />
-                                    </Tab>
-                                    <Tab title="Rejected">
+                                    </TabsContent>
+                                    <TabsContent value="rejected">
                                         <ProductTab
                                             products={rejectedProducts}
                                         />
-                                    </Tab>
+                                    </TabsContent>
                                 </Tabs>
                             </div>
                         </div>

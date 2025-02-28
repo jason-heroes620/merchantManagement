@@ -208,7 +208,6 @@ const View = ({ auth }) => {
                 return q;
             }
         });
-        // console.log(newItem);
         setQuotationItem(newItem);
         calculateTotal(newItem, null);
     };
@@ -480,10 +479,6 @@ const View = ({ auth }) => {
                                                     mode="single"
                                                     selected={balanceDueDate}
                                                     onSelect={(date) => {
-                                                        console.log(
-                                                            "date => ",
-                                                            date
-                                                        );
                                                         setBalanceDueDate(date);
                                                     }}
                                                     fromDate={moment().toDate()}

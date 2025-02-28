@@ -15,6 +15,9 @@ use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
 use App\Http\Controllers\CategoryController;
+use App\Models\Item;
+use Illuminate\Support\Facades\Exceptions;
+use Illuminate\Support\Facades\Log;
 
 use function PHPUnit\Framework\isEmpty;
 use function PHPUnit\Framework\isNull;
@@ -25,11 +28,16 @@ class ProductController extends Controller
     {
         $user = $req->user();
         $role = $user->roles->pluck('name')->toArray();
+        $type = $req->input('tab', $req->type ?? 'pending');
 
         if ($role[0] === 'admin') {
-            $rejectedProducts = Product::with('merchant')->where('status', 2)->paginate(10);
-            $newProducts = Product::with('merchant')->where('status', 1)->paginate(10);
-            $products = Product::with('merchant')->where('status', 0)->paginate(10);
+            $rejectedProducts = Product::with('merchant')->where('status', 2)->paginate(10, ['*'], 'RejectedPage')->appends(['tab' => 'rejected']);
+            $newProducts = Product::with('merchant')->where('status', 1)->paginate(10, ['*'], 'PendingPage')->appends(['tab' => 'pending']);
+            $products = Product::with('merchant')->where('status', 0)->paginate(
+                10,
+                ['*'],
+                'CurrentPage'
+            )->appends(['tab' => 'current']);
         } else {
             $rejectedProducts = Product::where('merchant_id', $user->merchant_id)->with('merchant')
                 ->where('status', 2)->paginate(10);
@@ -44,7 +52,7 @@ class ProductController extends Controller
             'products' => $products,
             'rejectedProducts' => $rejectedProducts,
             'role' => $role[0],
-            'type' => $req->type,
+            'type' => $type,
         ]);
     }
 
@@ -81,13 +89,41 @@ class ProductController extends Controller
                 'location' => $req->input('location'),
                 'google_location' => $req->input('google_location'),
                 'child_price' => $req->input('child_price'),
-                'adult_price' => $req->input('adult_price'),
+                'teacher_price' => $req->input('teacher_price'),
                 'category_id' => $req->input('category_id'),
                 'min_quantity' => $req->input('min_quantity'),
                 'max_quantity' => $req->input('max_quantity'),
                 'duration' => $hours + $minutes,
-                'food_allowed' => $req->input('food_allowed') === 'true' ? 0 : 1,
+                'food_allowed' => $req->input('food_allowed'),
+                'tour_guide' => $req->input('tour_guide')
             ]);
+
+            if ($req->input('tour_guide') ==  0) {
+                $item = Item::where('item_type', 'GUIDE')->where('product_id', $product->id)->get();
+                if (count($item) > 0) {
+                    Item::where('item_type', 'GUIDE')->where('product_id', $product->id)->update(
+                        [
+                            'unit_price' => $req->input('tour_guide_price')
+                        ]
+                    );
+                } else {
+                    $no = Item::where('item_type', 'GUIDE')->count() + 1;
+                    $item = Item::create([
+                        'item_code' => 'G' . str_pad($no, 3, '0', STR_PAD_LEFT),
+                        'item_name' => 'Tour Guide',
+                        'item_description' => '',
+                        'uom' => 'pax',
+                        'unit_price' => $req->input('tour_guide_price'),
+                        'sales_tax' => 0.00,
+                        'additional' => 1,
+                        'additional_unit_cost' => 0.00,
+                        'item_type' => 'GUIDE',
+                        'provider_id' => 4,
+                        'item_image' => null,
+                        'product_id' => $product->id
+                    ]);
+                }
+            }
 
             $main_image_path = "";
             if ($req->file('main_image') && count($req->file('main_image')) > 0) {
@@ -165,106 +201,141 @@ class ProductController extends Controller
 
     public function update(Request $req, Product $product, ProductDetail $productDetail)
     {
-        $user = $req->user();
-        $hours = $req->input('hours') * 60 * 60;
-        $minutes = $req->input('minutes') * 60;
+        try {
+            $user = $req->user();
+            $hours = $req->input('hours') * 60 * 60;
+            $minutes = $req->input('minutes') * 60;
 
-        $product->where('id', $req->id)->update([
-            'product_name' => $req->product_name,
-            'product_description' => html_entity_decode(
-                $req->product_description,
-                ENT_QUOTES,
-                'UTF-8'
-            ),
-            'product_activities' => html_entity_decode(
-                $req->product_activities,
-                ENT_QUOTES,
-                'UTF-8'
-            ),
-            'age_group' => $req->age_group,
-            'location' => $req->location,
-            'google_location' => $req->google_location,
-            'child_price' => $req->child_price,
-            'adult_price' => $req->adult_price,
-            'category_id' => $req->category_id,
-            'min_quantity' => $req->min_quantity,
-            'max_quantity' => $req->max_quantity,
-            'duration' => $hours + $minutes,
-            'food_allowed' => $req->input('food_allowed'),
-        ]);
+            $product->where('id', $req->id)->update([
+                'product_name' => $req->product_name,
+                'product_description' => html_entity_decode(
+                    $req->product_description,
+                    ENT_QUOTES,
+                    'UTF-8'
+                ),
+                'product_activities' => html_entity_decode(
+                    $req->product_activities,
+                    ENT_QUOTES,
+                    'UTF-8'
+                ),
+                'age_group' => $req->age_group,
+                'location' => $req->location,
+                'google_location' => $req->google_location,
+                'child_price' => $req->child_price,
+                'teacher_price' => $req->teacher_price,
+                'category_id' => $req->category_id,
+                'min_quantity' => $req->min_quantity,
+                'max_quantity' => $req->max_quantity,
+                'duration' => $hours + $minutes,
+                'food_allowed' => $req->input('food_allowed'),
+                'tour_guide' => $req->input('tour_guide'),
+            ]);
 
-        $main_image_path = "";
-        if ($req->file('main_image') && count($req->file('main_image')) > 0) {
-            foreach ($req->file('main_image') as $file) {
-                $main_image_path = storage_path('app/public/productImages');
-                $file_name = $this->randomFileNameGenerator(
-                    15,
-                    $this->getFileExtension($file->getClientOriginalName())
-                );
-                $file->move($main_image_path, $file_name);
-
-                Product::where('id', $req->id)->update([
-                    'product_image' => $main_image_path . '/' . $file_name,
-                ]);
+            if ($req->input('tour_guide') ==  0) {
+                $item = Item::where('item_type', 'GUIDE')->where('product_id', $req->id)->get();
+                if (count($item) > 0) {
+                    Item::where('item_type', 'GUIDE')->where('product_id', $req->id)->update(
+                        [
+                            'unit_price' => $req->input('tour_guide_price')
+                        ]
+                    );
+                } else {
+                    $no = Item::where('item_type', 'GUIDE')->count() + 1;
+                    $item = Item::create([
+                        'item_code' => 'G' . str_pad($no, 3, '0', STR_PAD_LEFT),
+                        'item_name' => 'Tour Guide',
+                        'item_description' => '',
+                        'uom' => 'pax',
+                        'unit_price' => $req->input('tour_guide_price'),
+                        'sales_tax' => 0.00,
+                        'additional' => 1,
+                        'additional_unit_cost' => 0.00,
+                        'item_type' => 'GUIDE',
+                        'provider_id' => 4,
+                        'item_image' => null,
+                        'product_id' => $req->id
+                    ]);
+                }
             }
-        }
 
-        $week_time = [];
-        $index = 0;
-        foreach ($req->week_time as $w) {
-            $week_time[$index]['start_time'] = $w['start_time'];
-            $week_time[$index]['end_time'] = $w['end_time'];
-            $index++;
-        }
+            $main_image_path = "";
+            if ($req->file('main_image') && count($req->file('main_image')) > 0) {
+                foreach ($req->file('main_image') as $file) {
+                    $main_image_path = storage_path('app/public/productImages');
+                    $file_name = $this->randomFileNameGenerator(
+                        15,
+                        $this->getFileExtension($file->getClientOriginalName())
+                    );
+                    $file->move($main_image_path, $file_name);
 
-        $productDetail->where('product_id', $req->id)->update([
-            'product_id' => $req->id,
-            'google_map_location' => $req->google_map_location,
-            'event_start_date' =>  date('Y-m-d', strtotime(str_replace('/', '-', $req->event_start_date))),
-            'event_end_date' => date(
-                'Y-m-d',
-                strtotime(
-                    str_replace('/', '-', $req->event_end_date)
-                )
-            ),
-            'event_start_time' =>
-            $req->event_start_time,
-            'event_end_time' =>
-            $req->event_end_time,
-            'frequency_id' => $req->frequency_id,
-            'sunday_start_time' => $week_time[0]['start_time'],
-            'sunday_end_time' => $week_time[0]['end_time'],
-            'monday_start_time' => $week_time[1]['start_time'],
-            'monday_end_time' => $week_time[1]['end_time'],
-            'tuesday_start_time' => $week_time[2]['start_time'],
-            'tuesday_end_time' => $week_time[2]['end_time'],
-            'wednesday_start_time' => $week_time[3]['start_time'],
-            'wednesday_end_time' => $week_time[3]['end_time'],
-            'thursday_start_time' => $week_time[4]['start_time'],
-            'thursday_end_time' => $week_time[4]['end_time'],
-            'friday_start_time' => $week_time[5]['start_time'],
-            'friday_end_time' => $week_time[5]['end_time'],
-            'saturday_start_time' => $week_time[6]['start_time'],
-            'saturday_end_time' => $week_time[6]['end_time'],
-        ]);
-
-        if ($req->file('images') && count($req->file('images')) > 0) {
-            foreach ($req->file('images') as $file) {
-                $path = storage_path('app/public/productImages');
-
-                $file_name = $this->randomFileNameGenerator(15, $this->getFileExtension($file->getClientOriginalName()));
-                $file->move($path, $file_name);
-                ProductImage::create([
-                    'product_id' => $req->id,
-                    'image_path' => $path . '/' . $file_name,
-                    'original_file_name' => $file->getClientOriginalName()
-                ]);
+                    Product::where('id', $req->id)->update([
+                        'product_image' => $main_image_path . '/' . $file_name,
+                    ]);
+                }
             }
-        }
 
-        return redirect()->back()->with([
-            'success' => "Product Updated",
-        ]);
+            $week_time = [];
+            $index = 0;
+            foreach ($req->week_time as $w) {
+                $week_time[$index]['start_time'] = $w['start_time'];
+                $week_time[$index]['end_time'] = $w['end_time'];
+                $index++;
+            }
+
+            $productDetail->where('product_id', $req->id)->update([
+                'product_id' => $req->id,
+                'google_map_location' => $req->google_map_location,
+                'event_start_date' =>  date('Y-m-d', strtotime(str_replace('/', '-', $req->event_start_date))),
+                'event_end_date' => date(
+                    'Y-m-d',
+                    strtotime(
+                        str_replace('/', '-', $req->event_end_date)
+                    )
+                ),
+                'event_start_time' =>
+                $req->event_start_time,
+                'event_end_time' =>
+                $req->event_end_time,
+                'frequency_id' => $req->frequency_id,
+                'sunday_start_time' => $week_time[0]['start_time'],
+                'sunday_end_time' => $week_time[0]['end_time'],
+                'monday_start_time' => $week_time[1]['start_time'],
+                'monday_end_time' => $week_time[1]['end_time'],
+                'tuesday_start_time' => $week_time[2]['start_time'],
+                'tuesday_end_time' => $week_time[2]['end_time'],
+                'wednesday_start_time' => $week_time[3]['start_time'],
+                'wednesday_end_time' => $week_time[3]['end_time'],
+                'thursday_start_time' => $week_time[4]['start_time'],
+                'thursday_end_time' => $week_time[4]['end_time'],
+                'friday_start_time' => $week_time[5]['start_time'],
+                'friday_end_time' => $week_time[5]['end_time'],
+                'saturday_start_time' => $week_time[6]['start_time'],
+                'saturday_end_time' => $week_time[6]['end_time'],
+            ]);
+
+            if ($req->file('images') && count($req->file('images')) > 0) {
+                foreach ($req->file('images') as $file) {
+                    $path = storage_path('app/public/productImages');
+
+                    $file_name = $this->randomFileNameGenerator(15, $this->getFileExtension($file->getClientOriginalName()));
+                    $file->move($path, $file_name);
+                    ProductImage::create([
+                        'product_id' => $req->id,
+                        'image_path' => $path . '/' . $file_name,
+                        'original_file_name' => $file->getClientOriginalName()
+                    ]);
+                }
+            }
+
+            return redirect()->back()->with([
+                'success' => "Product Updated",
+            ]);
+        } catch (Exceptions $e) {
+            Log::error('Error update product ' . $req->id, ' ' . $e);
+            return redirect()->back()->with([
+                'error' => "Error updating product!",
+            ]);
+        }
     }
 
     public function newProduct()
@@ -292,6 +363,11 @@ class ProductController extends Controller
         $categories = $this->getProductCategories();
         $frequency = Frequency::orderBy('sort_order', 'ASC')->get(['id as value', 'frequency as label']);
         $product['product_detail'] = $product_detail;
+
+        $item = [];
+        if ($product['tour_guide'] === 0) {
+            $item = Item::where('product_id', $req->id)->first();
+        }
 
         $week_time = [];
         $week_time[0]['index'] = 0;
@@ -338,6 +414,7 @@ class ProductController extends Controller
             'product_main_image' => $main_image,
             'profit_types' => $profit_types,
             'profit_info' => $profit_info,
+            'tour_guide_price' => $item ? $item['unit_price'] : '',
         ]);
     }
 
