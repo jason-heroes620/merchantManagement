@@ -340,21 +340,21 @@ const ProductDetailTab = ({
                 </div>
                 <div className="flex flex-col gap-4 md:grid md:grid-cols-2 md:justify-between md:gap-10 px-4 py-4 ">
                     <div>
-                        <InputLabel htmlFor="price" value="Child" />
+                        <InputLabel htmlFor="price" value="Student" />
                         <TextInput
-                            id="child_price"
-                            name="child_price"
-                            value={data.child_price}
+                            id="student_price"
+                            name="student_price"
+                            value={data.student_price}
                             type="number"
                             className="mt-1 block w-full"
-                            autoComplete="child_price"
+                            autoComplete="student_price"
                             onChange={(e) =>
-                                setData("child_price", e.target.value)
+                                setData("student_price", e.target.value)
                             }
                             required
                         />
                         <InputError
-                            message={errors.child_price}
+                            message={errors.student_price}
                             className="mt-2"
                         />
                     </div>

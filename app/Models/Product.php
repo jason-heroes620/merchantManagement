@@ -21,7 +21,7 @@ class Product extends Model
         'age_group',
         'location',
         'google_location',
-        'child_price',
+        'student_price',
         'teacher_price',
         'duration',
         'product_description',

@@ -89,7 +89,7 @@ const View = ({
             : "",
         min_quantity: product.min_quantity,
         max_quantity: product.max_quantity,
-        child_price: product?.child_price,
+        student_price: product?.student_price,
         teacher_price: product?.teacher_price,
         main_image: [],
         images: [],

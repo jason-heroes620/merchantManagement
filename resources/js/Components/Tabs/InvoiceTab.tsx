@@ -4,7 +4,7 @@ import { formattedNumber } from "@/utils/formatNumber";
 import dayjs from "dayjs";
 
 const InvoiceTab = ({ invoices }: any) => {
-    const { data, links } = invoices;
+    const { data, links, from, to, total } = invoices;
 
     return (
         <div>
@@ -80,7 +80,14 @@ const InvoiceTab = ({ invoices }: any) => {
                                 route("invoice.view", row.invoice_id)
                             }
                         />
-                        <Pagination links={links} />
+                        <div className="flex flex-col gap-2 py-4">
+                            <Pagination links={links} />
+                            {from && (
+                                <span className="text-sm">
+                                    Showing {from} - {to} of {total} records
+                                </span>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>

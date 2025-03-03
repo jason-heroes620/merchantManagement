@@ -3,7 +3,7 @@ import { Trash2 } from "lucide-react";
 import Table from "@/Components/Table/Table";
 
 const SchoolTab = ({ schools }: any) => {
-    const { data, links } = schools;
+    const { data, links, from, to, total } = schools;
 
     return (
         <div>
@@ -55,7 +55,14 @@ const SchoolTab = ({ schools }: any) => {
                                 route("school.view", row.school_id)
                             }
                         />
-                        <Pagination links={links} />
+                        <div className="flex flex-col gap-2 py-4">
+                            <Pagination links={links} />
+                            {from && (
+                                <span className="text-sm">
+                                    Showing {from} - {to} of {total} records
+                                </span>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>

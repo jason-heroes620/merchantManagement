@@ -4,7 +4,7 @@ import { formattedNumber } from "@/utils/formatNumber";
 import dayjs from "dayjs";
 
 const QuotationTab = ({ quotations }: any) => {
-    const { data, links } = quotations;
+    const { data, links, from, to, total } = quotations;
 
     return (
         <div>
@@ -62,7 +62,14 @@ const QuotationTab = ({ quotations }: any) => {
                                 route("quotation.view", row.quotation_id)
                             }
                         />
-                        <Pagination links={links} />
+                        <div className="flex flex-col gap-2 py-4">
+                            <Pagination links={links} />
+                            {from && (
+                                <span className="text-sm">
+                                    Showing {from} - {to} of {total} records
+                                </span>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>

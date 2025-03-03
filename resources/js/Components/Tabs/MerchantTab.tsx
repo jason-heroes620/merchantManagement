@@ -4,7 +4,7 @@ import Table from "@/Components/Table/Table";
 import { Merchant, PaginatedData } from "@/types";
 
 const MerchantTab = ({ merchants }: any) => {
-    const { data, links } = merchants;
+    const { data, links, from, to, total } = merchants;
 
     return (
         <div>
@@ -19,30 +19,9 @@ const MerchantTab = ({ merchants }: any) => {
                                     renderCell: (row) => (
                                         <>
                                             <>{row.merchant_name}</>
-                                            {/* {row.deleted_at && (
-                                                <Trash2
-                                                    size={16}
-                                                    className="ml-2 text-gray-400"
-                                                />
-                                            )} */}
                                         </>
                                     ),
                                 },
-                                // {
-                                //     label: "Type",
-                                //     name: "type",
-                                //     renderCell: (row) => (
-                                //         <>
-                                //             <>{row.merchant_type}</>
-                                //             {row.deleted_at && (
-                                //                 <Trash2
-                                //                     size={16}
-                                //                     className="ml-2 text-gray-400"
-                                //                 />
-                                //             )}
-                                //         </>
-                                //     ),
-                                // },
                                 {
                                     label: "PIC",
                                     name: "pic",
@@ -77,7 +56,14 @@ const MerchantTab = ({ merchants }: any) => {
                                 route("merchant.view", row.id)
                             }
                         />
-                        <Pagination links={links} />
+                        <div className="flex flex-col gap-2 py-4">
+                            <Pagination links={links} />
+                            {from && (
+                                <span className="text-sm">
+                                    Showing {from} - {to} of {total} records
+                                </span>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>

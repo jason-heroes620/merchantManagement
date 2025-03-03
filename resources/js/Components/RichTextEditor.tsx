@@ -47,6 +47,9 @@ const RichTextEditor = ({ value, onChange, contentFor }: any) => {
                         "indent",
                     ],
                 },
+                link: {
+                    addTargetToExternalLinks: true,
+                },
                 plugins: [
                     Bold,
                     Essentials,

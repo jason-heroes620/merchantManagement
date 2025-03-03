@@ -4,7 +4,7 @@ import Pagination from "../Pagination";
 import { formattedNumber } from "@/utils/formatNumber";
 
 const OrderTab = ({ orders }: { orders: any }) => {
-    const { data, links } = orders;
+    const { data, links, from, to, total } = orders;
 
     return (
         <div>
@@ -66,7 +66,14 @@ const OrderTab = ({ orders }: { orders: any }) => {
                                 route("order.view", row.order_id)
                             }
                         />
-                        <Pagination links={links} />
+                        <div className="flex flex-col gap-2 py-4">
+                            <Pagination links={links} />
+                            {from && (
+                                <span className="text-sm">
+                                    Showing {from} - {to} of {total} records
+                                </span>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>

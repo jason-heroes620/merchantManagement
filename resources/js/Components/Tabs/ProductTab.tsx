@@ -4,8 +4,7 @@ import Table from "@/Components/Table/Table";
 import dayjs from "dayjs";
 
 const ProductTab = ({ products }: any) => {
-    const { data, links } = products;
-
+    const { data, links, from, to, total } = products;
     return (
         <div>
             <div className="pt-4">
@@ -57,7 +56,14 @@ const ProductTab = ({ products }: any) => {
                                 route("product.view", row.id)
                             }
                         />
-                        <Pagination links={links} />
+                        <div className="flex flex-col gap-2 py-4">
+                            <Pagination links={links} />
+                            {from && (
+                                <span className="text-sm">
+                                    Showing {from} - {to} of {total} records
+                                </span>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>

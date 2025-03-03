@@ -51,7 +51,7 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
         google_map_location: "",
         min_quantity: 1,
         max_quantity: 1,
-        child_price: "0.00",
+        student_price: "0.00",
         teacher_price: "0.00",
         images: [],
         main_image: [],
@@ -454,19 +454,19 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
                                         <div className="flex flex-col md:grid md:grid-cols-2 md:gap-8 py-2">
                                             <div>
                                                 <InputLabel
-                                                    htmlFor="child_price"
-                                                    value="Child Price"
+                                                    htmlFor="student_price"
+                                                    value="student_price"
                                                 />
                                                 <TextInput
-                                                    id="child_price"
-                                                    name="child_price"
-                                                    value={data.child_price}
+                                                    id="student_price"
+                                                    name="student_price"
+                                                    value={data.student_price}
                                                     type="number"
                                                     className="mt-1 block w-full"
-                                                    autoComplete="child_price"
+                                                    autoComplete="student_price"
                                                     onChange={(e) =>
                                                         setData(
-                                                            "child_price",
+                                                            "student_price",
                                                             e.target.value
                                                         )
                                                     }
@@ -474,7 +474,9 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
                                                     required
                                                 />
                                                 <InputError
-                                                    message={errors.child_price}
+                                                    message={
+                                                        errors.student_price
+                                                    }
                                                     className="mt-2"
                                                 />
                                             </div>
