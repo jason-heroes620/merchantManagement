@@ -18,7 +18,7 @@ class SchoolController extends Controller
 {
     public function index(Request $req)
     {
-        $type = $req->input('tab', 'pending');
+        $type = $req->input('tab', $req->type ?? 'pending');
 
         $schools = School::where('school_status', 0)->paginate(
             10,
@@ -54,23 +54,29 @@ class SchoolController extends Controller
 
     public function update(Request $req)
     {
-        $school = School::where('school_id', $req->id)->update([
-            'school_id' => $req->id,
-            'school_name' => $req->input('school_name'),
-            'address_1' => $req->input('address_1'),
-            'address_2' => $req->input('address_2'),
-            'address_3' => $req->input('address_3'),
-            'city' => $req->input('city'),
-            'postcode' => $req->input('postcode'),
-            'state' => $req->input('state'),
-            'contact_person' => $req->input('contact_person'),
-            'contact_no' => $req->input('contact_no'),
-            'mobile_no' => $req->input('mobile_no'),
-            'email' => $req->input('email'),
-            'google_place_name' => $req->input('google_place_name'),
-        ]);
+        try {
+            $school = School::where('school_id', $req->id)->update([
+                'school_id' => $req->id,
+                'school_name' => $req->input('school_name'),
+                'address_1' => $req->input('address_1'),
+                'address_2' => $req->input('address_2'),
+                'address_3' => $req->input('address_3'),
+                'city' => $req->input('city'),
+                'postcode' => $req->input('postcode'),
+                'state' => $req->input('state'),
+                'contact_person' => $req->input('contact_person'),
+                'contact_no' => $req->input('contact_no'),
+                'mobile_no' => $req->input('mobile_no'),
+                'email' => $req->input('email'),
+                'google_place_name' => $req->input('google_place_name'),
+            ]);
 
-        return redirect()->back();
+            return back()->with(["success" => "School information updated"]);
+        } catch (Exceptions $e) {
+            Log::error("Error updating school information for " . $req->id, ' ' . $e);
+
+            return back()->with(["error" => "School information update failed"]);
+        }
     }
 
     public function approve(Request $req)
