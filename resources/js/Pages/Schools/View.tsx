@@ -1,6 +1,6 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { usePage, Head, useForm, router } from "@inertiajs/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, FormEventHandler } from "react";
 import { School } from "@/types";
 import InputLabel from "@/Components/InputLabel";
 import TextInput from "@/Components/TextInput";
@@ -51,7 +51,6 @@ const View = ({ auth, flash, previousUrl }: any) => {
         school_logo: school_logo,
         school_status: school.school_status,
         google_place_name: school.google_place_name || "",
-        _method: "put",
     });
     const [logo, setLogo] = useState<File>();
     const getObjectUrl = useObjectUrls();
@@ -102,8 +101,24 @@ const View = ({ auth, flash, previousUrl }: any) => {
             }
         });
     };
-    const handleSubmit = () => {
-        put(route("school.update", school.school_id));
+    const handleSubmit: FormEventHandler = (e) => {
+        e.preventDefault();
+
+        put(route("school.update", school.school_id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast({
+                    variant: "default",
+                    description: "School information updated",
+                });
+            },
+            onError: (errors) => {
+                ({
+                    variant: "desctructive",
+                    description: "School information update failed",
+                });
+            },
+        });
     };
 
     useEffect(() => {
@@ -119,7 +134,8 @@ const View = ({ auth, flash, previousUrl }: any) => {
                     <div>
                         <Button
                             variant="destructive"
-                            onClick={() => router.visit(previousUrl.toString())}
+                            // onClick={() => router.visit(previousUrl.toString())}
+                            onClick={() => router.visit(route("schools"))}
                         >
                             Back
                         </Button>
@@ -549,7 +565,10 @@ const View = ({ auth, flash, previousUrl }: any) => {
                                             <hr />
                                             <div className="flex flex-col md:flex-row py-4 gap-8 justify-end">
                                                 <div className="py-4">
-                                                    <Button type="submit">
+                                                    <Button
+                                                        type="submit"
+                                                        disabled={processing}
+                                                    >
                                                         Update
                                                     </Button>
                                                 </div>

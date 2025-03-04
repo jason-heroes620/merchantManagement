@@ -178,7 +178,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/school_reject/{id?}', [SchoolController::class, 'reject'])->name('school.reject');
 
     // Quotations
-    Route::get('/quotations', [QuotationController::class, 'index'])->name('quotations');
+    Route::get('/quotations/{type?}', [QuotationController::class, 'index'])->name('quotations');
     Route::get('/quotation/{id}', [QuotationController::class, 'view'])->name('quotation.view');
     Route::put('/quotation/{id}', [QuotationController::class, 'confirm'])->name('quotation.confirm');
     Route::put('/proposal_visitation_date/{id}', [QuotationController::class, 'updateVisitationDate'])->name('quotation.visitation_date');
@@ -191,7 +191,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/invoice/{id}', [InvoiceController::class, 'view'])->name('invoice.view');
 
     // Orders
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders');
+    Route::get('/orders/{type?}', [OrderController::class, 'index'])->name('orders');
     Route::get('/order/{id}', [OrderController::class, 'view'])->name('order.view');
     Route::post('/order', [OrderController::class, 'create'])->name('order.create');
 

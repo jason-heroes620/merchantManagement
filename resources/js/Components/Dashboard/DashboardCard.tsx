@@ -13,7 +13,7 @@ const DashboardCard = ({ header, content, type, links }) => {
     const borderColor =
         type === "pending"
             ? "bg-orange-300"
-            : type === "current"
+            : type === "current" || type === "accepted" || type === "paid"
             ? "bg-green-300"
             : "bg-red-300";
     return (

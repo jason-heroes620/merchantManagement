@@ -5,7 +5,8 @@ import Merchant from "./Merchant";
 import Admin from "./Admin";
 
 export default function Dashboard({ auth }: PageProps) {
-    const { merchant, product } = usePage<{}>().props;
+    const { merchant, product, schools, quotations, orders } = usePage<{}>()
+        .props;
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -29,7 +30,13 @@ export default function Dashboard({ auth }: PageProps) {
                             )}
 
                             {auth.user.roles.find((m) => m === "admin") && (
-                                <Admin product={product} merchant={merchant} />
+                                <Admin
+                                    merchant={merchant}
+                                    product={product}
+                                    schools={schools}
+                                    quotations={quotations}
+                                    orders={orders}
+                                />
                             )}
                         </div>
                     </div>

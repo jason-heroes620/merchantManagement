@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import DashboardCard from "@/Components/Dashboard/DashboardCard";
 import { usePage } from "@inertiajs/react";
 
-const Admin = ({ product, merchant }) => {
+const Admin = ({ merchant, product, schools, quotations, orders }: any) => {
     return (
-        <div className="flex px-4 py-4">
+        <div className="flex flex-col px-4 py-4 gap-4">
             <div id="header" className="flex flex-row gap-4 overflow-x-auto">
                 <div>
                     <DashboardCard
@@ -52,6 +52,48 @@ const Admin = ({ product, merchant }) => {
                         content={product[2].count}
                         type={"rejected"}
                         links={["products", 2]}
+                    />
+                </div>
+            </div>
+            <div id="header" className="flex flex-row gap-4 overflow-x-auto">
+                <div>
+                    <DashboardCard
+                        header={"School"}
+                        content={schools[0].count}
+                        type={"pending"}
+                        links={["schools", 1]}
+                    />
+                </div>
+                <div>
+                    <DashboardCard
+                        header={"Quotations"}
+                        content={quotations[0].count}
+                        type={"pending"}
+                        links={["quotations", 0]}
+                    />
+                </div>
+                <div>
+                    <DashboardCard
+                        header={"Quotations"}
+                        content={quotations[1].count}
+                        type={"accepted"}
+                        links={["quotations", 2]}
+                    />
+                </div>
+                <div>
+                    <DashboardCard
+                        header={"Orders"}
+                        content={orders[0].count}
+                        type={"pending"}
+                        links={["orders", 1]}
+                    />
+                </div>
+                <div>
+                    <DashboardCard
+                        header={"Orders"}
+                        content={orders[1].count}
+                        type={"paid"}
+                        links={["orders", 2]}
                     />
                 </div>
             </div>

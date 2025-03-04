@@ -50,7 +50,7 @@
             </table>
 
             <br>
-            <p style="font-size: 14px; text-align: justify">We are delighted to inform you that your application to join HEROES Self Planning Trip has been approved.</p>
+            <p style="font-size: 14px; text-align: justify">We are delighted to inform you that your application to join HEROES Platform has been approved.</p>
             <p>
                 You will receive an email shortly on how to set your account & password.
             </p>

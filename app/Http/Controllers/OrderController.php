@@ -25,12 +25,12 @@ class OrderController extends Controller
 {
     public function index(Request $req)
     {
-        $type = $req->input('tab', 'pending');
+        $type = $req->input('tab', $req->type ?? 'pending');
 
         $user = $req->user();
         $pending_payment = $this->getOrders(0);
         $paid = $this->getOrders(2);
-        $type = $type;
+
         return Inertia::render('Orders/Orders', compact('pending_payment', 'paid', 'type'));
     }
 

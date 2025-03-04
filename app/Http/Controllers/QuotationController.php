@@ -24,7 +24,7 @@ class QuotationController extends Controller
 {
     public function index(Request $req)
     {
-        $type = $req->input('tab', 'pending');
+        $type = $req->input('tab', $req->type ?? 'pending');
 
         $new_quotations = $this->getQuotations(
             0,
@@ -47,7 +47,6 @@ class QuotationController extends Controller
             'OrderIssuedPage'
         )->appends(['tab' => 'issued']);
 
-        $type = $type;
         return Inertia::render('Quotations/Quotations', compact('new_quotations', 'quotations', 'accepted_quotations', 'order_issued', 'type'));
     }
 
