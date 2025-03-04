@@ -282,7 +282,7 @@ class ProductController extends Controller
                 $index++;
             }
 
-            $productDetail->where('product_id', $req->id)->update([
+            ProductDetail::where('product_id', $req->id)->update([
                 'product_id' => $req->id,
                 'google_map_location' => $req->google_map_location,
                 'event_start_date' =>  date('Y-m-d', strtotime(str_replace('/', '-', $req->event_start_date))),
