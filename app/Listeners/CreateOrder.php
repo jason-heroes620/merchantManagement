@@ -26,7 +26,8 @@ class CreateOrder
     {
         Log::info('Create order mail sent to ' . $event->school['email']);
         $emails = [$event->school['email']];
-        $bccEmail = ['jason.w@heroes.my', 'admin@heroes.my'];
+        $bccEmail = ['jason.w@heroes.my'];
+
         Mail::to($emails)
             ->bcc($bccEmail)
             ->send(new CreateOrderEmail($event->school, $event->order));

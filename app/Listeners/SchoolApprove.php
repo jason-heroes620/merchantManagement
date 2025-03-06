@@ -25,7 +25,13 @@ class SchoolApprove
     public function handle(SchoolApproveEvent $event): void
     {
         Log::info('School approved mail sent to ' . $event->school['email']);
-        $emails = [$event->school['email'], 'jason.w@heroes.my'];
-        Mail::to($emails)->send(new SchoolApproveEmail($event->school));
+        $emails = [$event->school['email']];
+        $bccEmail = ['jason.w@heroes.my'];
+
+        foreach ($emails as $recipient) {
+            Mail::to($recipient)
+                ->bcc($bccEmail)
+                ->send(new SchoolApproveEmail($event->school));
+        }
     }
 }
