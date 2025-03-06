@@ -18,6 +18,7 @@ class ProposalFees extends Model
         'fee_id',
         'fee_amount',
         'fee_type',
+        'fee_description',
         'proposal_id',
     ];
 }
