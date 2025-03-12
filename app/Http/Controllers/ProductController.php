@@ -344,7 +344,7 @@ class ProductController extends Controller
             }
 
             ProductFilter::where('product_id', $req->id)->delete();
-            if (count($req->input('product_filter')) > 0) {
+            if ($req->input('product_filter')) {
                 foreach ($req->input('product_filter') as $p) {
                     ProductFilter::create([
                         'product_id' => $req->id,
