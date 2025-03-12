@@ -15,7 +15,9 @@ use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
 use App\Http\Controllers\CategoryController;
+use App\Models\Filters;
 use App\Models\Item;
+use App\Models\ProductFilter;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Log;
 
@@ -58,17 +60,22 @@ class ProductController extends Controller
 
     public function createProduct(Request $req, Product $product)
     {
+        // true = 1, false = 0
         $user = $req->user();
 
         if ($req->isMethod('get')) {
             $categories = $this->getProductCategories();
             $frequency = Frequency::orderBy('sort_order', 'ASC')->get(['id as value', 'frequency as label']);
+            $filters = Filters::where('filter_status', 0)->get(["filter_id", "filter_description"]);
 
             return Inertia::render('Products/CreateProduct', [
                 'categories' => $categories,
-                'frequency' => $frequency
+                'frequency' => $frequency,
+                'filters' => $filters,
             ]);
         } else {
+
+            // dd($req);
             $hours = $req->input('hours') * 60 * 60;
             $minutes = $req->input('minutes') * 60;
 
@@ -191,6 +198,15 @@ class ProductController extends Controller
                         'product_id' => $product->id,
                         'image_path' => $path . '/' . $file_name,
                         'original_file_name' => $file->getClientOriginalName()
+                    ]);
+                }
+            }
+
+            if (count($req->input('product_filter')) > 0) {
+                foreach ($req->input('product_filter') as $p) {
+                    ProductFilter::create([
+                        'product_id' => $product->id,
+                        'filter_id' => $p['filter_id']
                     ]);
                 }
             }
@@ -327,6 +343,16 @@ class ProductController extends Controller
                 }
             }
 
+            ProductFilter::where('product_id', $req->id)->delete();
+            if (count($req->input('product_filter')) > 0) {
+                foreach ($req->input('product_filter') as $p) {
+                    ProductFilter::create([
+                        'product_id' => $req->id,
+                        'filter_id' => $p['filter_id']
+                    ]);
+                }
+            }
+
             return redirect()->back()->with([
                 'success' => "Product Updated",
             ]);
@@ -404,6 +430,9 @@ class ProductController extends Controller
 
         $main_image = $this->getMainImage($req->id);
 
+        $filters = Filters::where('filter_status', 0)->get(["filter_id", "filter_description"]);
+        $product_filter = ProductFilter::where('product_id', $req->id)->get(['filter_id']);
+
         return Inertia::render('Products/View', [
             'product' => $product,
             'product_description' => html_entity_decode($product['product_description'], ENT_QUOTES, 'UTF-8'),
@@ -415,6 +444,8 @@ class ProductController extends Controller
             'profit_types' => $profit_types,
             'profit_info' => $profit_info,
             'tour_guide_price' => $item ? $item['unit_price'] : '',
+            'filters' => $filters,
+            'product_filter' => $product_filter,
         ]);
     }
 

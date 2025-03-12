@@ -33,7 +33,7 @@ const Duration = ({ data, setData, errors }) => {
     return (
         <div className="border rounded-md py-4 px-4">
             <span className="font-bold">Duration</span>
-            <div className="flex flex-col md:grid md:grid-cols-2 md:gap-6 py-2">
+            <div className="flex flex-col md:grid md:grid-cols-2 md:gap-6 py-2 px-4">
                 <div className="py-2">
                     <InputLabel htmlFor="hours" value="Hours" />
                     <SelectInput

@@ -26,10 +26,11 @@ const View = ({
     profit_types,
     profit_info,
     tour_guide_price,
+    filters,
+    product_filter,
     flash,
     previousUrl,
 }: any) => {
-    console.log(previousUrl);
     const { toast } = useToast();
     const [dark, setDark] = useState(
         window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -101,6 +102,7 @@ const View = ({
         food_allowed: product.food_allowed,
         tour_guide: product.tour_guide,
         tour_guide_price: tour_guide_price,
+        product_filter: product_filter ?? [],
     });
 
     useEffect(() => {
@@ -123,6 +125,7 @@ const View = ({
             forceFormData: true,
             method: "put",
             preserveState: false,
+            preserveScroll: true,
         });
     };
 
@@ -134,7 +137,9 @@ const View = ({
                     <div>
                         <Button
                             variant={"destructive"}
-                            onClick={() => router.visit(previousUrl.toString())}
+                            onClick={() => {
+                                router.visit(route("products"));
+                            }}
                         >
                             Back
                         </Button>
@@ -216,6 +221,7 @@ const View = ({
                                                 errors={errors}
                                                 categories={categories}
                                                 frequency={frequency}
+                                                filters={filters}
                                                 destroy={destroy}
                                                 setSelectedImage={
                                                     setSelectedImage

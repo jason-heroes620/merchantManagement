@@ -30,6 +30,7 @@ const ProductDetailTab = ({
     errors,
     categories,
     frequency,
+    filters,
     destroy,
     setSelectedImage,
     setShowImageModal,
@@ -120,6 +121,20 @@ const ProductDetailTab = ({
         }
     };
 
+    const handleProductFilterChange = (e, filter_id) => {
+        if (e.target.checked) {
+            setData("product_filter", [
+                ...data.product_filter,
+                { filter_id: filter_id },
+            ]);
+        } else {
+            setData(
+                "product_filter",
+                data.product_filter.filter((p) => p.filter_id !== filter_id)
+            );
+        }
+    };
+
     return (
         <div className="py-4">
             <div className="py-2">
@@ -152,6 +167,7 @@ const ProductDetailTab = ({
                     onChange={(e: any) =>
                         setData("category_id", e.target.value)
                     }
+                    required
                 />
             </div>
             <div className="py-2">
@@ -309,7 +325,7 @@ const ProductDetailTab = ({
                         className="mt-2"
                     />
                 </div>
-                <div className=" py-2">
+                <div className="py-2">
                     <InputLabel htmlFor="quantity" value="Max. Pax" />
                     <TextInput
                         id="max_quantity"
@@ -334,11 +350,11 @@ const ProductDetailTab = ({
             <div className="py-3">
                 <Duration data={data} setData={setData} errors={errors} />
             </div>
-            <div className="py-2 border rounded-md mt-2 mb-2">
-                <div className="px-4">
+            <div className="py-2 border rounded-md mt-2 mb-4">
+                <div className="py-2 px-4">
                     <span className="font-bold">Price</span>
                 </div>
-                <div className="flex flex-col gap-4 md:grid md:grid-cols-2 md:justify-between md:gap-10 px-4 py-4 ">
+                <div className="flex flex-col gap-4 md:grid md:grid-cols-2 md:justify-between md:gap-10 px-8 py-2">
                     <div>
                         <InputLabel htmlFor="price" value="Student" />
                         <TextInput
@@ -379,8 +395,38 @@ const ProductDetailTab = ({
                     </div>
                 </div>
             </div>
+            <div className="mt-2 mb-2 px-2 py-2 border rounded-md">
+                <div className="py-2 px-4">
+                    <span className="font-bold">Filters</span>
+                </div>
+                <div className="flex flex-col md:grid md:grid-cols-4 px-8 py-2">
+                    {filters
+                        .sort((a, b) =>
+                            a.filter_description > b.filter_description ? 1 : -1
+                        )
+                        .map((f): any => {
+                            return (
+                                <div className="flex gap-2 items-center">
+                                    <Checkbox
+                                        checked={data.product_filter?.some(
+                                            (p): any =>
+                                                p.filter_id === f.filter_id
+                                        )}
+                                        onChange={(e) =>
+                                            handleProductFilterChange(
+                                                e,
+                                                f.filter_id
+                                            )
+                                        }
+                                    />
+                                    <span>{f.filter_description}</span>
+                                </div>
+                            );
+                        })}
+                </div>
+            </div>
 
-            <div className="py-2 px-2 border rounded-md">
+            <div className="mt-4 mb-2 py-2 px-2 border rounded-md">
                 <div className="py-2">
                     <Checkbox
                         name="foodAllowed"
@@ -431,7 +477,7 @@ const ProductDetailTab = ({
                 </div>
             </div>
 
-            <div className="py-2">
+            <div className="py-4">
                 <InputLabel
                     htmlFor="images"
                     value="Main Image (supported formats .png, .jpg. Image should not be more than 2 MB)"

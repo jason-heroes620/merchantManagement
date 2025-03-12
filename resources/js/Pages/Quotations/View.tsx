@@ -117,6 +117,7 @@ const View = ({ auth }) => {
     const [quotationFees, setQuotationFees] = useState(
         quotation_fees.length > 0 ? quotation_fees : fees
     );
+    const [loading, setLoading] = useState(false);
 
     const calculateTotal = (newQuotationItem, newDiscount) => {
         const item =
@@ -257,6 +258,7 @@ const View = ({ auth }) => {
                     toast.error(resp.data.error);
                 }
                 setOpen(false);
+                setLoading(false);
             });
     };
 
@@ -566,11 +568,20 @@ const View = ({ auth }) => {
                                     <AlertDialogCancel>
                                         Cancel
                                     </AlertDialogCancel>
-                                    <AlertDialogAction
+                                    {/* <AlertDialogAction
                                         onClick={(e) => handleGenerateOrder(e)}
                                     >
                                         Continue
-                                    </AlertDialogAction>
+                                    </AlertDialogAction> */}
+                                    <Button
+                                        variant="default"
+                                        onClick={(e) => {
+                                            setLoading(true);
+                                            handleGenerateOrder(e);
+                                        }}
+                                    >
+                                        {loading ? "Please wait.." : "Continue"}
+                                    </Button>
                                 </AlertDialogFooter>
                             </AlertDialogContent>
                         </AlertDialog>

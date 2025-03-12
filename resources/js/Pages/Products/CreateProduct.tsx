@@ -28,7 +28,13 @@ import Checkbox from "@/Components/Checkbox";
 const dateFormat = "DD/MM/YYYY";
 const timeFormat = "HH:mm";
 
-const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
+const CreateProduct = ({
+    auth,
+    categories,
+    frequency,
+    filters,
+    flash,
+}: any) => {
     const { toast } = useToast();
     const [files, setFiles] = useState<File[]>([]);
     const [mainImage, setMainImage] = useState<File[]>([]);
@@ -66,8 +72,9 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
         ],
         hours: 0,
         minutes: 0,
-        food_allowed: false,
-        tour_guide: false,
+        food_allowed: 0,
+        tour_guide: 1,
+        product_filter: [],
         tour_guide_price: "0.00",
     });
 
@@ -79,12 +86,9 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
         }
     }, [flash]);
 
-    const [tourGuideOption, setTourGuideOption] = useState(data.tour_guide);
-    const [tourGuidePrice, setTourGuidePrice] = useState(data.tour_guide_price);
-
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        // console.log(data);
+        console.log(data);
         post(route("product.create"), {
             forceFormData: true,
             preserveState: true,
@@ -149,6 +153,20 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
         time.end_time = dayjs(val).format("HH:mm");
 
         setData("week_time", newTime);
+    };
+
+    const handleProductFilterChange = (e, filter_id) => {
+        if (e.target.checked) {
+            setData("product_filter", [
+                ...data.product_filter,
+                { filter_id: filter_id },
+            ]);
+        } else {
+            setData(
+                "product_filter",
+                data.product_filter.filter((p) => p.filter_id !== filter_id)
+            );
+        }
     };
 
     return (
@@ -451,7 +469,7 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
                                 <div className="py-2">
                                     <div className="border rounded-md py-4 px-4">
                                         <span className="font-bold">Price</span>
-                                        <div className="flex flex-col md:grid md:grid-cols-2 md:gap-8 py-2">
+                                        <div className="flex flex-col md:grid md:grid-cols-2 md:gap-8 py-2 px-4">
                                             <div>
                                                 <InputLabel
                                                     htmlFor="student_price"
@@ -511,16 +529,67 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="py-2 px-2 border rounded-md">
+
+                                <div className="mt-2 mb-2 px-2 py-2 border rounded-md">
+                                    <div className="py-2 px-4">
+                                        <span className="font-bold">
+                                            Filters
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-col md:grid md:grid-cols-4 px-8 py-2">
+                                        {filters
+                                            .sort((a, b) =>
+                                                a.filter_description >
+                                                b.filter_description
+                                                    ? 1
+                                                    : -1
+                                            )
+                                            .map((f): any => {
+                                                return (
+                                                    <div
+                                                        className="flex gap-2 items-center"
+                                                        key={f.filter_id}
+                                                    >
+                                                        <Checkbox
+                                                            checked={data.product_filter?.some(
+                                                                (p): any =>
+                                                                    p.filter_id ===
+                                                                    f.filter_id
+                                                            )}
+                                                            onChange={(e) =>
+                                                                handleProductFilterChange(
+                                                                    e,
+                                                                    f.filter_id
+                                                                )
+                                                            }
+                                                        />
+                                                        <span>
+                                                            {
+                                                                f.filter_description
+                                                            }
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })}
+                                    </div>
+                                </div>
+
+                                <div className="mt-4 mb-4 py-2 px-2 border rounded-md">
                                     <div className="py-2">
                                         <Checkbox
                                             name="foodAllowed"
-                                            onChange={(e) =>
+                                            onChange={(e) => {
+                                                console.log(
+                                                    "food =>",
+                                                    e.target.checked
+                                                );
                                                 setData(
                                                     "food_allowed",
-                                                    e.target.checked
-                                                )
-                                            }
+                                                    e.target.checked === true
+                                                        ? 0
+                                                        : 1
+                                                );
+                                            }}
                                             defaultChecked
                                         />
                                         <span className="pl-2 font-bold">
@@ -531,20 +600,27 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
                                         <Checkbox
                                             name="tourGuideOption"
                                             onChange={(e) => {
-                                                setData(
-                                                    "tour_guide",
-                                                    !e.target.checked
-                                                );
-                                                setTourGuideOption(
+                                                console.log(
+                                                    "tour ==> ",
                                                     e.target.checked
                                                 );
+                                                setData(
+                                                    "tour_guide",
+                                                    e.target.checked === true
+                                                        ? 0
+                                                        : 1
+                                                );
                                             }}
-                                            checked={tourGuideOption}
+                                            checked={
+                                                data.tour_guide === 0
+                                                    ? true
+                                                    : false
+                                            }
                                         />
                                         <span className="pl-2 font-bold">
                                             Tour Guide Provided
                                         </span>
-                                        {tourGuideOption && (
+                                        {data.tour_guide === 0 && (
                                             <div className="px-4 py-2">
                                                 <InputLabel
                                                     htmlFor="tour_guide_price"
@@ -561,9 +637,6 @@ const CreateProduct = ({ auth, categories, frequency, flash }: any) => {
                                                         className="mt-1 block w-full"
                                                         autoComplete="tour_guide_price"
                                                         onChange={(e) => {
-                                                            setTourGuidePrice(
-                                                                e.target.value
-                                                            );
                                                             setData(
                                                                 "tour_guide_price",
                                                                 e.target.value
