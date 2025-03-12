@@ -272,6 +272,8 @@ class ProductController extends Controller
                         'product_id' => $req->id
                     ]);
                 }
+            } else {
+                Item::where('item_type', 'GUIDE')->where('product_id', $req->id)->delete();
             }
 
             $main_image_path = "";
