@@ -102,7 +102,8 @@ class ProductController extends Controller
                 'max_quantity' => $req->input('max_quantity'),
                 'duration' => $hours + $minutes,
                 'food_allowed' => $req->input('food_allowed'),
-                'tour_guide' => $req->input('tour_guide')
+                'tour_guide' => $req->input('tour_guide'),
+                'max_group' => $req->input('max_group'),
             ]);
 
             if ($req->input('tour_guide') ==  0) {
@@ -245,6 +246,7 @@ class ProductController extends Controller
                 'duration' => $hours + $minutes,
                 'food_allowed' => $req->input('food_allowed'),
                 'tour_guide' => $req->input('tour_guide'),
+                'max_group' => $req->input('max_group'),
             ]);
 
             if ($req->input('tour_guide') ==  0) {

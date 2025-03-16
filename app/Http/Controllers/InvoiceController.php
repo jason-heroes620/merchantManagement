@@ -15,6 +15,7 @@ use App\Models\ProposalProduct;
 use App\Models\ProposalItem;
 use App\Models\ProposalProductPrice;
 use App\Models\Quotation;
+use App\Models\ReservedDate;
 use App\Models\School;
 use Symfony\Component\Uid\UuidV8;
 use Illuminate\Http\Request;
@@ -50,7 +51,7 @@ class InvoiceController extends Controller
             }
         }
 
-        $discount = Discount::where('quotation_id', $order['quotation_id'])->first();
+        $discount = Discount::where('proposal_id', $order['proposal_id'])->first();
 
         $proposalItems = ProposalItem::leftJoin('item', 'item.item_id', 'proposal_item.item_id')
             ->where('proposal_id', $proposal['proposal_id'])
@@ -63,7 +64,7 @@ class InvoiceController extends Controller
         $orderTotal = OrderTotal::where('order_id', $order['order_id'])->orderBy('sort_order', 'asc')->get();
 
         $school = School::where('user_id', $proposal['user_id'])->first();
-        $payment = PaymentDetail::where("order_no", $order["order_no"])->first();
+        $payment = PaymentDetail::where("order_no", $order["order_no"])->where('bank_ref', '!=', '')->first();
 
         return Inertia::render(
             'Invoices/View',
@@ -86,6 +87,20 @@ class InvoiceController extends Controller
                 'invoice_amount' => $order['order_amount'],
                 'invoice_status' => 0
             ]);
+
+            if ($order['order_type'] === 'D') {
+                $proposal = Proposal::leftJoin('proposal_product', 'proposal_product.proposal_id', 'proposal.proposal_id')
+                    ->where('proposal_id', $order['proposal_id'])
+                    ->get();
+
+                foreach ($proposal as $p) {
+                    ReservedDate::create([
+                        'reserved_date' => $p['proposal_date'],
+                        'user_id' => $p['user_id'],
+                        'product_id' => $p['product_id'],
+                    ]);
+                }
+            }
 
             return response()->json([
                 'message' => 'Invoice created successfully',

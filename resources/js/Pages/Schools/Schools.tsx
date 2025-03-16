@@ -3,6 +3,7 @@ import { Head, usePage } from "@inertiajs/react";
 import SchoolTab from "@/Components/Tabs/SchoolTab";
 import { PaginatedData, School } from "@/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/Components/ui/tabs";
+import { Badge } from "@/Components/ui/badge";
 
 const Schools = ({ auth }) => {
     const { new_schools, schools, rejected_schools, type } = usePage<{
@@ -32,6 +33,19 @@ const Schools = ({ auth }) => {
                                     <TabsList>
                                         <TabsTrigger value="pending">
                                             Pending
+                                            <div className="flex flex-row gap-2 items-center">
+                                                Pending
+                                                {new_schools.data &&
+                                                    new_schools.data.length >
+                                                        0 && (
+                                                        <Badge variant="destructive">
+                                                            {
+                                                                new_schools.data
+                                                                    .length
+                                                            }
+                                                        </Badge>
+                                                    )}
+                                            </div>
                                         </TabsTrigger>
                                         <TabsTrigger value="current">
                                             Current

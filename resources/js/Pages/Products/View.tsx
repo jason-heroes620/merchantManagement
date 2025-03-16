@@ -102,6 +102,7 @@ const View = ({
         food_allowed: product.food_allowed,
         tour_guide: product.tour_guide,
         tour_guide_price: tour_guide_price,
+        max_group: product.max_group,
         product_filter: product_filter ?? [],
     });
 

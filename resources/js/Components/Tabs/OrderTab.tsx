@@ -5,7 +5,6 @@ import { formattedNumber } from "@/utils/formatNumber";
 
 const OrderTab = ({ orders }: { orders: any }) => {
     const { data, links, from, to, total } = orders;
-
     return (
         <div>
             <div className="pt-4">
@@ -23,6 +22,29 @@ const OrderTab = ({ orders }: { orders: any }) => {
                                                     "DD/MM/YYYY"
                                                 )}
                                             </>
+                                        </>
+                                    ),
+                                },
+                                {
+                                    label: "Due Date",
+                                    name: "due_date",
+                                    renderCell: (row: any) => (
+                                        <>
+                                            <div
+                                                className={
+                                                    dayjs(row.due_date).diff(
+                                                        dayjs(),
+                                                        "day"
+                                                    ) < 5 &&
+                                                    row.order_status !== 2
+                                                        ? `bg-red-300 px-2 py-1 rounded-sm`
+                                                        : ""
+                                                }
+                                            >
+                                                {dayjs(row.due_date).format(
+                                                    "DD/MM/YYYY"
+                                                )}
+                                            </div>
                                         </>
                                     ),
                                 },
@@ -46,7 +68,6 @@ const OrderTab = ({ orders }: { orders: any }) => {
                                         </>
                                     ),
                                 },
-
                                 {
                                     label: "Amount",
                                     name: "order_amount",
@@ -57,6 +78,15 @@ const OrderTab = ({ orders }: { orders: any }) => {
                                                     row.order_amount
                                                 )}
                                             </>
+                                        </>
+                                    ),
+                                },
+                                {
+                                    label: "Type",
+                                    name: "order_type",
+                                    renderCell: (row) => (
+                                        <>
+                                            <>{row.order_type}</>
                                         </>
                                     ),
                                 },

@@ -426,7 +426,7 @@ const ProductDetailTab = ({
                 </div>
             </div>
 
-            <div className="mt-4 mb-2 py-2 px-2 border rounded-md">
+            <div className="mt-4 mb-2 py-2 px-4 border rounded-md">
                 <div className="py-2">
                     <Checkbox
                         name="foodAllowed"
@@ -438,7 +438,7 @@ const ProductDetailTab = ({
                     />
                     <span className="pl-2 font-bold">Food Allowed</span>
                 </div>
-                <div>
+                <div className="py-2">
                     <Checkbox
                         name="tourGuideOption"
                         onChange={(e) => {
@@ -474,6 +474,27 @@ const ProductDetailTab = ({
                             </div>
                         </div>
                     )}
+                </div>
+                <hr />
+                <div className="py-4">
+                    <InputLabel
+                        htmlFor="max_group"
+                        value="Max Group Allowed Per Day"
+                    />
+                    <div className="flex flex-row w-full md:w-[50%]">
+                        <TextInput
+                            id="max_group"
+                            name="max_group"
+                            value={data.max_group}
+                            type="number"
+                            className="mt-1 block w-full"
+                            onChange={(e) => {
+                                setData("max_group", parseInt(e.target.value));
+                            }}
+                            min={1}
+                            max={5}
+                        />
+                    </div>
                 </div>
             </div>
 

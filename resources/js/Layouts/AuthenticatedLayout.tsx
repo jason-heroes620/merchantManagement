@@ -76,13 +76,21 @@ export default function Authenticated({
                                         >
                                             Schools
                                         </NavLink>
-                                        <NavLink
+                                        {/* <NavLink
                                             href={route("quotations")}
                                             active={route().current(
                                                 "quotations"
                                             )}
                                         >
                                             Quotations
+                                        </NavLink> */}
+                                        <NavLink
+                                            href={route("proposals")}
+                                            active={route().current(
+                                                "proposals"
+                                            )}
+                                        >
+                                            Proposals
                                         </NavLink>
                                         <NavLink
                                             href={route("orders")}

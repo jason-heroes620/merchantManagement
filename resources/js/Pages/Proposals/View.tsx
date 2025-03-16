@@ -2,14 +2,13 @@ import { useState, useEffect, useMemo } from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Link, usePage, Head } from "@inertiajs/react";
 import {
-    Quotation,
     Proposal,
-    QuotationDiscount,
-    QuotationItem,
-    QuotationProductPrices,
+    ProposalDiscount,
+    ProposalItem,
+    ProposalProductPrices,
     Fees,
-    QuotationFees,
-    QuotationProduct,
+    ProposalFees,
+    ProposalProduct,
 } from "@/types";
 import { toast, ToastContainer } from "react-toastify";
 import InputLabel from "@/Components/InputLabel";
@@ -77,33 +76,35 @@ let feeTotal = 0.0;
 let discountTotal = 0.0;
 let total = 0.0;
 
+const mapKey = import.meta.env.VITE_GOOGLE_KEY;
+const libraries = ["places"];
+
 const View = ({ auth }) => {
+    // const libraries = useMemo(() => ["places"], []);
     const {
-        quotation,
         proposal,
-        quotation_product,
-        quotation_item,
+        proposal_product,
+        proposal_item,
         prices,
-        quotation_discount,
+        proposal_discount,
         fees,
-        quotation_fees,
+        proposal_fees,
     } = usePage<{
-        quotation: Quotation;
         proposal: Proposal;
-        quotation_product: Array<QuotationProduct>;
-        quotation_item: Array<QuotationItem>;
-        prices: Array<QuotationProductPrices>;
-        quotation_discount: QuotationDiscount;
+        proposal_product: Array<ProposalProduct>;
+        proposal_item: Array<ProposalItem>;
+        prices: Array<ProposalProductPrices>;
+        proposal_discount: ProposalDiscount;
         fees: Array<Fees>;
-        quotation_fees: Array<QuotationFees>;
+        proposal_fees: Array<ProposalFees>;
     }>().props;
 
-    const [quotationProduct, setQuotationProduct] = useState(quotation_product);
-    const [quotationItem, setQuotationItem] = useState(quotation_item);
+    const [proposalProduct, setProposalProduct] = useState(proposal_product);
+    const [proposalItem, setProposalItem] = useState(proposal_item);
 
     const [discount, setDiscount] = useState({
-        discounttype: quotation_discount?.discount_type,
-        discountamount: quotation_discount?.discount_amount,
+        discounttype: proposal_discount?.discount_type,
+        discountamount: proposal_discount?.discount_amount,
     });
 
     const [travelInfo, setTravelInfo] = useState({
@@ -113,14 +114,13 @@ const View = ({ auth }) => {
             proposal.travel_distance > 0 ? proposal.travel_distance : 0,
     });
 
-    const [quotationFees, setQuotationFees] = useState(
-        quotation_fees.length > 0 ? quotation_fees : fees
+    const [proposalFees, setProposalFees] = useState(
+        proposal_fees.length > 0 ? proposal_fees : fees
     );
     const [loading, setLoading] = useState(false);
 
-    const calculateTotal = (newQuotationItem, newDiscount) => {
-        const item =
-            newQuotationItem === null ? quotationItem : newQuotationItem;
+    const calculateTotal = (newProposalItem, newDiscount) => {
+        const item = newProposalItem === null ? proposalItem : newProposalItem;
         const disc = newDiscount === null ? discount : newDiscount;
 
         productTotal = prices.reduce(
@@ -134,7 +134,7 @@ const View = ({ auth }) => {
             0.0
         );
 
-        feeTotal = quotationFees.reduce(
+        feeTotal = proposalFees.reduce(
             (sum: number, p: any) =>
                 sum +
                 (p.fee_type === "P"
@@ -161,17 +161,14 @@ const View = ({ auth }) => {
     const handleUpdateTransportationPrice = (e) => {
         e.preventDefault();
         const data = {
-            transportation: quotationItem.filter((q) => {
+            transportation: proposalItem.filter((q) => {
                 return q.item.item_type === "TRANSPORTATION";
             }),
         };
 
         axios
             .put(
-                route(
-                    "quotation.transportation.update",
-                    quotation.quotation_id
-                ),
+                route("proposal.transportation.update", proposal.proposal_id),
                 data
             )
             .then((resp) => {
@@ -182,7 +179,7 @@ const View = ({ auth }) => {
     };
 
     const handleItemQtyChange = (itemId, formula) => {
-        let newItem = quotationItem.map((q) => {
+        let newItem = proposalItem.map((q) => {
             if (q.item_id === itemId) {
                 if (formula === "add")
                     return { ...q, item_qty: q.item_qty + 1 };
@@ -196,49 +193,49 @@ const View = ({ auth }) => {
             }
         });
 
-        setQuotationItem(newItem);
+        setProposalItem(newItem);
         calculateTotal(newItem, null);
     };
 
-    const handleTransportationPriceChange = (e, itemId, quotationItemId) => {
-        let newItem = quotationItem.map((q) => {
+    const handleTransportationPriceChange = (e, itemId, proposalItemId) => {
+        let newItem = proposalItem.map((q) => {
             if (q.item_id === itemId) {
                 return { ...q, unit_price: e.target.value };
             } else {
                 return q;
             }
         });
-        setQuotationItem(newItem);
+        setProposalItem(newItem);
         calculateTotal(newItem, null);
     };
 
-    const handleConfirmQuotation = (e) => {
-        e.preventDefault();
+    // const handleConfirmQuotation = (e) => {
+    //     e.preventDefault();
 
-        axios
-            .put(route("quotation.confirm", quotation.quotation_id), {
-                fees: quotationFees,
-            })
-            .then((resp) => {
-                if (resp.data.success) {
-                    toast.success(resp.data.success);
-                    router.visit(
-                        route("quotation.view", quotation.quotation_id)
-                    );
-                } else {
-                    toast.error(resp.data.error);
-                }
-                setOpen(false);
-            });
-    };
+    //     axios
+    //         .put(route("proposal.confirm", proposal.proposal_id), {
+    //             fees: proposalFees,
+    //         })
+    //         .then((resp) => {
+    //             if (resp.data.success) {
+    //                 toast.success(resp.data.success);
+    //                 router.visit(
+    //                     route("proposal.view", proposal.proposal_id)
+    //                 );
+    //             } else {
+    //                 toast.error(resp.data.error);
+    //             }
+    //             setOpen(false);
+    //         });
+    // };
 
     const handleGenerateOrder = (e) => {
         e.preventDefault();
 
         axios
             .post(route("order.create"), {
-                quotation_id: quotation.quotation_id,
-                quotation_amount: total,
+                proposal_id: proposal.proposal_id,
+                proposal_amount: total,
                 order_type: orderType,
                 deposit: depositAmount,
                 balance: balance,
@@ -247,15 +244,19 @@ const View = ({ auth }) => {
                 feeTotal: feeTotal,
                 depositDueDate: depositDueDate,
                 balanceDueDate: balanceDueDate,
+                fees: proposalFees,
             })
             .then((resp) => {
-                setOpenConfirm(false);
                 if (resp.status === 200) {
-                    router.visit(route("orders"));
                     toast.success("Order created!");
+                } else if (resp.status === 202) {
+                    toast.error(
+                        "There might be an issue with visitation date. Please check if there could be duplicates."
+                    );
                 } else {
                     toast.error(resp.data.error);
                 }
+                setOpenConfirm(false);
                 setOpen(false);
                 setLoading(false);
             });
@@ -264,40 +265,40 @@ const View = ({ auth }) => {
     const [open, setOpen] = useState(false);
     const [openConfirm, setOpenConfirm] = useState(false);
 
-    const confirmDialog = () => {
-        return (
-            <AlertDialog open={open} onOpenChange={setOpen}>
-                <AlertDialogTrigger asChild>
-                    <Button
-                        variant="default"
-                        disabled={
-                            quotation.quotation_status === 1 ? true : false
-                        }
-                    >
-                        Confirm Quotation
-                    </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle></AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Ready to confirm quotation? Once confirmed, a
-                            notification will be sent to the user email to
-                            notify them.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={(e) => handleConfirmQuotation(e)}
-                        >
-                            Continue
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-        );
-    };
+    // const confirmDialog = () => {
+    //     return (
+    //         <AlertDialog open={open} onOpenChange={setOpen}>
+    //             <AlertDialogTrigger asChild>
+    //                 <Button
+    //                     variant="default"
+    //                     disabled={
+    //                         proposal.proposal_status === 1 ? true : false
+    //                     }
+    //                 >
+    //                     Confirm Quotation
+    //                 </Button>
+    //             </AlertDialogTrigger>
+    //             <AlertDialogContent>
+    //                 <AlertDialogHeader>
+    //                     <AlertDialogTitle></AlertDialogTitle>
+    //                     <AlertDialogDescription>
+    //                         Ready to confirm proposal? Once confirmed, a
+    //                         notification will be sent to the user email to
+    //                         notify them.
+    //                     </AlertDialogDescription>
+    //                 </AlertDialogHeader>
+    //                 <AlertDialogFooter>
+    //                     <AlertDialogCancel>Cancel</AlertDialogCancel>
+    //                     <AlertDialogAction
+    //                         onClick={(e) => handleConfirmQuotation(e)}
+    //                     >
+    //                         Continue
+    //                     </AlertDialogAction>
+    //                 </AlertDialogFooter>
+    //             </AlertDialogContent>
+    //         </AlertDialog>
+    //     );
+    // };
 
     const [orderType, setOrderType] = useState("");
     const [depositAmount, setDepositAmount] = useState((total * 50) / 100);
@@ -340,7 +341,7 @@ const View = ({ auth }) => {
                 <DialogTrigger asChild>
                     <Button
                         variant="primary"
-                        disabled={quotation.quotation_status < 3 ? false : true}
+                        disabled={proposal.proposal_status < 3 ? false : true}
                     >
                         Create Order
                     </Button>
@@ -604,7 +605,7 @@ const View = ({ auth }) => {
 
     const handleUpdateDiscount = () => {
         const data = {
-            quotation_id: quotation.quotation_id,
+            proposal_id: proposal.proposal_id,
             discount_type: discount.discounttype,
             discount_amount: discount.discountamount,
         };
@@ -617,9 +618,8 @@ const View = ({ auth }) => {
         });
     };
 
-    const libraries = useMemo(() => ["places"], []);
     const { isLoaded } = useLoadScript({
-        googleMapsApiKey: import.meta.env.VITE_GOOGLE_KEY, // Replace with your API key
+        googleMapsApiKey: mapKey, // Replace with your API key
         libraries: libraries as any,
     });
 
@@ -629,13 +629,13 @@ const View = ({ auth }) => {
         const service = new google.maps.DirectionsService();
 
         const origin = proposal.origin; // Replace with your origin
-        const destinations = proposal.origin; // Replace with your destinations
+        const destination = proposal.origin; // Replace with your destinations
         const waypoints = locations; // Replace with your destinations
 
         await service.route(
             {
                 origin: origin,
-                destination: destinations,
+                destination: destination,
                 waypoints: waypoints,
                 travelMode: google.maps.TravelMode.DRIVING,
                 unitSystem: google.maps.UnitSystem.METRIC, // Use METRIC for kilometers
@@ -651,19 +651,22 @@ const View = ({ auth }) => {
     };
 
     useEffect(() => {
-        let travelLocations = quotation_product.map((p: any) => {
+        let travelLocations = proposal_product.map((p: any) => {
             return { location: p.product.location, stopover: true };
         });
 
-        calculateDistances(travelLocations);
-    }, []);
+        if (isLoaded) {
+            calculateDistances(travelLocations);
+        }
+    }, [isLoaded]);
+
     if (!isLoaded) return <div>Loading...</div>;
 
     const handleUpdateVisitationDate = (e) => {
         //e.preventDefault();
 
         axios
-            .put(route("quotation.visitation_date", proposal.proposal_id), {
+            .put(route("proposal.visitation_date", proposal.proposal_id), {
                 date: moment(visitionDate).format("YYYY-MM-DD"),
             })
             .then((resp) => {
@@ -674,6 +677,7 @@ const View = ({ auth }) => {
                 }
             });
     };
+
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -681,7 +685,7 @@ const View = ({ auth }) => {
                 <div className="flex flex-row gap-8">
                     <div>
                         <Button asChild variant="destructive">
-                            <Link href={route("quotations")}>Back</Link>
+                            <Link href={route("proposals")}>Back</Link>
                         </Button>
                     </div>
                 </div>
@@ -689,35 +693,10 @@ const View = ({ auth }) => {
         >
             <Head title="School" />
             <ToastContainer limit={3} />
-            <div className="py-12">
+            <div className="py-8">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="px-2 md:px-10 lg:px-20">
-                            <div className="flex flex-col md:grid md:grid-cols-2 py-4">
-                                <div className="px-2">
-                                    <InputLabel
-                                        htmlFor="quotation_no"
-                                        value="Quotation No."
-                                        className="py-2"
-                                    />
-                                    <span className="py-4">
-                                        {quotation.quotation_no}
-                                    </span>
-                                </div>
-                                <div className="px-2">
-                                    <InputLabel
-                                        htmlFor="quotation_date"
-                                        value="Quotation Date"
-                                        className="py-2"
-                                    />
-                                    <span className="py-4">
-                                        {moment(
-                                            quotation.quotation_date
-                                        ).format("DD/MM/YYYY")}
-                                    </span>
-                                </div>
-                            </div>
-                            <hr />
                             <div className="py-2">
                                 {/* school info */}
                                 <div className="flex flex-col md:grid md:grid-cols-2 py-2">
@@ -813,8 +792,18 @@ const View = ({ auth }) => {
                                             </AlertDialog>
                                         </div>
                                     </div>
+                                    <div className="px-2">
+                                        <InputLabel
+                                            htmlFor="proposal_name"
+                                            value="proposal"
+                                            className="py-2"
+                                        />
+                                        <span className="py-4">
+                                            {proposal.proposal_name}
+                                        </span>
+                                    </div>
                                 </div>
-
+                                <hr />
                                 <div className="flex flex-col md:grid md:grid-cols-2 py-2">
                                     <div className="px-2">
                                         <InputLabel
@@ -875,9 +864,9 @@ const View = ({ auth }) => {
                             </div>
                             <hr />
                             <div className="py-4">
-                                {/* quotation product */}
+                                {/* proposal product */}
                                 <div>
-                                    {quotationProduct.map((p, index) => {
+                                    {proposalProduct.map((p, index) => {
                                         return (
                                             <div
                                                 key={index}
@@ -1024,12 +1013,12 @@ const View = ({ auth }) => {
                             </div>
                             <hr />
                             <div className="px-4 py-4">
-                                {/* quotation item */}
+                                {/* proposal item */}
                                 <div className="py-4">
                                     <span className="text-lg font-bold">
                                         Transportation
                                     </span>
-                                    {quotationItem
+                                    {proposalItem
                                         .filter((p) => {
                                             return (
                                                 p.item.item_type ===
@@ -1047,7 +1036,7 @@ const View = ({ auth }) => {
                                                             {p.item.item_name}
                                                         </span>
                                                     </div>
-                                                    {quotation.quotation_status <
+                                                    {proposal.proposal_status <
                                                     1 ? (
                                                         <div className="flex flex-row gap-2">
                                                             <div className="mr-2 flex flex-row items-center gap-2 py-2">
@@ -1102,7 +1091,7 @@ const View = ({ auth }) => {
                                                                             handleTransportationPriceChange(
                                                                                 e,
                                                                                 p.item_id,
-                                                                                p.quotation_item_id
+                                                                                p.proposal_item_id
                                                                             );
                                                                         }}
                                                                         required
@@ -1165,7 +1154,7 @@ const View = ({ auth }) => {
                                     <span className="text-lg font-bold">
                                         Meals
                                     </span>
-                                    {quotationItem
+                                    {proposalItem
                                         .filter((p) => {
                                             return p.item.item_type === "FOOD";
                                         })
@@ -1203,7 +1192,7 @@ const View = ({ auth }) => {
                                     <span className="text-lg font-bold">
                                         Insurance
                                     </span>
-                                    {quotationItem
+                                    {proposalItem
                                         .filter((p) => {
                                             return (
                                                 p.item.item_type === "INSURANCE"
@@ -1239,14 +1228,14 @@ const View = ({ auth }) => {
                                             );
                                         })}
                                 </div>
-                                {quotationItem.some(
+                                {proposalItem.some(
                                     (q: any) => q.item.item_type === "GUIDE"
                                 ) && (
                                     <div className="py-4">
                                         <span className="text-lg font-bold">
                                             GUIDE
                                         </span>
-                                        {quotationItem
+                                        {proposalItem
                                             .filter((p) => {
                                                 return (
                                                     p.item.item_type === "GUIDE"
@@ -1293,7 +1282,7 @@ const View = ({ auth }) => {
                                 <textarea
                                     name="special_request"
                                     id=""
-                                    value={proposal.special_request}
+                                    defaultValue={proposal?.special_request}
                                     disabled={true}
                                     rows={4}
                                 />
@@ -1313,7 +1302,7 @@ const View = ({ auth }) => {
                             <div className="px-4 py-4">
                                 <div className="text-lg font-bold">Fees</div>
                                 <div className="py-2">
-                                    {quotationFees.map((f: any) => {
+                                    {proposalFees.map((f: any) => {
                                         return (
                                             <div
                                                 className="flex flex-row justify-between items-center"
@@ -1361,60 +1350,54 @@ const View = ({ auth }) => {
                                         Discount
                                     </span>
                                 </div>
-                                {quotation.quotation_status < 2 && (
-                                    <div className="flex flex-col  md:flex-row md:justify-end py-4 gap-4">
-                                        <div>
-                                            <SelectInput
-                                                options={discountType}
-                                                defaultValue={
-                                                    discount.discounttype
-                                                        ? discount.discounttype
-                                                        : ""
-                                                }
-                                                onChange={(e) =>
-                                                    handleDiscountChange(
-                                                        "type",
-                                                        e.target.value
-                                                    )
-                                                }
-                                            ></SelectInput>
-                                        </div>
-                                        <div>
-                                            <TextInput
-                                                name="discount_amount"
-                                                type="number"
-                                                defaultValue={
-                                                    discount.discountamount
-                                                }
-                                                onChange={(e) =>
-                                                    handleDiscountChange(
-                                                        "amount",
-                                                        e.target.value
-                                                    )
-                                                }
-                                                maxLength={6}
-                                                min={0}
-                                                className=""
-                                            />
-                                        </div>
-                                        <div className="flex items-center">
-                                            <Button
-                                                variant="primary"
-                                                onClick={() =>
-                                                    handleUpdateDiscount()
-                                                }
-                                                disabled={
-                                                    quotation.quotation_status <
-                                                    1
-                                                        ? false
-                                                        : true
-                                                }
-                                            >
-                                                Save Discount
-                                            </Button>
-                                        </div>
+
+                                <div className="flex flex-col  md:flex-row md:justify-end py-4 gap-4">
+                                    <div>
+                                        <SelectInput
+                                            options={discountType}
+                                            defaultValue={
+                                                discount.discounttype
+                                                    ? discount.discounttype
+                                                    : ""
+                                            }
+                                            onChange={(e) =>
+                                                handleDiscountChange(
+                                                    "type",
+                                                    e.target.value
+                                                )
+                                            }
+                                        ></SelectInput>
                                     </div>
-                                )}
+                                    <div>
+                                        <TextInput
+                                            name="discount_amount"
+                                            type="number"
+                                            defaultValue={
+                                                discount.discountamount
+                                            }
+                                            onChange={(e) =>
+                                                handleDiscountChange(
+                                                    "amount",
+                                                    e.target.value
+                                                )
+                                            }
+                                            maxLength={6}
+                                            min={0}
+                                            className=""
+                                        />
+                                    </div>
+                                    <div className="flex items-center">
+                                        <Button
+                                            variant="primary"
+                                            onClick={() =>
+                                                handleUpdateDiscount()
+                                            }
+                                        >
+                                            Save Discount
+                                        </Button>
+                                    </div>
+                                </div>
+
                                 <div className="flex flex-row gap-4 justify-end">
                                     <span className="font-bold text-lg text-red-600">
                                         Discount
@@ -1436,7 +1419,7 @@ const View = ({ auth }) => {
                                             price per pax{" "}
                                             {formattedNumber(
                                                 total /
-                                                    quotation.proposal
+                                                    proposal.proposal
                                                         .qty_student
                                             )}
                                         </span>
@@ -1444,11 +1427,7 @@ const View = ({ auth }) => {
                             </div>
                             <hr />
                             <div className="flex flex-row-reverse  py-4">
-                                {quotation.quotation_status < 2 ? (
-                                    <div className="">{confirmDialog()}</div>
-                                ) : (
-                                    <div className="">{generateOrder()}</div>
-                                )}
+                                <div className="">{generateOrder()}</div>
                             </div>
                         </div>
                     </div>

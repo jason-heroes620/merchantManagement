@@ -15,7 +15,7 @@ class Discount extends Model
     protected $primaryKey = "discount_id";
 
     protected $fillable = [
-        'quotation_id',
+        'proposal_id',
         'discount_type',
         'discount_amount',
     ];

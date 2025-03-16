@@ -18,6 +18,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductProfitController;
 use App\Http\Controllers\ProductImageController;
+use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\QuotationItemController;
 use App\Http\Controllers\SchoolController;
@@ -177,6 +178,13 @@ Route::middleware('auth')->group(function () {
     Route::put('/school_approve/{id?}', [SchoolController::class, 'approve'])->name('school.approve');
     Route::put('/school_reject/{id?}', [SchoolController::class, 'reject'])->name('school.reject');
 
+    // Proposals
+    Route::get('/proposals', [ProposalController::class, 'index'])->name('proposals');
+    Route::get('/proposal/{id}', [ProposalController::class, 'view'])->name('proposal.view');
+    Route::get('/getDisabledDays/{id}', [ProposalController::class, 'getDisabledDays'])->name('proposal.getDisabledDays');
+    Route::get('/getDisabledDates/{id}', [ProposalController::class, 'getDisabledDates'])->name('proposal.getDisabledDates');
+
+
     // Quotations
     Route::get('/quotations/{type?}', [QuotationController::class, 'index'])->name('quotations');
     Route::get('/quotation/{id}', [QuotationController::class, 'view'])->name('quotation.view');
@@ -194,7 +202,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/{type?}', [OrderController::class, 'index'])->name('orders');
     Route::get('/order/{id}', [OrderController::class, 'view'])->name('order.view');
     Route::post('/order', [OrderController::class, 'create'])->name('order.create');
-
+    Route::get('/order_edit/{id}', [OrderController::class, 'edit'])->name('order.edit');
 
     // Discount
     Route::post('/discount', [DiscountController::class, 'create'])->name('discount.create');

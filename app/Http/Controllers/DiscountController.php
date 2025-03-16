@@ -14,7 +14,7 @@ class DiscountController extends Controller
     {
         try {
             Discount::updateOrCreate(
-                ['quotation_id' => $req->input('quotation_id')],
+                ['proposal_id' => $req->input('proposal_id')],
                 ['discount_type' => $req->input('discount_type'), 'discount_amount' => $req->input('discount_amount')]
             );
             return response()->json(["success" => "Discount updated."]);

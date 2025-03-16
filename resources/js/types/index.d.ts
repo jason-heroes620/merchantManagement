@@ -80,51 +80,54 @@ export interface Item {
     item_type: string;
     unit_price: number;
     item_name: string;
+    additional_unit_cost: number;
+    additional: number;
 }
-export interface Quotation {
-    quotation_id: string;
-    quotation_no: string;
-    quotation_date: Date;
-    quotation_status: number;
+export interface Proposal {
+    proposal_id: string;
+    proposal_no: string;
+    proposal_date: Date;
+    proposal_status: number;
     proposal: Proposal;
-    quotation_product: Array<QuotationProduct>;
-    quotation_item: Array<QuotationItem>;
-    prices: Array<QuotationProductPrices>;
-    quotation_discount: QuotationDiscount;
+    proposal_product: Array<ProposalProduct>;
+    proposal_item: Array<ProposalItem>;
+    prices: Array<ProposalProductPrices>;
+    proposal_discount: ProposalDiscount;
     fees: Array<Fees>;
 }
 
-export interface QuotationDiscount {
+export interface ProposalDiscount {
     discount_type: string;
     discount_amount: string;
 }
-export interface QuotationProduct {
-    quotation_product_id: string;
-    quotation_id: string;
+export interface ProposalProduct {
     product_id: string;
     product: Product;
-    prices: Array<QuotationProductPrices>;
+    prices: Array<ProposalProductPrices>;
 }
 
-export interface QuotationProductPrices {
+export interface ProposalProductPrices {
     attribute: string;
     uom: string;
     unit_price: number;
     product_qty: number;
     sales_tax: number;
 }
-export interface QuotationItem {
-    quotation_item_id: string;
-    quotation_id: string;
+export interface ProposalItem {
+    proposal_item_id: number;
+    proposal_id: string;
     item_id: string;
     uom: string;
     item_qty: number;
     sales_tax: number;
     unit_price: number;
     item: Item;
+    item_type: string;
+    additional_unit_cost: string;
+    additional: string;
 }
 
-export interface QuotationFees {
+export interface ProposalFees {
     proposal_fee_id: number;
     proposal_id: string;
     fee_id: number;
@@ -136,7 +139,6 @@ export interface Proposal {
     proposal_id: string;
     proposal_name: string;
     proposal_date: Date;
-    quotation_id: string;
     additional_price: number;
     qty_student: number;
     qty_teacher: number;
@@ -158,19 +160,19 @@ export interface Order {
     order_date: Date;
     due_date: Date;
     order_status: number;
-    quotation_id: string;
+    proposal_id: string;
 }
 
 export interface Invoice {
-    quotation_id: string;
+    proposal_id: string;
     invoice_no: string;
     invoice_date: Date;
     due_date: Date;
     invoice_status: number;
     proposal: Proposal;
-    quotation_product: Array<QuotationProduct>;
-    quotation_item: Array<QuotationItem>;
-    prices: Array<QuotationProductPrices>;
+    proposal_product: Array<ProposalProduct>;
+    proposal_item: Array<ProposalItem>;
+    prices: Array<ProposalProductPrices>;
 }
 
 export interface Fees {

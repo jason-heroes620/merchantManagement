@@ -4,16 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Events\CreateOrderEvent;
 use App\Models\Discount;
+use App\Models\Invoice;
+use App\Models\Item;
 use App\Models\Order;
 use App\Models\OrderTotal;
 use App\Models\PaymentDetail;
 use App\Models\Product;
+use App\Models\ProductDetail;
 use App\Models\Proposal;
 use App\Models\ProposalFees;
 use App\Models\ProposalItem;
 use App\Models\ProposalProduct;
 use App\Models\ProposalProductPrice;
 use App\Models\Quotation;
+use App\Models\ReservedDate;
 use App\Models\School;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Exceptions;
@@ -30,48 +34,58 @@ class OrderController extends Controller
         $user = $req->user();
         $pending_payment = $this->getOrders(0);
         $paid = $this->getOrders(2);
+        $failed = $this->getOrders(4);
+        $cancelled = $this->getOrders(9);
 
-        return Inertia::render('Orders/Orders', compact('pending_payment', 'paid', 'type'));
+        return Inertia::render('Orders/Orders', compact('pending_payment', 'paid', 'failed', 'cancelled', 'type'));
     }
 
     public function create(Request $req)
     {
         $order = "";
-        $order_no = "";
+        $proposal = Proposal::where('proposal_id', $req->input('proposal_id'))->first();
 
-        $quotation = Quotation::where('quotation_id', $req->input('quotation_id'))->first();
-        $proposal = Proposal::where('proposal_id', $quotation['proposal_id'])->first();
-
-        // today + 14 days not more than proposal_date then deposit due date = today + 14 days
-        // $deposit_due_date = date('Y-m-d', strtotime('+14 days'));
-        // (strtotime(date('Y-m-d')) + strtotime($proposal['proposal_date'])) /  (60 * 60 * 24) > 14 ? date('Y-m-d', strtotime('-14 days', strtotime($proposal['proposal_date']))) : date('Y-m-d');
-        // $deposit_due_date = $proposal['proposal_date'] > $deposit_due_date  ? $deposit_due_date : date('Y-m-d');
-
-        // proposed_date - 14 days < today then balance due date = today else balance due date  = proposal_date - 14 days
-        // $balance_due_date = date('Y-m-d', strtotime('-14 days', strtotime($proposal['proposal_date'])));
-        // $balance_due_date = date('Y-m-d') < $balance_due_date && $balance_due_date > $deposit_due_date ? $balance_due_date : $deposit_due_date;
         $deposit_due_date = date('Y-m-d', strtotime($req->input('depositDueDate')));
         $balance_due_date = date('Y-m-d', strtotime($req->input('balanceDueDate')));
+
         try {
-            Quotation::where('quotation_id', $req->input('quotation_id'))->update([
-                'quotation_status' => 3
-            ]);
+            if ($this->canCreateOrder($proposal)) {
+                foreach ($req->input('fees') as $fee) {
+                    ProposalFees::firstOrCreate([
+                        'fee_id' => $fee['fee_id'],
+                        'fee_type' => $fee['fee_type'],
+                        'fee_amount' => $fee['fee_amount'],
+                        'proposal_id' => $proposal['proposal_id'],
+                        'fee_description' => $fee['fee_description']
+                    ]);
+                }
 
-            if ($req->input('order_type') === 'deposit') {
-                $order = $this->createOrder($req->input('quotation_id'), $req->input('deposit'), $deposit_due_date, 'D', $req->input('subTotal'), $req->input('discountTotal'), $req->input('quotation_amount'), 0);
-                $order2 = $this->createOrder($req->input('quotation_id'), $req->input('balance'), $balance_due_date, 'B', $req->input('subTotal'), $req->input('discountTotal'), $req->input('quotation_amount'), $req->input('deposit'));
+                Proposal::where('proposal_id', $req->input('proposal_id'))->update([
+                    'proposal_status' => 3
+                ]);
+
+                if ($req->input('order_type') === 'deposit') {
+                    $order = $this->createOrder($req->input('proposal_id'), $req->input('deposit'), $deposit_due_date, 'D', $req->input('subTotal'), $req->input('discountTotal'), $req->input('proposal_amount'), $req->input('deposit'));
+                    $this->createOrder($req->input('proposal_id'), $req->input('balance'), $balance_due_date, 'B', $req->input('subTotal'), $req->input('discountTotal'), $req->input('proposal_amount'), $req->input('deposit'));
+                } else {
+                    $order = $this->createOrder($req->input('proposal_id'), $req->input('proposal_amount'), $balance_due_date, 'F', $req->input('subTotal'), $req->input('discountTotal'), $req->input('proposal_amount'), 0);
+                }
+
+                $school = School::select(["contact_person", "email"])->where('user_id', $proposal['user_id'])->first();
+                $orders = Order::select(['order_no'])->where('proposal_id', $req->input('proposal_id'))->get();
+
+                event(new CreateOrderEvent($school, $orders));
+
+                return response()->json([
+                    'message' => 'Order created.',
+                    'data' => ['success' => $order]
+                ], 200);
             } else {
-                $order = $this->createOrder($req->input('quotation_id'), $req->input('quotation_amount'), $balance_due_date, 'F', $req->input('subTotal'), $req->input('discountTotal'), $req->input('quotation_amount'), 0);
+                return response()->json([
+                    'message' => 'Order cannot be created!',
+                    'data' => ['error' => $order]
+                ], 202);
             }
-
-            $school = School::select(["contact_person", "email"])->where('user_id', $proposal['user_id'])->first();
-            $orders = Order::select(['order_no'])->where('quotation_id', $req->input('quotation_id'))->get();
-
-            event(new CreateOrderEvent($school, $orders));
-            return response()->json([
-                'message' => 'Order created',
-                'data' => $order
-            ], 200);
         } catch (Exceptions $e) {
             Log::error($e);
 
@@ -82,11 +96,28 @@ class OrderController extends Controller
         }
     }
 
+    private function canCreateOrder($proposal)
+    {
+        // check if can create order, based on product max group and reserved date
+        $eligible = true;
+        $proposal_products = ProposalProduct::where('proposal_id', $proposal['proposal_id'])->get();
+
+        foreach ($proposal_products as $p) {
+            $dates = ReservedDate::where('product_id', $p['product_id'])->where('reserved_date', $proposal['proposal_date'])->where('user_id', '!=', $proposal['user_id'])->count();
+            $product = Product::where('id', $p['product_id'])->first();
+
+            if ($dates + 1 > $product['max_group']) {
+                $eligible = false;
+            }
+        }
+
+        return $eligible;
+    }
+
     public function view(Request $req)
     {
         $order = Order::where('order_id', $req->id)->first();
-        $quotation = Quotation::where('quotation_id', $order['quotation_id'])->first();
-        $proposal = Proposal::where('proposal_id', $quotation['proposal_id'])->first();
+        $proposal = Proposal::where('proposal_id', $order['proposal_id'])->first();
 
         $total = 0;
         $fee_amount = 0.00;
@@ -102,7 +133,7 @@ class OrderController extends Controller
             }
         }
 
-        $discount = Discount::where('quotation_id', $quotation['quotation_id'])->first();
+        $discount = Discount::where('proposal_id', $proposal['proposal_id'])->first();
 
         $proposalItems = ProposalItem::leftJoin('item', 'item.item_id', 'proposal_item.item_id')
             ->where('proposal_id', $proposal['proposal_id'])
@@ -123,24 +154,57 @@ class OrderController extends Controller
         $payment = "";
 
         if ($order['order_status'] === 2) {
-            $payment = PaymentDetail::where("order_no", $order["order_no"])->first();
+            $payment = PaymentDetail::where("order_no", $order["order_no"])->where('bank_ref', '!=', '')->first();
         }
+
+        $invoice = Invoice::where('order_id', $req->id)->get();
+
         return Inertia::render(
             'Orders/View',
-            compact('order', 'proposal', 'proposalProduct', 'proposalItems', 'school', 'orderTotal', 'payment')
+            compact('order', 'proposal', 'proposalProduct', 'proposalItems', 'school', 'orderTotal', 'payment', 'invoice')
         );
     }
 
-    private function createOrder($quotation_id, $amount, $due_date, $order_type, $subTotal, $discountTotal, $total, $deposit)
+    public function edit(Request $req)
+    {
+        $order = Order::where('order_id', $req->id)->first();
+        $proposal = Proposal::where('proposal_id', $order['proposal_id'])->first();
+
+        $proposal_product = ProposalProduct::where('proposal_id', $proposal["proposal_id"])->get();
+
+        $end_date = null;
+        foreach ($proposal_product as $p) {
+            $location = Product::where('id', $p['product_id'])->first();
+            $p['location'] = $location;
+            $detail = ProductDetail::where('product_id', $location['id'])->first();
+
+            if ($end_date === null) {
+                $end_date = $detail['event_end_date'];
+            } else {
+                if ($end_date < $detail['event_end_date'])
+                    $end_date = $detail['event_end_date'];
+            }
+        }
+
+        $product_prices = ProposalProduct::leftJoin('proposal_product_price', 'proposal_product_price.proposal_product_id', 'proposal_product.proposal_product_id')->where('proposal_id', $proposal['proposal_id'])->get();
+        $items = Item::where('item_status', 0)->get(["item_id", "item_name", "unit_price", "item_type", "uom", "additional_unit_cost", "item_image", "item_status", "item_description", "product_id"]);
+
+        $proposal_item = ProposalItem::leftJoin('item', 'proposal_item.item_id', '=', 'item.item_id')
+            ->where('proposal_item.proposal_id', $proposal['proposal_id'])->get(["item.item_id", "item_name", "item.uom", "item_qty", "proposal_item.unit_price", "item.sales_tax", "item_type", "item.additional_unit_cost"]);
+        $proposal_fees = ProposalFees::where('proposal_id', $proposal['proposal_id'])->get();
+
+        return Inertia::render('Orders/Edit', compact('order', 'proposal', 'proposal_product', 'product_prices', 'items', 'proposal_item', 'proposal_fees'));
+    }
+
+    private function createOrder($proposal_id, $amount, $due_date, $order_type, $subTotal, $discountTotal, $total, $deposit)
     {
         $no = Order::whereYear('created_at', date('Y'))->count() + 1;
         $order_id = UuidV8::v4();
-        $quotation = Quotation::where("quotation_id", $quotation_id)->first();
-        $proposal = Proposal::where('proposal_id', $quotation['proposal_id'])->select(['user_id'])->first();
+        $proposal = Proposal::where('proposal_id', $proposal_id)->select(['user_id'])->first();
 
-        $order = Order::create([
+        Order::create([
             'order_id' => $order_id,
-            'quotation_id' => $quotation['quotation_id'],
+            'quotation_id' => "",
             'user_id' => $proposal['user_id'],
             'order_no' => date("Y") . str_pad($no, 5, '0', STR_PAD_LEFT),
             'order_date' => date('Y-m-d'),
@@ -148,28 +212,44 @@ class OrderController extends Controller
             'due_date' => $due_date,
             'order_status' => 0,
             'order_type' => $order_type,
-            'proposal_id' => $quotation['proposal_id'],
+            'proposal_id' => $proposal_id,
             'order_description' => ''
         ]);
 
-        $codes = [['sub_total', 'Sub Total', $subTotal, 1], ['discount', 'Discount', $discountTotal, 20], ['total', 'Total', $total, 50]];
-        foreach ($codes as $code) {
-            OrderTotal::create([
-                'order_id' => $order_id,
-                'code' => $code[0],
-                'title' => $code[1],
-                'value' => $code[2],
-                'sort_order' => $code[3]
-            ]);
-        }
         if ($order_type === 'D') {
             OrderTotal::create([
                 'order_id' => $order_id,
-                'code' => 'deposit',
-                'title' => 'Deposit (50%)',
+                'code' => 'total',
+                'title' => 'Total',
                 'value' => $amount,
                 'sort_order' => 60
             ]);
+        }
+
+        if ($order_type === 'B' || $order_type === 'F') {
+            $codes = [['sub_total', 'Sub Total', $subTotal, 1], ['discount', 'Discount', $discountTotal, 20], ['total', 'Total', $total, 50]];
+            foreach ($codes as $code) {
+                OrderTotal::create([
+                    'order_id' => $order_id,
+                    'code' => $code[0],
+                    'title' => $code[1],
+                    'value' => $code[2],
+                    'sort_order' => $code[3]
+                ]);
+            }
+
+            $fees = ProposalFees::where('proposal_id', $proposal_id)->get();
+            foreach ($fees as $fee) {
+                $i = 10;
+                OrderTotal::create([
+                    'order_id' => $order_id,
+                    'code' => 'fee',
+                    'title' => $fee['fee_description'],
+                    'value' => $fee['fee_type'] === 'P' ? $subTotal * $fee['fee_amount'] / 100 : $fee['fee_amount'],
+                    'sort_order' => $i,
+                ]);
+                $i++;
+            }
         }
 
         if ($order_type === 'B') {
@@ -177,7 +257,7 @@ class OrderController extends Controller
                 'order_id' => $order_id,
                 'code' => 'deposit',
                 'title' => 'Deposit',
-                'value' => -$amount,
+                'value' => -$deposit,
                 'sort_order' => 60
             ]);
 
@@ -200,34 +280,32 @@ class OrderController extends Controller
             ]);
         }
 
-        $fees = ProposalFees::where('proposal_id', $quotation['proposal_id'])->get();
-        foreach ($fees as $fee) {
-            $i = 10;
-            OrderTotal::create([
-                'order_id' => $order_id,
-                'code' => 'fee',
-                'title' => $fee['fee_description'],
-                'value' => $fee['fee_type'] === 'P' ? $subTotal * $fee['fee_amount'] / 100 : $fee['fee_amount'],
-                'sort_order' => $i,
-            ]);
-            $i++;
-        }
-
         return $order_id;
     }
 
-    private function getOrders($status)
+    private function getOrders($stat)
     {
         $page = "";
         $tab = "";
-        if ($status === 0) {
+        $status = [];
+        if ($stat === 0) {
             $page = "PendingPage";
             $tab = "pending";
-        } else {
+            $status = [0, 1];
+        } else if ($stat === 4) {
+            $page = "FailedPage";
+            $tab = "fail";
+            $status = [4];
+        } else if ($stat === 2) {
             $page = "PaidPage";
             $tab = "paid";
+            $status = [2];
+        } else {
+            $page = "CancelledPage";
+            $tab = "cancelled";
+            $status = [9];
         }
-        $orders = Order::where('order_status', $status)
+        $orders = Order::whereIn('order_status', $status)
             ->orderBy('created_at', 'DESC')
             ->paginate(
                 10,

@@ -1,14 +1,16 @@
 import { Head, usePage } from "@inertiajs/react";
 import { Order, PaginatedData } from "@/types";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import Tab from "@/Components/Tabs/Tab";
 import OrderTab from "@/Components/Tabs/OrderTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/Components/ui/tabs";
+import { Badge } from "@/Components/ui/badge";
 
 const Orders = ({ auth }) => {
-    const { pending_payment, paid, type } = usePage<{
+    const { pending_payment, paid, failed, cancelled, type } = usePage<{
         pending_payment: PaginatedData<Order>;
         paid: PaginatedData<Order>;
+        failed: PaginatedData<Order>;
+        cancelled: PaginatedData<Order>;
         type: string;
     }>().props;
 
@@ -31,12 +33,31 @@ const Orders = ({ auth }) => {
                             <div className="flex justify-end px-8 py-2"></div>
                             <div>
                                 <Tabs defaultValue={type} className="w-full">
-                                    <TabsList>
+                                    <TabsList className="gap-4">
                                         <TabsTrigger value="pending">
-                                            Pending
+                                            <div className="flex flex-row items-center gap-2">
+                                                Pending
+                                                {pending_payment.data.length >
+                                                0 ? (
+                                                    <Badge variant="destructive">
+                                                        {
+                                                            pending_payment.data
+                                                                .length
+                                                        }
+                                                    </Badge>
+                                                ) : (
+                                                    ""
+                                                )}
+                                            </div>
                                         </TabsTrigger>
                                         <TabsTrigger value="paid">
                                             Paid
+                                        </TabsTrigger>
+                                        <TabsTrigger value="failed">
+                                            Failed Payment
+                                        </TabsTrigger>
+                                        <TabsTrigger value="cancelled">
+                                            Cancelled
                                         </TabsTrigger>
                                     </TabsList>
                                     <TabsContent value="pending">
@@ -44,6 +65,12 @@ const Orders = ({ auth }) => {
                                     </TabsContent>
                                     <TabsContent value="paid">
                                         <OrderTab orders={paid} />
+                                    </TabsContent>
+                                    <TabsContent value="failed">
+                                        <OrderTab orders={failed} />
+                                    </TabsContent>
+                                    <TabsContent value="cancelled">
+                                        <OrderTab orders={cancelled} />
                                     </TabsContent>
                                 </Tabs>
                             </div>
