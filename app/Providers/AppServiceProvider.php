@@ -8,10 +8,12 @@ use App\Events\MerchantApplicationReject;
 use App\Events\NewMerchantApplication;
 use App\Listeners\SendNewMerchantApplicationEmail;
 use App\Events\NewMerchantApplicationResponse;
+use App\Events\OrderUpdateEvent;
 use App\Events\QuotationConfirmEvent;
 use App\Events\SchoolApproveEvent;
 use App\Events\SchoolRejectEvent;
 use App\Listeners\CreateOrder;
+use App\Listeners\OrderUpdate;
 use App\Listeners\QuotationConfirm;
 use App\Listeners\SendMerchantApplicationApproveEmail;
 use App\Listeners\SendMerchantApplicationRejectEmail;
@@ -74,6 +76,11 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(
             CreateOrderEvent::class,
             CreateOrder::class,
+        );
+
+        Event::listen(
+            OrderUpdateEvent::class,
+            OrderUpdate::class,
         );
     }
 }

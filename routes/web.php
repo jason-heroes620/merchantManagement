@@ -166,6 +166,7 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/productprofit/add_profit/{id}', [ProductProfitController::class, 'add_profit'])->name('product.addprofit');
     Route::put('/productprofit/edit_profit/{id}', [ProductProfitController::class, 'edit_profit'])->name('product.editprofit');
+    Route::put('/product_featured/{id}', [ProductController::class, 'featured'])->name('product.featured');
 
     Route::delete('product-image/delete/{id}', [ProductImageController::class, 'delete'])->name('product_image.delete');
     Route::get('/categories', [CategoryController::class, 'categories']);
@@ -203,6 +204,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/order/{id}', [OrderController::class, 'view'])->name('order.view');
     Route::post('/order', [OrderController::class, 'create'])->name('order.create');
     Route::get('/order_edit/{id}', [OrderController::class, 'edit'])->name('order.edit');
+    Route::put('/order/{id}', [OrderController::class, 'update'])->name('order.update');
 
     // Discount
     Route::post('/discount', [DiscountController::class, 'create'])->name('discount.create');

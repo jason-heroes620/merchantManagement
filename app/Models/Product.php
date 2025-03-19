@@ -33,7 +33,8 @@ class Product extends Model
         'max_quantity',
         'food_allowed',
         'tour_guide',
-        'max_group,'
+        'max_group,',
+        'is_featured',
     ];
 
     public function merchant(): BelongsTo

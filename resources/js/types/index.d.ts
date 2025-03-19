@@ -14,7 +14,7 @@ export type PaginatedData<T> = {
         prev: string | null;
         next: string | null;
     };
-
+    total: number;
     meta: {
         current_page: number;
         from: number;

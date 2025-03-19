@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\CreateOrderEvent;
+use App\Events\OrderUpdateEvent;
 use App\Models\Discount;
 use App\Models\Invoice;
 use App\Models\Item;
@@ -172,19 +173,21 @@ class OrderController extends Controller
 
         $proposal_product = ProposalProduct::where('proposal_id', $proposal["proposal_id"])->get();
 
-        $end_date = null;
+        $product_end_date = null;
         foreach ($proposal_product as $p) {
             $location = Product::where('id', $p['product_id'])->first();
             $p['location'] = $location;
             $detail = ProductDetail::where('product_id', $location['id'])->first();
 
-            if ($end_date === null) {
+            if ($product_end_date === null) {
                 $end_date = $detail['event_end_date'];
             } else {
-                if ($end_date < $detail['event_end_date'])
-                    $end_date = $detail['event_end_date'];
+                if ($product_end_date < $detail['event_end_date'])
+                    $product_end_date = $detail['event_end_date'];
             }
         }
+
+        $order_total = OrderTotal::where('order_id', $req->id)->get();
 
         $product_prices = ProposalProduct::leftJoin('proposal_product_price', 'proposal_product_price.proposal_product_id', 'proposal_product.proposal_product_id')->where('proposal_id', $proposal['proposal_id'])->get();
         $items = Item::where('item_status', 0)->get(["item_id", "item_name", "unit_price", "item_type", "uom", "additional_unit_cost", "item_image", "item_status", "item_description", "product_id"]);
@@ -193,7 +196,7 @@ class OrderController extends Controller
             ->where('proposal_item.proposal_id', $proposal['proposal_id'])->get(["item.item_id", "item_name", "item.uom", "item_qty", "proposal_item.unit_price", "item.sales_tax", "item_type", "item.additional_unit_cost"]);
         $proposal_fees = ProposalFees::where('proposal_id', $proposal['proposal_id'])->get();
 
-        return Inertia::render('Orders/Edit', compact('order', 'proposal', 'proposal_product', 'product_prices', 'items', 'proposal_item', 'proposal_fees'));
+        return Inertia::render('Orders/Edit', compact('order', 'proposal', 'proposal_product', 'product_prices', 'items', 'proposal_item', 'proposal_fees', 'end_date', 'product_end_date', 'order_total'));
     }
 
     private function createOrder($proposal_id, $amount, $due_date, $order_type, $subTotal, $discountTotal, $total, $deposit)
@@ -281,6 +284,72 @@ class OrderController extends Controller
         }
 
         return $order_id;
+    }
+
+    public function update(Request $req)
+    {
+        $order = Order::where('order_id', $req->id)->first();
+        try {
+            Proposal::where('proposal_id', $req->input('proposal_id'))->update([
+                'proposal_date' => !empty($req->input('proposal_date')) ? date('Y-m-d', strtotime(str_replace('/', '-', $req->input('proposal_date')))) : null,
+                'qty_student' => $req->input('qty_student'),
+                'qty_teacher' => $req->input('qty_teacher'),
+            ]);
+
+            $proposal_product = ProposalProduct::where('proposal_id', $req->input('proposal_id'))->get();
+            foreach ($proposal_product as $p) {
+                ProposalProductPrice::where('proposal_product_id', $p['proposal_product_id'])
+                    ->where('attribute', 'student')
+                    ->update([
+                        'qty' => $req->input('qty_student')
+                    ]);
+                ProposalProductPrice::where('proposal_product_id', $p['proposal_product_id'])
+                    ->where('attribute', 'teacher')
+                    ->update([
+                        'qty' => $req->input('qty_teacher')
+                    ]);
+            }
+
+            ProposalItem::where('proposal_id', $req->input('proposal_id'))->delete();
+
+            if (sizeof($req->input('proposal_items')) > 0) {
+                $this->addOrRemoveProposalItem($req->input('proposal_items'), $req->input('proposal_id'));
+            }
+
+            foreach ($req->input('order_total') as $o) {
+                OrderTotal::where('order_total_id', $o['order_total_id'])->update([
+                    'value' => $o['value']
+                ]);
+            }
+
+
+            $data["success"] = "Order updated";
+            $school = School::where('user_id', $order['user_id'])->first();
+            // add event to notify user of updated order
+            event(new OrderUpdateEvent($school, $order));
+
+            return response()->json($data);
+        } catch (Exceptions $e) {
+            Log::info($e);
+            $data["failed"] = "Proposal update failed";
+            return response()->json($data);
+        }
+    }
+
+    private function addOrRemoveProposalItem($itemArray, $proposal_id)
+    {
+        try {
+            // Log::info($itemArray . ' ' . $proposal_id);
+            foreach ($itemArray as $t) {
+                $item = Item::where('item_id', $t['item_id'])->first();
+                ProposalItem::updateOrCreate(
+                    ['proposal_id' => $proposal_id, 'item_id' => $t['item_id'],],
+                    ['item_qty' => $t['item_qty'], 'uom' => $t['uom'], 'unit_price' => $t['unit_price'], 'sales_tax' => $item['sales_tax']]
+                );
+            }
+        } catch (Exceptions $e) {
+            Log::info('error ', $e);
+        }
     }
 
     private function getOrders($stat)

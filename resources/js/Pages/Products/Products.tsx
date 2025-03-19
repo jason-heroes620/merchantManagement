@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { PageProps, PaginatedData, Product } from "@/types";
 import ProductTab from "@/Components/Tabs/ProductTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/Components/ui/tabs";
+import { Badge } from "@/Components/ui/badge";
 
 const Products = ({ auth, flash }: PageProps) => {
     const { toast } = useToast();
@@ -53,8 +54,20 @@ const Products = ({ auth, flash }: PageProps) => {
                             <div>
                                 <Tabs defaultValue={type} className="w-full">
                                     <TabsList>
-                                        <TabsTrigger value="pending">
+                                        <TabsTrigger
+                                            value="pending"
+                                            className="gap-2"
+                                        >
                                             Pending
+                                            <div className="flex flex-row items-center">
+                                                {newProducts.data &&
+                                                    newProducts.data.length >
+                                                        0 && (
+                                                        <Badge variant="destructive">
+                                                            {newProducts.total}
+                                                        </Badge>
+                                                    )}
+                                            </div>
                                         </TabsTrigger>
                                         <TabsTrigger value="current">
                                             Current
@@ -64,14 +77,21 @@ const Products = ({ auth, flash }: PageProps) => {
                                         </TabsTrigger>
                                     </TabsList>
                                     <TabsContent value="pending">
-                                        <ProductTab products={newProducts} />
+                                        <ProductTab
+                                            products={newProducts}
+                                            type={type}
+                                        />
                                     </TabsContent>
                                     <TabsContent value="current">
-                                        <ProductTab products={products} />
+                                        <ProductTab
+                                            products={products}
+                                            type={type}
+                                        />
                                     </TabsContent>
                                     <TabsContent value="rejected">
                                         <ProductTab
                                             products={rejectedProducts}
+                                            type={type}
                                         />
                                     </TabsContent>
                                 </Tabs>

@@ -31,18 +31,17 @@ const Schools = ({ auth }) => {
                             <div>
                                 <Tabs defaultValue={type} className="w-full">
                                     <TabsList>
-                                        <TabsTrigger value="pending">
+                                        <TabsTrigger
+                                            value="pending"
+                                            className="gap-2"
+                                        >
                                             Pending
                                             <div className="flex flex-row gap-2 items-center">
-                                                Pending
                                                 {new_schools.data &&
                                                     new_schools.data.length >
                                                         0 && (
                                                         <Badge variant="destructive">
-                                                            {
-                                                                new_schools.data
-                                                                    .length
-                                                            }
+                                                            {new_schools.total}
                                                         </Badge>
                                                     )}
                                             </div>

@@ -40,10 +40,7 @@ const Orders = ({ auth }) => {
                                                 {pending_payment.data.length >
                                                 0 ? (
                                                     <Badge variant="destructive">
-                                                        {
-                                                            pending_payment.data
-                                                                .length
-                                                        }
+                                                        {pending_payment.total}
                                                     </Badge>
                                                 ) : (
                                                     ""

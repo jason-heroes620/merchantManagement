@@ -45,7 +45,6 @@ import { secondsToHms } from "@/utils/secondsToHms";
 import useDisabledDates from "@/utils/useDisabledDates";
 import useDisabledDays from "@/utils/useDisabledDays";
 import { Link, Head, useForm, usePage } from "@inertiajs/react";
-import { useLoadScript } from "@react-google-maps/api";
 import axios from "axios";
 import { isSameDay } from "date-fns";
 import {
@@ -57,11 +56,8 @@ import {
     Utensils,
 } from "lucide-react";
 import moment from "moment";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Toaster } from "@/Components/ui/toaster";
-
-const mapKey = import.meta.env.VITE_GOOGLE_KEY;
-const libraries = ["places"];
 
 const Edit = ({
     auth,
@@ -73,7 +69,8 @@ const Edit = ({
     items,
     proposal_item,
     proposal_fees,
-    proposal_endDate,
+    product_end_date,
+    order_total,
 }: any) => {
     const { toast } = useToast();
     const { props } = usePage();
@@ -89,7 +86,6 @@ const Edit = ({
         qty_teacher: proposal.qty_teacher,
         proposal_status: proposal.proposal_status,
         special_request: proposal.special_request,
-        markup_per_student: proposal.markup_per_student,
     });
 
     const products = proposal_product.map((p: any) => {
@@ -99,12 +95,6 @@ const Edit = ({
     const { disabledDays } = useDisabledDays(proposal.proposal_id);
     const { disabledDates } = useDisabledDates(proposal.proposal_id, products);
 
-    // const libraries = useMemo(() => ["places"], []);
-    // const { isLoaded } = useLoadScript({
-    //     googleMapsApiKey: mapKey, // Replace with your API key
-    //     libraries: libraries as any,
-    // });
-
     const [travelInfo, setTravelInfo] = useState({
         travelDuration:
             proposal.travel_duration !== 0 ? proposal.travel_duration : 0,
@@ -112,69 +102,22 @@ const Edit = ({
             proposal.travel_distance > 0 ? proposal.travel_distance : 0,
     });
 
-    // const calculateDistances = async (locations: []) => {
-    //     const service = new google.maps.DirectionsService();
-
-    //     const origin = proposal.origin; // Replace with your origin
-    //     const destinations = proposal.origin; // Replace with your destinations
-    //     const waypoints = locations; // Replace with your destinations
-
-    //     await service.route(
-    //         {
-    //             origin: origin,
-    //             destination: destinations,
-    //             waypoints: waypoints,
-    //             travelMode: google.maps.TravelMode.DRIVING,
-    //             unitSystem: google.maps.UnitSystem.METRIC, // Use METRIC for kilometers
-    //         },
-    //         (response, status) => {
-    //             if (status === "OK") {
-    //                 let distance = response?.routes[0].legs.reduce(
-    //                     (sum, leg) => sum + (leg.distance?.value ?? 0),
-    //                     0
-    //                 );
-    //                 let duration = response?.routes[0].legs.reduce(
-    //                     (sum, leg) => sum + (leg.duration?.value ?? 0),
-    //                     0
-    //                 );
-
-    //                 setTravelInfo({
-    //                     travelDistance: distance,
-    //                     travelDuration: duration,
-    //                 });
-    //                 const data = {
-    //                     distance: distance,
-    //                     duration: duration,
-    //                 };
-    //                 axios.patch(
-    //                     route("proposal.travel_info", proposal.proposal_id),
-    //                     data
-    //                 );
-    //             } else {
-    //                 console.error("Error with Distance Matrix API:", status);
-    //             }
-    //         }
-    //     );
-    // };
-
     const [open, setOpen] = useState(false);
-    const [openRequestOrder, setOpenRequestOrder] = useState(false);
-
     const [date, setDate] = useState<Date | undefined>(
         data.proposal_date ? moment(data.proposal_date).toDate() : undefined
     );
 
-    const [transportationItem, setTransportationItem] = useState(
+    const [transportationItem] = useState(
         items.filter((i: any) => i.item_type === "TRANSPORTATION")
     );
-    const [mealsItem, setMealsItem] = useState(
+    const [mealsItem] = useState(
         items.filter((i: any) => i.item_type === "FOOD")
     );
-    const [insuranceItem, setInsuranceItem] = useState(
+    const [insuranceItem] = useState(
         items.filter((i: any) => i.item_type === "INSURANCE")
     );
 
-    const [guideItem, setGuideItem] = useState(
+    const [guideItem] = useState(
         items.filter(
             (i: any) =>
                 i.item_type === "GUIDE" &&
@@ -189,6 +132,7 @@ const Edit = ({
         ? false
         : true;
     const [locations, setLocations] = useState([]);
+    const [orderTotal, setOrderTotal] = useState(order_total);
 
     const handleProposalItemChanged = (
         e: React.ChangeEvent<HTMLInputElement>,
@@ -209,6 +153,7 @@ const Edit = ({
             additional: m.additional,
             distance: travelInfo.travelDistance,
         };
+
         if (proposalItems.length > 0) {
             if (newItem.find((n: ProposalItem) => n.item_id === m.item_id)) {
                 newItem = proposalItems.filter((n: ProposalItem) => {
@@ -278,13 +223,32 @@ const Edit = ({
         calculateTotal(proposalItems, student, teacher);
     };
 
+    let fee = order_total.filter((o: any) => {
+        return o.code === "fee";
+    });
+    const [orderFee, setOrderFee] = useState(parseFloat(fee[0].value) || 0.0);
+    let discount = order_total.filter((o: any) => {
+        return o.code === "discount";
+    });
+    const [orderDiscount, setOrderDiscount] = useState(
+        parseFloat(discount[0].value) || 0.0
+    );
+    let deposit = order_total.filter((o: any) => {
+        return o.code === "deposit";
+    });
+    const [orderDeposit, setOrderDeposit] = useState(
+        parseFloat(deposit[0].value) || 0.0
+    );
+    let balance = order_total.filter((o: any) => {
+        return o.code === "balance";
+    });
+    const [orderBalance, setOrderBalance] = useState(
+        parseFloat(balance[0].value) || 0.0
+    );
+
     const [productTotal, setProductTotal] = useState(0);
     const [optionTotal, setOptionTotal] = useState(0);
-    const [feeTotal, setFeeTotal] = useState(0);
     const [total, setTotal] = useState(0);
-    const [markupPerStudent, setMarkupPerStudent] = useState(
-        data.markup_per_student ?? 0
-    );
 
     const calculateTotal = (i: any, student: number, teacher: number) => {
         let product = product_prices.reduce(
@@ -317,15 +281,27 @@ const Edit = ({
             0.0
         );
 
-        let t =
-            product +
-            option +
-            fee -
-            (proposal.discount_type ? proposal.discount_amount : 0);
+        let t = product + option + fee - orderDiscount;
+        let bal = product + option + fee - orderDiscount + orderDeposit;
 
+        let newOrderTotal = orderTotal.map((o: any) => {
+            if (o.code === "fee") return { ...o, value: fee };
+            else if (o.code === "sub_total") {
+                return { ...o, value: product + option };
+            } else if (o.code === "total") {
+                return { ...o, value: t };
+            } else if (o.code === "balance") {
+                return { ...o, value: bal };
+            } else {
+                return o;
+            }
+        });
+
+        setOrderTotal(newOrderTotal);
         setProductTotal(product);
         setOptionTotal(option);
-        setFeeTotal(fee);
+        setOrderFee(fee);
+        setOrderBalance(bal);
         setTotal(t);
     };
 
@@ -334,12 +310,6 @@ const Edit = ({
             return { location: p.location.google_location, stopover: true };
         });
         setLocations(travelLocations);
-
-        // if (proposal.travel_duration === 0 || proposal.travel_distance === 0) {
-        //     if (isLoaded) {
-        //         calculateDistances(travelLocations);
-        //     }
-        // }
 
         calculateTotal(proposal_item, data.qty_student, data.qty_teacher);
     }, [travelInfo.travelDistance]);
@@ -368,101 +338,26 @@ const Edit = ({
         await checkMinAndMaxQty();
         const draft = {
             proposal_id: data.proposal_id,
-            proposal_name: data.proposal_name,
             proposal_date: data.proposal_date,
-            additional_price: data.additional_price,
             qty_student: data.qty_student,
             qty_teacher: data.qty_teacher,
             proposal_items: proposalItems,
-            special_request: data.special_request,
+            order_total: orderTotal,
         };
-        // axios.post(route("proposal.update"), draft).then((resp) => {
-        //     if (resp.data.success) {
-        //         toast({
-        //             description: resp.data.success,
-        //         });
-        //     } else {
-        //         toast({
-        //             variant: "destructive",
-        //             title: resp.data.failed + "!",
-        //             description:
-        //                 "There was an issue with update. Please check your information and try again",
-        //         });
-        //     }
-        //     setOpen(false);
-        // });
-    };
 
-    const handleRequestOrder = (e: React.ChangeEvent<HTMLInputElement>) => {
-        e.preventDefault();
-
-        const draft = {
-            proposal_id: data.proposal_id,
-            proposal_name: data.proposal_name,
-            proposal_date: data.proposal_date,
-            additional_price: data.additional_price,
-            qty_student: data.qty_student,
-            qty_teacher: data.qty_teacher,
-            proposal_items: proposalItems,
-            special_request: data.special_request,
-            proposal_status: 2,
-        };
-        axios.post(route("proposal.update"), draft).then((resp) => {
-            if (resp.data.success) {
-                setData("proposal_status", 2);
+        axios.put(route("order.update", order.order_id), draft).then((resp) => {
+            if (resp.status === 200) {
                 toast({
-                    description: resp.data.request_order,
+                    description: resp.data.success,
                 });
             } else {
                 toast({
                     variant: "destructive",
-                    title: resp.data.failed + "!",
-                    description:
-                        "There was an issue with your request. Please save your changes before requesting.",
+                    description: resp.data.error,
                 });
             }
-            setOpenRequestOrder(false);
+            setOpen(false);
         });
-    };
-
-    // if (!isLoaded) return <div>Loading...</div>;
-
-    // const handleDownloadProposal = () => {
-    //     axios
-    //         .get(route("proposal.pdf", proposal.proposal_id), {
-    //             responseType: "blob",
-    //         })
-    //         .then((response) => {
-    //             const blob = new Blob([response.data], {
-    //                 type: "application/pdf",
-    //             });
-    //             const url = window.URL.createObjectURL(blob);
-    //             window.open(url); // Opens in a new tab
-    //         })
-    //         .catch((err) => {});
-    // };
-
-    const handleSaveMarkupPerStudent = (
-        e: React.ChangeEvent<HTMLInputElement>
-    ) => {
-        e.preventDefault();
-        axios
-            .put(route("proposal.markup", proposal.proposal_id), {
-                markup_per_student: markupPerStudent,
-            })
-            .then((resp) => {
-                if (resp.status === 200) {
-                    toast({
-                        description: "Update has been applied to proposal",
-                    });
-                } else {
-                    toast({
-                        variant: "destructive",
-                        description:
-                            "There was an error updating your proposal.",
-                    });
-                }
-            });
     };
 
     const isDateDisabled = (dateToCheck: Date) => {
@@ -590,7 +485,7 @@ const Edit = ({
                                                     fromDate={moment()
                                                         .add(10, "days")
                                                         .toDate()}
-                                                    toDate={proposal_endDate}
+                                                    toDate={product_end_date}
                                                     onSelect={(date) => {
                                                         setDate(date);
                                                         setData(
@@ -1142,51 +1037,41 @@ const Edit = ({
                                     );
                                 })}
                             </div>
-                            {proposal.discount_type && (
-                                <>
-                                    <div className="py-2">
-                                        {proposal.discount_type === "F" ? (
-                                            <div className="flex justify-end gap-4">
-                                                <span className="text-lg font-bold text-red-600">
-                                                    Discount
-                                                </span>
-                                                <span className="text-lg font-bold text-red-600">
-                                                    -{" "}
-                                                    {formattedNumber(
-                                                        proposal.discount_amount
-                                                    )}
-                                                </span>
-                                            </div>
-                                        ) : (
-                                            <div className="flex justify-end gap-4">
-                                                <span>
-                                                    {" "}
-                                                    Discount (
-                                                    {
-                                                        proposal.discount_percentage
-                                                    }
-                                                    %)
-                                                </span>
-                                                <span className="text-lg font-bold text-red-600">
-                                                    {"  "}-{" "}
-                                                    {formattedNumber(
-                                                        proposal.discount_amount
-                                                    )}
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <hr />
-                                </>
-                            )}
 
-                            <div className="py-4">
+                            <div className="py-1">
+                                <div className="flex justify-end gap-4">
+                                    <span className="text-lg font-bold text-red-600">
+                                        Discount
+                                    </span>
+                                    <span className="text-lg font-bold text-red-600">
+                                        - {formattedNumber(orderDiscount)}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="py-1">
                                 <div className="flex justify-end">
                                     <span className="text-lg font-bold">
                                         Total{"  "}
                                         {formattedNumber(total)}
                                     </span>
                                 </div>
+                            </div>
+                            <div className="flex justify-end gap-4">
+                                <span className="text-lg font-bold text-red-600">
+                                    Deposit
+                                </span>
+                                <span className="text-lg font-bold text-red-600">
+                                    {formattedNumber(orderDeposit)}
+                                </span>
+                            </div>
+                            <div className="flex justify-end gap-4">
+                                <span className="text-lg font-bold">
+                                    Balance
+                                </span>
+                                <span className="text-lg font-bold">
+                                    {formattedNumber(orderBalance)}
+                                </span>
                             </div>
 
                             <div className="flex justify-end gap-2 py-2">

@@ -104,6 +104,7 @@ const View = ({
         tour_guide_price: tour_guide_price,
         max_group: product.max_group,
         product_filter: product_filter ?? [],
+        is_featured: product.is_featured,
     });
 
     useEffect(() => {
@@ -239,6 +240,7 @@ const View = ({
                                                 profit_types={profit_types}
                                                 profit_info={profit_info}
                                                 role={auth.user.roles[0]}
+                                                isFeatured={data.is_featured}
                                             />
                                         </Tab>
                                     </Tabs>

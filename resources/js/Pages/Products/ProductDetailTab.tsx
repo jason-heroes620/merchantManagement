@@ -406,7 +406,10 @@ const ProductDetailTab = ({
                         )
                         .map((f): any => {
                             return (
-                                <div className="flex gap-2 items-center">
+                                <div
+                                    className="flex gap-2 items-center"
+                                    key={f.filter_id}
+                                >
                                     <Checkbox
                                         checked={data.product_filter?.some(
                                             (p): any =>

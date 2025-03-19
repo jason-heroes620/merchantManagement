@@ -320,7 +320,7 @@ const View = ({
                                                     order.order_id
                                                 )}
                                             >
-                                                Edit
+                                                Edit Order
                                             </Link>
                                         </Button>
                                     </div>

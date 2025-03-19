@@ -1,10 +1,11 @@
 import Pagination from "@/Components/Pagination";
-import { Trash2 } from "lucide-react";
+import { Hand, Trash2 } from "lucide-react";
 import Table from "@/Components/Table/Table";
 import dayjs from "dayjs";
 
-const ProductTab = ({ products }: any) => {
+const ProductTab = ({ products, type }: any) => {
     const { data, links, from, to, total } = products;
+
     return (
         <div>
             <div className="pt-4">
@@ -39,7 +40,7 @@ const ProductTab = ({ products }: any) => {
                                 {
                                     label: "Date Submitted",
                                     name: "date",
-                                    colSpan: 2,
+                                    colSpan: 1,
                                     renderCell: (row) => (
                                         <>
                                             <>

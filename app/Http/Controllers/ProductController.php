@@ -472,6 +472,24 @@ class ProductController extends Controller
         return redirect()->back()->with(['success' => "Product Rejected"]);
     }
 
+    public function featured(Request $req)
+    {
+        try {
+            Product::where('id', $req->id)->update([
+                'is_featured' => $req->input('is_featured')
+            ]);
+
+            $data['success'] = "Product has been added / removed from featured list.";
+
+            return response()->json($data);
+        } catch (Exceptions $e) {
+            Log::error("Error updating product to featured. " . $e);
+            $data['failed'] = "There is an error with update.";
+
+            return response()->json($data);
+        }
+    }
+
     private function getAdditionalProductImages($product_id)
     {
         $images = ProductImage::where('product_id', $product_id)->get();

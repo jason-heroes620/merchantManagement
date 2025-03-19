@@ -36,8 +36,7 @@ const Proposals = ({ auth, proposals, requestingOrder, type }: any) => {
                                                         .length > 0 && (
                                                         <Badge variant="destructive">
                                                             {
-                                                                requestingOrder
-                                                                    .data.length
+                                                                requestingOrder.total
                                                             }
                                                         </Badge>
                                                     )}
