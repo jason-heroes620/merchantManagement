@@ -14,6 +14,12 @@ class CategoryController extends Controller
 
     public function categories()
     {
+        $trip = DB::connection('journey')
+            ->table('category_description')
+            ->select('category_id')
+            ->where('name', 'Trips')
+            ->first();
+
         $this->allowed_categories = ['Workshop', 'Field Trip'];
 
         $categories = DB::connection('journey')
@@ -21,7 +27,7 @@ class CategoryController extends Controller
             ->select('category.category_id as value', 'category_description.name as label')
             ->leftJoin('category_description', 'category.category_id', '=', 'category_description.category_id')
             ->where('category.status', 1)
-            ->where('category.parent_id', 0)
+            ->where('category.parent_id', $trip->category_id)
             ->whereIn('category_description.name', $this->allowed_categories)
             ->orderBy('category_description.name', 'ASC')
             ->get();
