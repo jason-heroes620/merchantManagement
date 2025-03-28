@@ -90,16 +90,16 @@ class InvoiceController extends Controller
 
             if ($order['order_type'] === 'D') {
                 $proposal = Proposal::leftJoin('proposal_product', 'proposal_product.proposal_id', 'proposal.proposal_id')
-                    ->where('proposal_id', $order['proposal_id'])
-                    ->get();
+                    ->where('proposal.proposal_id', $order['proposal_id'])
+                    ->first();
 
-                foreach ($proposal as $p) {
-                    ReservedDate::create([
-                        'reserved_date' => $p['proposal_date'],
-                        'user_id' => $p['user_id'],
-                        'product_id' => $p['product_id'],
-                    ]);
-                }
+                // foreach ($proposal as $p) {
+                ReservedDate::create([
+                    'reserved_date' => $proposal['proposal_date'],
+                    'user_id' => $proposal['user_id'],
+                    'product_id' => $proposal['product_id'],
+                ]);
+                // }
             }
 
             return response()->json([
