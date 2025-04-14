@@ -90,6 +90,15 @@ const OrderTab = ({ orders }: { orders: any }) => {
                                         </>
                                     ),
                                 },
+                                {
+                                    label: "Invoice No",
+                                    name: "invoice_no",
+                                    renderCell: (row) => (
+                                        <>
+                                            <>{row.invoice_no}</>
+                                        </>
+                                    ),
+                                },
                             ]}
                             rows={data}
                             getRowDetailsUrl={(row) =>

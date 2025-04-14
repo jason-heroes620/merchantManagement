@@ -64,7 +64,7 @@ const Admin = ({ merchant, product, schools, quotations, orders }: any) => {
                         links={["schools", 1]}
                     />
                 </div>
-                <div>
+                {/* <div>
                     <DashboardCard
                         header={"Quotations"}
                         content={quotations[0].count}
@@ -79,7 +79,7 @@ const Admin = ({ merchant, product, schools, quotations, orders }: any) => {
                         type={"accepted"}
                         links={["quotations", 2]}
                     />
-                </div>
+                </div> */}
                 <div>
                     <DashboardCard
                         header={"Orders"}

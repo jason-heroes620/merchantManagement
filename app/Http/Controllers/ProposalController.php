@@ -47,15 +47,48 @@ class ProposalController extends Controller
             $prices = array_merge($price->toArray(), $prices);
         }
 
+        $subTotal = 0;
+        $fee_type = 'P';
         $proposal_item = ProposalItem::where('proposal_id', $proposal['proposal_id'])->get();
         foreach ($proposal_item as $p) {
             $p['item'] = Item::select(['item_id', 'item_name', 'item_type', 'unit_price'])->where('item_id', $p['item_id'])->first();
+            $subTotal += $p['unit_price'] * $p['item_qty'];
         }
-        $fees = Fees::where('effective_date', '<=', now())->where('expiry_date', null)->get();
+
+        foreach ($prices as $price) {
+            $subTotal += $price['qty'] * $price['unit_price'];
+        }
+
         $proposal_fees = ProposalFees::where('proposal_id', $proposal['proposal_id'])->get();
+        if ($proposal_fees->isEmpty()) {
+            $fees = Fees::where('effective_date', '<=', now())->where('expiry_date', null)->get();
+            foreach ($fees as $fee) {
+                $fee_charges = 0;
+                if ($fee['fee_type'] === 'P') {
+                    $fee_charges = $subTotal * $fee['fee_amount'] / 100;
+
+                    if ($fee_charges < $fee['min_charges']) {
+                        $fee_charges = $fee['min_charges'];
+                        $fee_type = 'F';
+                    }
+                } else {
+                    $fee_charges = $fee_charges < $fee['min_charges'] ? $fee['min_charges'] : $fee_charges;
+                    $fee_type = 'F';
+                }
+
+                $proposal_fees = [
+                    'fee_id' => $fee['fee_id'],
+                    'fee_type' => $fee_type,
+                    'fee_description' => $fee['fee_description'],
+                    'fee_amount' => $fee['fee_amount'],
+                    'fee_charges' => $fee_charges,
+                ];
+            }
+        }
+
         $proposal_discount = Discount::where('proposal_id', $req->id)->first();
 
-        return Inertia::render('Proposals/View', compact('proposal', 'proposal', 'proposal_product', 'proposal_item', 'prices', 'proposal_discount', 'fees', 'proposal_fees'));
+        return Inertia::render('Proposals/View', compact('proposal', 'proposal', 'proposal_product', 'proposal_item', 'prices', 'proposal_discount', 'proposal_fees'));
     }
 
     private function getProposals($status)

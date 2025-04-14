@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Merchant;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProposalProduct;
 use App\Models\Quotation;
 use App\Models\School;
 use Illuminate\Http\Request;
@@ -33,6 +34,7 @@ class DashboardController extends Controller
         $order_paid = "";
         $order_pending = "";
 
+        $confirmed_current_month = [];
         if ($role[0] === 'admin') {
             $p_reject = Product::selectRaw('COUNT(*) as count')->where('status', 2)->first();
             $p_new = Product::selectRaw('COUNT(*) as count')->where('status', 1)->first();
@@ -44,10 +46,44 @@ class DashboardController extends Controller
 
             $order_pending = Order::selectRaw('COUNT(*) as count')->where('order_status', 2)->first();
             $order_paid = Order::selectRaw('COUNT(*) as count')->where('order_status', 2)->first();
+
+            $confirmed_current_month = Order::leftJoin('proposal', 'proposal.proposal_id', 'orders.proposal_id')
+                ->leftJoin('school', 'proposal.user_id', 'school.user_id')
+                ->where('orders.order_type', 'D')
+                ->whereMonth('proposal.proposal_date', now()->month)
+                ->whereYear('proposal.proposal_date', now()->year)
+                ->get(["school.school_name", "proposal.proposal_date", "proposal.qty_student", "proposal.proposal_id"]);
+
+            foreach ($confirmed_current_month as $c) {
+                $locations = [];
+                $products = ProposalProduct::where('proposal_id', $c['proposal_id'])->get();
+                foreach ($products as $p) {
+                    $product = Product::where('id', $p['product_id'])->first();
+                    array_push($locations, $product['product_name']);
+                }
+                $c['locations'] = $locations;
+            }
         } else {
             $p_reject = Product::selectRaw('COUNT(*) as count')->where('status', 2)->where('merchant_id', $user->id)->first();
             $p_new = Product::selectRaw('COUNT(*) as count')->where('status', 1)->where('merchant_id', $user->id)->first();
             $p_current = Product::selectRaw('COUNT(*) as count')->where('status', 0)->where('merchant_id', $user->id)->first();
+
+            $current_month = Order::leftJoin('proposal', 'proposal.proposal_id', 'orders.proposal_id')
+                ->leftJoin('school', 'proposal.user_id', 'school.user_id')
+                ->where('orders.order_type', 'D')
+                ->whereMonth('proposal.proposal_date', now()->month)
+                ->whereYear('proposal.proposal_date', now()->year)
+                ->get(["school.school_name", "proposal.proposal_date", "proposal.qty_student", 'proposal.proposal_id']);
+
+            foreach ($current_month as $c) {
+                $products = ProposalProduct::where('proposal_id', $c['proposal_id'])->get();
+                foreach ($products as $p) {
+                    $product = Product::where('id', $c['product_id'])->where('merchant_id', $user->id)->first();
+                    if ($product) {
+                        array_push($confirmed_current_month, $c);
+                    }
+                }
+            }
         }
         // dd($schools);
         return Inertia::render('Dashboard/Dashboard', [
@@ -56,6 +92,7 @@ class DashboardController extends Controller
             'schools' => [$schools],
             'quotations' => [$quotation_pending, $quotation_accepted],
             'orders' => [$order_pending, $order_paid],
+            'confirmed_current_month' => $confirmed_current_month,
         ]);
     }
 }

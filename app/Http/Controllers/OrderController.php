@@ -50,26 +50,35 @@ class OrderController extends Controller
         $balance_due_date = date('Y-m-d', strtotime($req->input('balanceDueDate')));
 
         try {
+            // dd($req);
             if ($this->canCreateOrder($proposal)) {
-                foreach ($req->input('fees') as $fee) {
-                    ProposalFees::firstOrCreate([
-                        'fee_id' => $fee['fee_id'],
-                        'fee_type' => $fee['fee_type'],
-                        'fee_amount' => $fee['fee_amount'],
-                        'proposal_id' => $proposal['proposal_id'],
-                        'fee_description' => $fee['fee_description']
-                    ]);
-                }
+                // foreach ($req->input('fees') as $fee) {
+                $fee = $req->input('fees');
+                ProposalFees::firstOrCreate([
+                    'fee_id' => $fee['fee_id'],
+                    'fee_type' => $fee['fee_type'],
+                    'fee_amount' => $fee['fee_charges'],
+                    'proposal_id' => $proposal['proposal_id'],
+                    'fee_description' => $fee['fee_description']
+                ]);
+                // }
 
                 Proposal::where('proposal_id', $req->input('proposal_id'))->update([
                     'proposal_status' => 3
                 ]);
 
+                if ($req->input('discount_type')) {
+                    Discount::updateOrCreate(
+                        ['proposal_id' => $req->input('proposal_id')],
+                        ['discount_type' => $req->input('discount_type'), 'discount_amount' => $req->input('discount_amount')]
+                    );
+                }
+
                 if ($req->input('order_type') === 'deposit') {
-                    $order = $this->createOrder($req->input('proposal_id'), $req->input('deposit'), $deposit_due_date, 'D', $req->input('subTotal'), $req->input('discountTotal'), $req->input('proposal_amount'), $req->input('deposit'));
-                    $this->createOrder($req->input('proposal_id'), $req->input('balance'), $balance_due_date, 'B', $req->input('subTotal'), $req->input('discountTotal'), $req->input('proposal_amount'), $req->input('deposit'));
+                    $order = $this->createOrder($req->input('proposal_id'), $req->input('deposit'), $deposit_due_date, 'D', $req->input('subTotal'), $req->input('discount_amount'), $req->input('proposal_amount'), $req->input('deposit'));
+                    $this->createOrder($req->input('proposal_id'), $req->input('balance'), $balance_due_date, 'B', $req->input('subTotal'), $req->input('discount_amount'), $req->input('proposal_amount'), $req->input('deposit'));
                 } else {
-                    $order = $this->createOrder($req->input('proposal_id'), $req->input('proposal_amount'), $balance_due_date, 'F', $req->input('subTotal'), $req->input('discountTotal'), $req->input('proposal_amount'), 0);
+                    $order = $this->createOrder($req->input('proposal_id'), $req->input('proposal_amount'), $balance_due_date, 'F', $req->input('subTotal'), $req->input('discount_amount'), $req->input('proposal_amount'), 0);
                 }
 
                 $school = School::select(["contact_person", "email"])->where('user_id', $proposal['user_id'])->first();
@@ -241,14 +250,17 @@ class OrderController extends Controller
                 ]);
             }
 
+
+
             $fees = ProposalFees::where('proposal_id', $proposal_id)->get();
             foreach ($fees as $fee) {
                 $i = 10;
+                $fee_description = $fee['fee_type'] === 'P' ? $fee['fee_description'] . '(' . $fee['fee_amount'] . '%)' : $fee['fee_description'];
                 OrderTotal::create([
                     'order_id' => $order_id,
                     'code' => 'fee',
-                    'title' => $fee['fee_description'],
-                    'value' => $fee['fee_type'] === 'P' ? $subTotal * $fee['fee_amount'] / 100 : $fee['fee_amount'],
+                    'title' => $fee_description,
+                    'value' => $fee['fee_amount'],
                     'sort_order' => $i,
                 ]);
                 $i++;
@@ -385,6 +397,11 @@ class OrderController extends Controller
         foreach ($orders as $order) {
             $school = School::select(['school_name'])->where('user_id', $order['user_id'])->first();
             $order['school_name'] = $school['school_name'];
+
+            if ($order['order_status'] === 2) {
+                $invoice = Invoice::select(['invoice_no'])->where('order_id', $order['order_id'])->first();
+                $order['invoice_no'] = $invoice['invoice_no'];
+            }
         }
 
         return $orders;

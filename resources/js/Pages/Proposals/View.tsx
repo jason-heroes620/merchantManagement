@@ -6,8 +6,6 @@ import {
     ProposalDiscount,
     ProposalItem,
     ProposalProductPrices,
-    Fees,
-    ProposalFees,
     ProposalProduct,
 } from "@/types";
 import { toast, ToastContainer } from "react-toastify";
@@ -87,7 +85,6 @@ const View = ({ auth }) => {
         proposal_item,
         prices,
         proposal_discount,
-        fees,
         proposal_fees,
     } = usePage<{
         proposal: Proposal;
@@ -95,16 +92,15 @@ const View = ({ auth }) => {
         proposal_item: Array<ProposalItem>;
         prices: Array<ProposalProductPrices>;
         proposal_discount: ProposalDiscount;
-        fees: Array<Fees>;
-        proposal_fees: Array<ProposalFees>;
+        proposal_fees: any;
     }>().props;
 
     const [proposalProduct, setProposalProduct] = useState(proposal_product);
     const [proposalItem, setProposalItem] = useState(proposal_item);
 
     const [discount, setDiscount] = useState({
-        discounttype: proposal_discount?.discount_type,
-        discountamount: proposal_discount?.discount_amount,
+        discounttype: proposal_discount?.discount_type ?? "",
+        discountamount: proposal_discount?.discount_amount ?? 0,
     });
 
     const [travelInfo, setTravelInfo] = useState({
@@ -114,10 +110,10 @@ const View = ({ auth }) => {
             proposal.travel_distance > 0 ? proposal.travel_distance : 0,
     });
 
-    const [proposalFees, setProposalFees] = useState(
-        proposal_fees.length > 0 ? proposal_fees : fees
-    );
+    const [proposalFees, setProposalFees] = useState(proposal_fees);
     const [loading, setLoading] = useState(false);
+    const [depositAmount, setDepositAmount] = useState(0);
+    const [balance, setBalance] = useState(0);
 
     const calculateTotal = (newProposalItem, newDiscount) => {
         const item = newProposalItem === null ? proposalItem : newProposalItem;
@@ -134,17 +130,17 @@ const View = ({ auth }) => {
             0.0
         );
 
-        feeTotal = proposalFees.reduce(
-            (sum: number, p: any) =>
-                sum +
-                (p.fee_type === "P"
-                    ? ((productTotal + optionTotal) *
-                          parseFloat(p.fee_amount)) /
-                      100
-                    : parseFloat(p.fee_amount)),
-            0.0
-        );
-
+        // feeTotal = proposalFees.reduce(
+        //     (sum: number, p: any) =>
+        //         sum +
+        //         (p.fee_type === "P"
+        //             ? ((productTotal + optionTotal) *
+        //                   parseFloat(p.fee_amount)) /
+        //               100
+        //             : parseFloat(p.fee_amount)),
+        //     0.0
+        // );
+        feeTotal = parseInt(proposalFees.fee_charges);
         discountTotal =
             parseFloat(disc.discountamount) > 0
                 ? disc.discounttype === "P"
@@ -154,9 +150,10 @@ const View = ({ auth }) => {
                     : parseFloat(disc.discountamount)
                 : 0;
         total = productTotal + optionTotal + feeTotal - discountTotal;
-    };
 
-    calculateTotal(null, null);
+        setDepositAmount((total * 50) / 100);
+        setBalance(total - (total * 50) / 100);
+    };
 
     const handleUpdateTransportationPrice = (e) => {
         e.preventDefault();
@@ -240,7 +237,8 @@ const View = ({ auth }) => {
                 deposit: depositAmount,
                 balance: balance,
                 subTotal: productTotal + optionTotal,
-                discountTotal: discountTotal,
+                discount_amount: discount.discountamount,
+                discount_type: discount.discounttype,
                 feeTotal: feeTotal,
                 depositDueDate: depositDueDate,
                 balanceDueDate: balanceDueDate,
@@ -249,6 +247,7 @@ const View = ({ auth }) => {
             .then((resp) => {
                 if (resp.status === 200) {
                     toast.success("Order created!");
+                    router.visit(route("orders"));
                 } else if (resp.status === 202) {
                     toast.error(
                         "There might be an issue with visitation date. Please check if there could be duplicates."
@@ -301,8 +300,6 @@ const View = ({ auth }) => {
     // };
 
     const [orderType, setOrderType] = useState("");
-    const [depositAmount, setDepositAmount] = useState((total * 50) / 100);
-    const [balance, setBalance] = useState(total - (total * 50) / 100);
 
     const calculateBalance = (deposit: number) => {
         setBalance(total - deposit);
@@ -599,24 +596,24 @@ const View = ({ auth }) => {
             newDiscount = { ...newDiscount, discountamount: value };
         }
 
-        setDiscount(newDiscount);
         calculateTotal(null, newDiscount);
+        setDiscount(newDiscount);
     };
 
-    const handleUpdateDiscount = () => {
-        const data = {
-            proposal_id: proposal.proposal_id,
-            discount_type: discount.discounttype,
-            discount_amount: discount.discountamount,
-        };
-        axios.post(route("discount.create"), data).then((resp) => {
-            if (resp.data.success) {
-                toast.success("Discount updated");
-            } else {
-                toast.error("Discount update failed");
-            }
-        });
-    };
+    // const handleUpdateDiscount = () => {
+    //     const data = {
+    //         proposal_id: proposal.proposal_id,
+    //         discount_type: discount.discounttype,
+    //         discount_amount: discount.discountamount,
+    //     };
+    //     axios.post(route("discount.create"), data).then((resp) => {
+    //         if (resp.data.success) {
+    //             toast.success("Discount updated");
+    //         } else {
+    //             toast.error("Discount update failed");
+    //         }
+    //     });
+    // };
 
     const { isLoaded } = useLoadScript({
         googleMapsApiKey: mapKey, // Replace with your API key
@@ -651,6 +648,7 @@ const View = ({ auth }) => {
     };
 
     useEffect(() => {
+        calculateTotal(null, null);
         let travelLocations = proposal_product.map((p: any) => {
             return { location: p.product.location, stopover: true };
         });
@@ -1289,9 +1287,11 @@ const View = ({ auth }) => {
                             </div>
                             <hr />
                             <div className="px-4 py-4">
-                                <div className="flex justify-end">
+                                <div className="flex justify-end gap-4">
                                     <span className="text-lg font-bold">
-                                        Sub Total{" "}
+                                        Sub Total
+                                    </span>
+                                    <span className="text-lg font-bold">
                                         {formattedNumber(
                                             productTotal + optionTotal
                                         )}
@@ -1302,7 +1302,7 @@ const View = ({ auth }) => {
                             <div className="px-4 py-4">
                                 <div className="text-lg font-bold">Fees</div>
                                 <div className="py-2">
-                                    {proposalFees.map((f: any) => {
+                                    {/* {proposalFees.map((f: any) => {
                                         return (
                                             <div
                                                 className="flex flex-row justify-between items-center"
@@ -1339,7 +1339,25 @@ const View = ({ auth }) => {
                                                 </span>
                                             </div>
                                         );
-                                    })}
+                                    })} */}
+
+                                    <div className="flex flex-row justify-end items-center gap-4">
+                                        <span className="font-bold text-lg">
+                                            {proposalFees.fee_description}{" "}
+                                            {proposalFees.fee_type === "P"
+                                                ? `(${parseInt(
+                                                      proposalFees.fee_amount
+                                                  )}%)`
+                                                : ""}
+                                            {"  "}
+                                        </span>
+                                        <span className="font-bold text-lg">
+                                            {" "}
+                                            {formattedNumber(
+                                                proposalFees.fee_charges
+                                            )}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                             <hr />
@@ -1386,7 +1404,7 @@ const View = ({ auth }) => {
                                             className=""
                                         />
                                     </div>
-                                    <div className="flex items-center">
+                                    {/* <div className="flex items-center">
                                         <Button
                                             variant="primary"
                                             onClick={() =>
@@ -1395,7 +1413,7 @@ const View = ({ auth }) => {
                                         >
                                             Save Discount
                                         </Button>
-                                    </div>
+                                    </div> */}
                                 </div>
 
                                 <div className="flex flex-row gap-4 justify-end">
@@ -1409,9 +1427,12 @@ const View = ({ auth }) => {
                             </div>
                             <hr />
                             <div className="flex flex-col py-4 px-4">
-                                <div className="flex justify-end ">
+                                <div className="flex justify-end gap-4">
                                     <span className="text-lg font-bold">
-                                        Total: {formattedNumber(total)}
+                                        Total
+                                    </span>
+                                    <span className="font-bold text-lg">
+                                        {formattedNumber(total)}
                                     </span>
                                 </div>
                                 {/* <div className="flex justify-end">

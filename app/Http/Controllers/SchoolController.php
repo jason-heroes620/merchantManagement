@@ -56,7 +56,6 @@ class SchoolController extends Controller
     {
         try {
             $school = School::where('school_id', $req->id)->update([
-                'school_id' => $req->id,
                 'school_name' => $req->input('school_name'),
                 'address_1' => $req->input('address_1'),
                 'address_2' => $req->input('address_2'),
@@ -70,6 +69,20 @@ class SchoolController extends Controller
                 'email' => $req->input('email'),
                 'google_place_name' => $req->input('google_place_name'),
             ]);
+
+            // $school_logo = "";
+            // if ($req->file('school_logo')) {
+            //     $school_logo = storage_path('app/public/schoolLogos');
+            //     $file_name = $this->randomFileNameGenerator(
+            //         15,
+            //         $this->getFileExtension($req->file('school_logo')->getClientOriginalName())
+            //     );
+            //     $req->file('school_logo')->move($school_logo, $file_name);
+
+            //     School::where('school_id', $req->id)->update([
+            //         'school_logo' => $school_logo . '/' . $file_name,
+            //     ]);
+            // }
 
             return back()->with(["success" => "School information updated"]);
         } catch (Exceptions $e) {
@@ -147,5 +160,16 @@ class SchoolController extends Controller
             return $image['url'];
         }
         return;
+    }
+
+    private function randomFileNameGenerator($length, $extension)
+    {
+        return substr(str_shuffle(str_repeat($x = '0123456789abcdefghijklmnopqrstuvwxyz', ceil($length / strlen($x)))), 1, $length) . '.' . $extension;
+    }
+
+    private function getFileExtension($file)
+    {
+        $extension = explode(".", $file);
+        return end($extension);
     }
 }

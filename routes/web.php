@@ -175,7 +175,7 @@ Route::middleware('auth')->group(function () {
     // Schools
     Route::get('/schools/{type?}', [SchoolController::class, 'index'])->name('schools');
     Route::get('/school/{id?}', [SchoolController::class, 'view'])->name('school.view');
-    Route::put('/school/{id?}', [SchoolController::class, 'update'])->name('school.update');
+    Route::post('/school/{id?}', [SchoolController::class, 'update'])->name('school.update');
     Route::put('/school_approve/{id?}', [SchoolController::class, 'approve'])->name('school.approve');
     Route::put('/school_reject/{id?}', [SchoolController::class, 'reject'])->name('school.reject');
 
@@ -190,7 +190,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/quotations/{type?}', [QuotationController::class, 'index'])->name('quotations');
     Route::get('/quotation/{id}', [QuotationController::class, 'view'])->name('quotation.view');
     Route::put('/quotation/{id}', [QuotationController::class, 'confirm'])->name('quotation.confirm');
-    Route::put('/proposal_visitation_date/{id}', [QuotationController::class, 'updateVisitationDate'])->name('quotation.visitation_date');
+    Route::put('/proposal_visitation_date/{id}', [QuotationController::class, 'updateVisitationDate'])->name('proposal.visitation_date');
 
     Route::put('/quotationItem/{id}', [QuotationItemController::class, 'transportation_update'])->name('quotation.transportation.update');
 
