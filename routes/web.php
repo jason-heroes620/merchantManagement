@@ -101,8 +101,8 @@ Route::group(['middleware' => ['auth']], function () {
 
 Route::get('/clear-cache', function () {
     Artisan::call('cache:clear');
-    Artisan::call('config:clear');
-    Artisan::call('route:clear');
+    Artisan::call('config:cache');
+    Artisan::call('route:cache');
     return "All cache cleared";
 });
 Route::get('/storage-link', function () {
@@ -159,6 +159,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/products/create', [ProductController::class, 'createProduct'])->name('product.form');
     Route::post('/products/create', [ProductController::class, 'createProduct'])->name('product.create');
     Route::get('/products/{type?}', [ProductController::class, 'products'])->name('products');
+
     Route::get('/product/{id}', [ProductController::class, 'view'])->name('product.view');
     Route::post('/product/{id}', [ProductController::class, 'update'])->name('product.update');
     Route::put('/product/approve/{id}', [ProductController::class, 'approve'])->name('product.approve');
@@ -180,7 +181,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/school_reject/{id?}', [SchoolController::class, 'reject'])->name('school.reject');
 
     // Proposals
-    Route::get('/proposals', [ProposalController::class, 'index'])->name('proposals');
+    Route::get('/proposals/{type?}', [ProposalController::class, 'index'])->name('proposals');
     Route::get('/proposal/{id}', [ProposalController::class, 'view'])->name('proposal.view');
     Route::get('/getDisabledDays/{id}', [ProposalController::class, 'getDisabledDays'])->name('proposal.getDisabledDays');
     Route::get('/getDisabledDates/{id}', [ProposalController::class, 'getDisabledDates'])->name('proposal.getDisabledDates');
