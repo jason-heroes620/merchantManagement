@@ -57,7 +57,7 @@ class OrderController extends Controller
                 ProposalFees::firstOrCreate([
                     'fee_id' => $fee['fee_id'],
                     'fee_type' => $fee['fee_type'],
-                    'fee_amount' => $fee['fee_charges'],
+                    'fee_amount' => $fee['fee_type'] === 'P' ? $fee['fee_amount'] : $fee['fee_charges'],
                     'proposal_id' => $proposal['proposal_id'],
                     'fee_description' => $fee['fee_description']
                 ]);
@@ -249,8 +249,6 @@ class OrderController extends Controller
                     'sort_order' => $code[3]
                 ]);
             }
-
-
 
             $fees = ProposalFees::where('proposal_id', $proposal_id)->get();
             foreach ($fees as $fee) {
