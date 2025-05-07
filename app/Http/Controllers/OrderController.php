@@ -50,19 +50,42 @@ class OrderController extends Controller
         $balance_due_date = date('Y-m-d', strtotime($req->input('balanceDueDate')));
 
         try {
-            // dd($req);
             if ($this->canCreateOrder($proposal)) {
-                // foreach ($req->input('fees') as $fee) {
-                $fee = $req->input('fees');
-                ProposalFees::firstOrCreate([
-                    'fee_id' => $fee['fee_id'],
-                    'fee_type' => $fee['fee_type'],
-                    'fee_amount' => $fee['fee_type'] === 'P' ? $fee['fee_amount'] : $fee['fee_charges'],
-                    'proposal_id' => $proposal['proposal_id'],
-                    'fee_description' => $fee['fee_description']
+                Proposal::where('proposal_id', $req->input('proposal_id'))->update([
+                    'qty_student' => $req->input('qty_student'),
+                    'qty_teacher' => $req->input('qty_teacher'),
                 ]);
-                // }
 
+                foreach ($req->input('proposalItem') as $item) {
+                    ProposalItem::updateOrCreate(
+                        ['proposal_id' => $req->input('proposal_id'), 'item_id' => $item['item_id']],
+                        ['item_qty' => $item['item_qty'], 'uom' => $item['uom'], 'unit_price' => $item['unit_price'], 'sales_tax' => $item['sales_tax']]
+                    );
+                }
+                $fee = $req->input('fees');
+                ProposalFees::where("proposal_id", $req->input("proposal_id"))->update(
+                    [
+                        'fee_id' => $fee['fee_id'],
+                        'fee_type' => $fee['fee_type'],
+                        'fee_amount' => $fee['fee_type'] === 'P' ? $fee['fee_amount'] : $fee['fee_charges'],
+                        'fee_description' => $fee['fee_description']
+                    ]
+                );
+
+                $proposal_product = ProposalProduct::where('proposal_id', $req->input('proposal_id'))->get();
+                foreach ($proposal_product as $p) {
+
+                    ProposalProductPrice::where('proposal_product_id', $p['proposal_product_id'])
+                        ->where('attribute', 'student')
+                        ->update([
+                            'qty' => $req->input('qty_student')
+                        ]);
+                    ProposalProductPrice::where('proposal_product_id', $p['proposal_product_id'])
+                        ->where('attribute', 'teacher')
+                        ->update([
+                            'qty' => $req->input('qty_teacher')
+                        ]);
+                }
                 Proposal::where('proposal_id', $req->input('proposal_id'))->update([
                     'proposal_status' => 3
                 ]);

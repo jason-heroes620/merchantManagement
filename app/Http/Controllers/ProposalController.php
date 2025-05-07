@@ -17,7 +17,6 @@ use App\Models\School;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-
 class ProposalController extends Controller
 {
     public function index(Request $req)
@@ -60,7 +59,8 @@ class ProposalController extends Controller
         }
 
         $proposal_fees = ProposalFees::where('proposal_id', $proposal['proposal_id'])->get();
-        if ($proposal_fees->isEmpty()) {
+        // dd(isEmpty($proposal_fees));
+        if ($proposal_fees) {
             $fees = Fees::where('effective_date', '<=', now())->where('expiry_date', null)->get();
             foreach ($fees as $fee) {
                 $fee_charges = 0;
@@ -82,13 +82,15 @@ class ProposalController extends Controller
                     'fee_description' => $fee['fee_description'],
                     'fee_amount' => $fee['fee_amount'],
                     'fee_charges' => $fee_charges,
+                    'min_charges' => $fee['min_charges'],
                 ];
             }
         }
-
+        // dd($proposal_fees);
+        $items = Item::where('item_status', 0)->get(["item_id", "item_name", "unit_price", "item_type", "uom", "additional_unit_cost", "item_image", "item_status", "item_description", "product_id", "sales_tax"]);
         $proposal_discount = Discount::where('proposal_id', $req->id)->first();
 
-        return Inertia::render('Proposals/View', compact('proposal', 'proposal', 'proposal_product', 'proposal_item', 'prices', 'proposal_discount', 'proposal_fees'));
+        return Inertia::render('Proposals/View', compact('proposal', 'proposal', 'proposal_product', 'proposal_item', 'prices', 'proposal_discount', 'proposal_fees', 'items'));
     }
 
     private function getProposals($status)

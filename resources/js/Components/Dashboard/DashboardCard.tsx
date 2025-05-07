@@ -11,7 +11,7 @@ import {
 
 const DashboardCard = ({ header, content, type, links }) => {
     const borderColor =
-        type === "pending"
+        type === "pending" || type === "requestingOrder"
             ? "bg-orange-300"
             : type === "current" || type === "accepted" || type === "paid"
             ? "bg-green-300"

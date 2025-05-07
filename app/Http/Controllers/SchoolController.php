@@ -70,19 +70,12 @@ class SchoolController extends Controller
                 'google_place_name' => $req->input('google_place_name'),
             ]);
 
-            // $school_logo = "";
-            // if ($req->file('school_logo')) {
-            //     $school_logo = storage_path('app/public/schoolLogos');
-            //     $file_name = $this->randomFileNameGenerator(
-            //         15,
-            //         $this->getFileExtension($req->file('school_logo')->getClientOriginalName())
-            //     );
-            //     $req->file('school_logo')->move($school_logo, $file_name);
-
-            //     School::where('school_id', $req->id)->update([
-            //         'school_logo' => $school_logo . '/' . $file_name,
-            //     ]);
-            // }
+            if ($req->file('school_logo')) {
+                $image = $req->file('school_logo');
+                $response = Http::attach('attachment', file_get_contents($image), 'image.jpg')
+                    ->post(config('custom.trip_host') . 'api/upload_school_logo/' . $req->id, $req->all());
+                Log::info("School logo upload response: " . $response . ' ' . config('custom.trip_host') . 'api/upload_school_logo/' . $req->id);
+            }
 
             return back()->with(["success" => "School information updated"]);
         } catch (Exceptions $e) {
