@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import DashboardCard from "@/Components/Dashboard/DashboardCard";
 import { usePage } from "@inertiajs/react";
 
-const Admin = ({ merchant, product, schools, quotations, orders }: any) => {
+const Admin = ({ merchant, product, schools, proposals, orders }: any) => {
     return (
         <div className="flex flex-col px-4 py-4 gap-4">
             <div id="header" className="flex flex-row gap-4 overflow-x-auto">
@@ -64,15 +64,15 @@ const Admin = ({ merchant, product, schools, quotations, orders }: any) => {
                         links={["schools", 1]}
                     />
                 </div>
-                {/* <div>
+                <div>
                     <DashboardCard
-                        header={"Quotations"}
-                        content={quotations[0].count}
-                        type={"pending"}
-                        links={["quotations", 0]}
+                        header={"Proposal"}
+                        content={proposals.count}
+                        type={"requestingOrder"}
+                        links={["proposals", 1]}
                     />
                 </div>
-                <div>
+                {/* <div>
                     <DashboardCard
                         header={"Quotations"}
                         content={quotations[1].count}

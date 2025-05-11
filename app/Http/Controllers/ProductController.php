@@ -12,17 +12,12 @@ use App\Models\ProductProfit;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Redirect;
 use App\Http\Controllers\CategoryController;
 use App\Models\Filters;
 use App\Models\Item;
 use App\Models\ProductFilter;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Log;
-
-use function PHPUnit\Framework\isEmpty;
-use function PHPUnit\Framework\isNull;
 
 class ProductController extends Controller
 {
@@ -31,6 +26,7 @@ class ProductController extends Controller
         $user = $req->user();
         $role = $user->roles->pluck('name')->toArray();
         $type = $req->input('tab', $req->type ?? 'pending');
+        $category = $req->type;
 
         if ($role[0] === 'admin') {
             $rejectedProducts = Product::with('merchant')->where('status', 2)->paginate(10, ['*'], 'RejectedPage')->appends(['tab' => 'rejected']);
@@ -247,6 +243,7 @@ class ProductController extends Controller
                 'food_allowed' => $req->input('food_allowed'),
                 'tour_guide' => $req->input('tour_guide'),
                 'max_group' => $req->input('max_group'),
+                'status' => $req->input('product_status'),
             ]);
 
             if ($req->input('tour_guide') ==  0) {
@@ -302,7 +299,9 @@ class ProductController extends Controller
                 $index++;
             }
 
-            ProductDetail::where('product_id', $req->id)->update([
+            ProductDetail::where('product_id', $req->id)->updateOrCreate([
+                'product_id' => $req->id,
+            ], [
                 'product_id' => $req->id,
                 'google_map_location' => $req->google_map_location,
                 'event_start_date' =>  date('Y-m-d', strtotime(str_replace('/', '-', $req->event_start_date))),

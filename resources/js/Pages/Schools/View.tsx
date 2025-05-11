@@ -36,7 +36,7 @@ const View = ({ auth, flash, previousUrl }: any) => {
         school_logo: any;
     }>().props;
     const { toast } = useToast();
-    const { data, setData, post, put, processing, errors, reset } = useForm({
+    const { data, setData, post, put, processing, errors, progress } = useForm({
         school_name: school.school_name,
         address_1: school.address_1,
         address_2: school.address_2,
@@ -52,6 +52,7 @@ const View = ({ auth, flash, previousUrl }: any) => {
         school_status: school.school_status,
         google_place_name: school.google_place_name || "",
     });
+    console.log(data);
     const [logo, setLogo] = useState<File>();
     const getObjectUrl = useObjectUrls();
 
@@ -101,6 +102,7 @@ const View = ({ auth, flash, previousUrl }: any) => {
             }
         });
     };
+
     const handleSubmit: FormEventHandler = (e) => {
         e.preventDefault();
 
@@ -443,16 +445,33 @@ const View = ({ auth, flash, previousUrl }: any) => {
                                                 value="School Logo"
                                             />
                                         </div>
-                                        {school_logo ? (
-                                            <div className="flex w-32 h-32 justify-center items-center px-2">
-                                                <img
-                                                    src={school_logo}
-                                                    className="object-contain"
-                                                />
-                                            </div>
-                                        ) : (
-                                            "No logo provided"
-                                        )}
+                                        <div>
+                                            <input
+                                                type="file"
+                                                accept=".png,.jpg,.jpeg"
+                                                onChange={(e) =>
+                                                    handleMainFileUpload(e)
+                                                }
+                                            />
+                                            {progress && (
+                                                <progress
+                                                    value={progress.percentage}
+                                                    max="100"
+                                                >
+                                                    {progress.percentage}%
+                                                </progress>
+                                            )}
+                                            {data.school_logo ? (
+                                                <div className="flex w-32 h-32 justify-center items-center px-2">
+                                                    <img
+                                                        src={data.school_logo}
+                                                        className="object-contain"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                "No logo provided"
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div>

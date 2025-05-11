@@ -105,6 +105,7 @@ const View = ({
         max_group: product.max_group,
         product_filter: product_filter ?? [],
         is_featured: product.is_featured,
+        product_status: product.status,
     });
 
     useEffect(() => {

@@ -49,6 +49,8 @@ export interface Product {
     min_quantity: number;
     max_quantity: number;
     age_group: string;
+    product_description: string;
+    product_activities: string;
 }
 
 export interface Chat {
@@ -77,11 +79,12 @@ export interface School {
 }
 
 export interface Item {
+    item_id?: string;
     item_type: string;
     unit_price: number;
     item_name: string;
-    additional_unit_cost: number;
-    additional: number;
+    additional_unit_cost?: number;
+    additional?: number;
 }
 export interface Proposal {
     proposal_id: string;
@@ -94,6 +97,14 @@ export interface Proposal {
     prices: Array<ProposalProductPrices>;
     proposal_discount: ProposalDiscount;
     fees: Array<Fees>;
+    proposal_file?: string;
+}
+
+export interface UserActivity {
+    id: number;
+    user_id: number;
+    event_type: string;
+    event_name: string;
 }
 
 export interface ProposalDiscount {
@@ -114,17 +125,19 @@ export interface ProposalProductPrices {
     sales_tax: number;
 }
 export interface ProposalItem {
-    proposal_item_id: number;
-    proposal_id: string;
+    proposal_item_id?: number;
+    proposal_id?: string;
     item_id: string;
+    item_name?: string;
     uom: string;
     item_qty: number;
     sales_tax: number;
     unit_price: number;
-    item: Item;
-    item_type: string;
+    item?: Item;
+    item_type?: string;
     additional_unit_cost: string;
     additional: string;
+    distance: number;
 }
 
 export interface ProposalFees {
@@ -133,6 +146,10 @@ export interface ProposalFees {
     fee_id: number;
     fee_type: string;
     proposal_fee: number;
+    fee_amount: number;
+    fee_charges: number;
+    fee_description: string;
+    min_charges?: number;
 }
 
 export interface Proposal {

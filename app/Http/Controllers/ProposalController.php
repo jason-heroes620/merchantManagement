@@ -9,11 +9,13 @@ use App\Models\Product;
 use App\Models\ProductDetail;
 use App\Models\Proposal;
 use App\Models\ProposalFees;
+use App\Models\ProposalFiles;
 use App\Models\ProposalItem;
 use App\Models\ProposalProduct;
 use App\Models\ProposalProductPrice;
 use App\Models\ReservedDate;
 use App\Models\School;
+use Illuminate\Http\Client\Response;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -89,6 +91,14 @@ class ProposalController extends Controller
         // dd($proposal_fees);
         $items = Item::where('item_status', 0)->get(["item_id", "item_name", "unit_price", "item_type", "uom", "additional_unit_cost", "item_image", "item_status", "item_description", "product_id", "sales_tax"]);
         $proposal_discount = Discount::where('proposal_id', $req->id)->first();
+        $proposal_file = ProposalFiles::where('proposal_id', $req->id)->first();
+
+        if ($proposal_file) {
+            $file_name = explode('/', $proposal_file['file_path']);
+            $path = config('custom.trip_host') . 'storage/proposal_files/' . $file_name[sizeof($file_name) - 1];
+            $proposal['proposal_file'] = $path ?? null;
+        }
+
 
         return Inertia::render('Proposals/View', compact('proposal', 'proposal', 'proposal_product', 'proposal_item', 'prices', 'proposal_discount', 'proposal_fees', 'items'));
     }
@@ -139,5 +149,17 @@ class ProposalController extends Controller
         }
 
         return array_unique($reserved);
+    }
+
+    public function fileDownload(Request $req)
+    {
+        $file = ProposalFiles::where('proposal_id', $req->id)->first();
+        if ($file) {
+            $file_name = explode('/', $file['file_path']);
+            $path = config('custom.trip_host') . 'storage/proposal_files/' . $file_name[sizeof($file_name) - 1];
+            // return response()->download($path, $file['original_file_name']);
+            return response()->download($path);
+        }
+        return response()->json(['error' => 'File not found'], 404);
     }
 }

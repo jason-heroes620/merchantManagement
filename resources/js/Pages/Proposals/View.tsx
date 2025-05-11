@@ -1,12 +1,13 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Link, usePage, Head } from "@inertiajs/react";
+import { Link, usePage, Head, useForm } from "@inertiajs/react";
 import {
     Proposal,
     ProposalDiscount,
     ProposalItem,
     ProposalProductPrices,
     ProposalProduct,
+    ProposalFees,
 } from "@/types";
 import { toast, ToastContainer } from "react-toastify";
 import InputLabel from "@/Components/InputLabel";
@@ -62,6 +63,17 @@ import {
     PopoverTrigger,
 } from "@/Components/ui/popover";
 import Checkbox from "@/Components/Checkbox";
+import { renderHTML } from "@/utils/renderHtml";
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@/Components/ui/accordion";
+import { useToast } from "@/hooks/use-toast";
+import AccordionProposalItem from "@/Components/AccordionItem";
+import { min } from "lodash";
+import { spawn } from "child_process";
 
 const discountType = [
     { label: "Fix Amount", value: "F" },
@@ -78,7 +90,6 @@ const mapKey = import.meta.env.VITE_GOOGLE_KEY;
 const libraries = ["places"];
 
 const View = ({ auth }) => {
-    // const libraries = useMemo(() => ["places"], []);
     const {
         proposal,
         proposal_product,
@@ -86,17 +97,28 @@ const View = ({ auth }) => {
         prices,
         proposal_discount,
         proposal_fees,
+        items,
     } = usePage<{
         proposal: Proposal;
         proposal_product: Array<ProposalProduct>;
         proposal_item: Array<ProposalItem>;
         prices: Array<ProposalProductPrices>;
         proposal_discount: ProposalDiscount;
-        proposal_fees: any;
+        proposal_fees: ProposalFees;
+        items: Array<ProposalItem>;
     }>().props;
 
+    const { data, setData, errors, processing } = useForm({
+        qty_student: proposal.qty_student,
+        qty_teacher: proposal.qty_teacher,
+    });
+
     const [proposalProduct, setProposalProduct] = useState(proposal_product);
-    const [proposalItem, setProposalItem] = useState(proposal_item);
+    const [proposalItem, setProposalItem] = useState(
+        proposal_item.map((i: any) => {
+            return i;
+        })
+    );
 
     const [discount, setDiscount] = useState({
         discounttype: proposal_discount?.discount_type ?? "",
@@ -110,16 +132,35 @@ const View = ({ auth }) => {
             proposal.travel_distance > 0 ? proposal.travel_distance : 0,
     });
 
-    const [proposalFees, setProposalFees] = useState(proposal_fees);
+    const [proposalProductPrices, setProposalProductPrices] = useState(prices);
+    const [proposalFees, setProposalFees] = useState({
+        fee_id: proposal_fees.fee_id,
+        fee_type: proposal_fees.fee_type,
+        fee_amount: proposal_fees.fee_amount,
+        fee_charges: proposal_fees.fee_charges,
+        fee_description: proposal_fees.fee_description,
+        min_charges: proposal_fees.min_charges,
+    });
+
     const [loading, setLoading] = useState(false);
     const [depositAmount, setDepositAmount] = useState(0);
     const [balance, setBalance] = useState(0);
+
+    const [transportationItem, setTransportationItem] = useState(
+        items.filter((i: any) => i.item_type === "TRANSPORTATION")
+    );
+    const [mealsItem, setMealsItem] = useState(
+        items.filter((i: any) => i.item_type === "FOOD")
+    );
+    const [insuranceItem, setInsuranceItem] = useState(
+        items.filter((i: any) => i.item_type === "INSURANCE")
+    );
 
     const calculateTotal = (newProposalItem, newDiscount) => {
         const item = newProposalItem === null ? proposalItem : newProposalItem;
         const disc = newDiscount === null ? discount : newDiscount;
 
-        productTotal = prices.reduce(
+        productTotal = proposalProductPrices.reduce(
             (sum: number, p: any) => sum + parseFloat(p.unit_price) * p.qty,
             0.0
         );
@@ -130,17 +171,14 @@ const View = ({ auth }) => {
             0.0
         );
 
-        // feeTotal = proposalFees.reduce(
-        //     (sum: number, p: any) =>
-        //         sum +
-        //         (p.fee_type === "P"
-        //             ? ((productTotal + optionTotal) *
-        //                   parseFloat(p.fee_amount)) /
-        //               100
-        //             : parseFloat(p.fee_amount)),
-        //     0.0
-        // );
-        feeTotal = parseInt(proposalFees.fee_charges);
+        // feeTotal = parseInt(proposalFees.fee_charges);
+        const adminCharges =
+            ((productTotal + optionTotal) * proposalFees.fee_amount) / 100;
+        feeTotal =
+            adminCharges > proposalFees.min_charges
+                ? ((productTotal + optionTotal) * proposalFees.fee_amount) / 100
+                : parseInt(proposalFees.min_charges.toString());
+
         discountTotal =
             parseFloat(disc.discountamount) > 0
                 ? disc.discounttype === "P"
@@ -153,6 +191,20 @@ const View = ({ auth }) => {
 
         setDepositAmount((total * 50) / 100);
         setBalance(total - (total * 50) / 100);
+
+        let fee = proposalFees;
+        fee.fee_type =
+            ((productTotal + optionTotal) * proposal_fees.fee_amount) / 100 <
+            proposal_fees.fee_charges
+                ? "F"
+                : "P";
+        fee.fee_charges =
+            ((productTotal + optionTotal) * proposalFees.fee_amount) / 100 >=
+            proposal_fees.fee_charges
+                ? ((productTotal + optionTotal) * proposalFees.fee_amount) / 100
+                : proposal_fees.fee_charges;
+
+        setProposalFees(fee);
     };
 
     const handleUpdateTransportationPrice = (e) => {
@@ -206,26 +258,6 @@ const View = ({ auth }) => {
         calculateTotal(newItem, null);
     };
 
-    // const handleConfirmQuotation = (e) => {
-    //     e.preventDefault();
-
-    //     axios
-    //         .put(route("proposal.confirm", proposal.proposal_id), {
-    //             fees: proposalFees,
-    //         })
-    //         .then((resp) => {
-    //             if (resp.data.success) {
-    //                 toast.success(resp.data.success);
-    //                 router.visit(
-    //                     route("proposal.view", proposal.proposal_id)
-    //                 );
-    //             } else {
-    //                 toast.error(resp.data.error);
-    //             }
-    //             setOpen(false);
-    //         });
-    // };
-
     const handleGenerateOrder = (e) => {
         e.preventDefault();
 
@@ -243,6 +275,9 @@ const View = ({ auth }) => {
                 depositDueDate: depositDueDate,
                 balanceDueDate: balanceDueDate,
                 fees: proposalFees,
+                proposalItem: proposalItem,
+                qty_student: data.qty_student,
+                qty_teacher: data.qty_teacher,
             })
             .then((resp) => {
                 if (resp.status === 200) {
@@ -263,41 +298,6 @@ const View = ({ auth }) => {
 
     const [open, setOpen] = useState(false);
     const [openConfirm, setOpenConfirm] = useState(false);
-
-    // const confirmDialog = () => {
-    //     return (
-    //         <AlertDialog open={open} onOpenChange={setOpen}>
-    //             <AlertDialogTrigger asChild>
-    //                 <Button
-    //                     variant="default"
-    //                     disabled={
-    //                         proposal.proposal_status === 1 ? true : false
-    //                     }
-    //                 >
-    //                     Confirm Quotation
-    //                 </Button>
-    //             </AlertDialogTrigger>
-    //             <AlertDialogContent>
-    //                 <AlertDialogHeader>
-    //                     <AlertDialogTitle></AlertDialogTitle>
-    //                     <AlertDialogDescription>
-    //                         Ready to confirm proposal? Once confirmed, a
-    //                         notification will be sent to the user email to
-    //                         notify them.
-    //                     </AlertDialogDescription>
-    //                 </AlertDialogHeader>
-    //                 <AlertDialogFooter>
-    //                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-    //                     <AlertDialogAction
-    //                         onClick={(e) => handleConfirmQuotation(e)}
-    //                     >
-    //                         Continue
-    //                     </AlertDialogAction>
-    //                 </AlertDialogFooter>
-    //             </AlertDialogContent>
-    //         </AlertDialog>
-    //     );
-    // };
 
     const [orderType, setOrderType] = useState("");
 
@@ -331,6 +331,61 @@ const View = ({ auth }) => {
     const [visitionDate, setVisitationDate] = useState<Date | undefined>(
         moment(proposal.proposal_date).toDate()
     );
+
+    const roundToNearest50 = (value: number) => {
+        return Math.ceil(value / 50) * 50;
+    };
+
+    const handleProposalItemChanged = (
+        e: React.ChangeEvent<HTMLInputElement>,
+        m: ProposalItem
+    ) => {
+        let newItem = proposalItem;
+        const item: ProposalItem = {
+            item: {
+                item_id: m.item_id,
+                item_type: m.item_type,
+                unit_price: m.unit_price,
+                item_name: m.item_name,
+            },
+            item_id: m.item_id,
+            unit_price:
+                m.item_type === "TRANSPORTATION"
+                    ? roundToNearest50(
+                          m.unit_price +
+                              parseFloat(m.additional_unit_cost) *
+                                  Math.round(travelInfo.travelDistance / 1000)
+                      )
+                    : m.unit_price,
+            uom: m.uom,
+            item_qty:
+                m.item_type === "TRANSPORTATION" || m.item_type === "GUIDE"
+                    ? 1
+                    : data.qty_student,
+
+            sales_tax: m.sales_tax,
+            additional_unit_cost: m.additional_unit_cost,
+            additional: m.additional,
+            distance: travelInfo.travelDistance,
+        };
+
+        if (e.target.checked) {
+            newItem = [...newItem, item];
+            if (proposalItem.length > 0) {
+                setProposalItem(newItem);
+                calculateTotal(newItem, null);
+            } else {
+                setProposalItem([item]);
+                calculateTotal([item], null);
+            }
+        } else {
+            newItem = proposalItem.filter((n: ProposalItem) => {
+                return n.item_id !== item.item_id;
+            });
+            setProposalItem(newItem);
+            calculateTotal(newItem, null);
+        }
+    };
 
     const generateOrder = () => {
         return (
@@ -600,21 +655,6 @@ const View = ({ auth }) => {
         setDiscount(newDiscount);
     };
 
-    // const handleUpdateDiscount = () => {
-    //     const data = {
-    //         proposal_id: proposal.proposal_id,
-    //         discount_type: discount.discounttype,
-    //         discount_amount: discount.discountamount,
-    //     };
-    //     axios.post(route("discount.create"), data).then((resp) => {
-    //         if (resp.data.success) {
-    //             toast.success("Discount updated");
-    //         } else {
-    //             toast.error("Discount update failed");
-    //         }
-    //     });
-    // };
-
     const { isLoaded } = useLoadScript({
         googleMapsApiKey: mapKey, // Replace with your API key
         libraries: libraries as any,
@@ -656,7 +696,7 @@ const View = ({ auth }) => {
         if (isLoaded) {
             calculateDistances(travelLocations);
         }
-    }, [isLoaded]);
+    }, [isLoaded, proposalProductPrices]);
 
     if (!isLoaded) return <div>Loading...</div>;
 
@@ -844,9 +884,35 @@ const View = ({ auth }) => {
                                             value="No. of Students"
                                             className="py-2"
                                         />
-                                        <span className="py-4">
+                                        {/* <span className="py-4">
                                             {proposal.qty_student}
-                                        </span>
+                                        </span> */}
+                                        <TextInput
+                                            type="number"
+                                            defaultValue={proposal.qty_student}
+                                            onChange={(e) => {
+                                                setData(
+                                                    "qty_student",
+                                                    parseInt(e.target.value)
+                                                );
+                                                setProposalProductPrices(
+                                                    prices.map((p) => {
+                                                        if (
+                                                            p.attribute ===
+                                                            "student"
+                                                        ) {
+                                                            return {
+                                                                ...p,
+                                                                qty: parseInt(
+                                                                    e.target
+                                                                        .value
+                                                                ),
+                                                            };
+                                                        } else return p;
+                                                    })
+                                                );
+                                            }}
+                                        />
                                     </div>
                                     <div className="px-2">
                                         <InputLabel
@@ -854,9 +920,36 @@ const View = ({ auth }) => {
                                             value="No. of Teachers"
                                             className="py-2"
                                         />
-                                        <span className="py-4">
+                                        {/* <span className="py-4">
                                             {proposal.qty_teacher}
-                                        </span>
+                                        </span> */}
+                                        <TextInput
+                                            type="number"
+                                            defaultValue={proposal.qty_teacher}
+                                            min={0}
+                                            onChange={(e) => {
+                                                setData(
+                                                    "qty_teacher",
+                                                    parseInt(e.target.value)
+                                                );
+                                                setProposalProductPrices(
+                                                    prices.map((p) => {
+                                                        if (
+                                                            p.attribute ===
+                                                            "teacher"
+                                                        ) {
+                                                            return {
+                                                                ...p,
+                                                                qty: parseInt(
+                                                                    e.target
+                                                                        .value
+                                                                ),
+                                                            };
+                                                        } else return p;
+                                                    })
+                                                );
+                                            }}
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -942,6 +1035,59 @@ const View = ({ auth }) => {
                                                     </div>
                                                 </div>
                                                 <div>
+                                                    <Dialog>
+                                                        <DialogTrigger asChild>
+                                                            <Button variant="link">
+                                                                <span className="italic">
+                                                                    Show More..
+                                                                </span>
+                                                            </Button>
+                                                        </DialogTrigger>
+                                                        <DialogContent className="max-h-screen max-w-[425px] overflow-y-scroll md:max-w-[620px]">
+                                                            <DialogHeader>
+                                                                <DialogTitle />
+                                                                <DialogDescription />
+                                                            </DialogHeader>
+                                                            <div className="py-4">
+                                                                <span className="font-bold underline">
+                                                                    Description
+                                                                </span>
+                                                                <div className="ulDescription py-2 text-justify">
+                                                                    {renderHTML(
+                                                                        p
+                                                                            .product
+                                                                            .product_description
+                                                                    )}
+                                                                </div>
+                                                                <div className="pt-4">
+                                                                    <span className="font-bold underline">
+                                                                        Activities
+                                                                    </span>
+                                                                </div>
+                                                                <div className="ulDescription py-2 text-justify">
+                                                                    {renderHTML(
+                                                                        p
+                                                                            .product
+                                                                            .product_activities
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            <DialogFooter className="justify-end">
+                                                                <DialogClose
+                                                                    asChild
+                                                                >
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="secondary"
+                                                                    >
+                                                                        Close
+                                                                    </Button>
+                                                                </DialogClose>
+                                                            </DialogFooter>
+                                                        </DialogContent>
+                                                    </Dialog>
+                                                </div>
+                                                <div>
                                                     {p.prices?.map((q) => {
                                                         return (
                                                             <span
@@ -1016,7 +1162,59 @@ const View = ({ auth }) => {
                                     <span className="text-lg font-bold">
                                         Transportation
                                     </span>
-                                    {proposalItem
+                                    <Accordion
+                                        type="single"
+                                        collapsible
+                                        defaultValue="item-1"
+                                        className="w-full"
+                                    >
+                                        <AccordionItem value="item-1">
+                                            <AccordionTrigger>
+                                                <span>Transportation</span>
+                                            </AccordionTrigger>
+                                            <AccordionContent>
+                                                {/* <div className="py-2">
+                                                    <span className="text-justify">
+                                                        Price inclusive of bus
+                                                        rental and round trip
+                                                        from your school address
+                                                        to selected destinations
+                                                    </span>
+                                                    <br />
+                                                    <span>
+                                                        * This is only
+                                                        estimation. The final
+                                                        transportation cost will
+                                                        be provided in
+                                                        quotation.
+                                                    </span>
+                                                </div> */}
+                                                <AccordionProposalItem
+                                                    productItems={
+                                                        transportationItem
+                                                    }
+                                                    proposalItems={proposalItem}
+                                                    handleProposalItemChanged={
+                                                        handleProposalItemChanged
+                                                    }
+                                                    handleItemQtyChange={
+                                                        handleItemQtyChange
+                                                    }
+                                                    distance={
+                                                        travelInfo.travelDistance
+                                                    }
+                                                    proposalStatus={
+                                                        proposal.proposal_status
+                                                    }
+                                                    // calculate={
+                                                    //     calculateTrasportationFormula
+                                                    // }
+                                                />
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    </Accordion>
+
+                                    {/* {proposalItem
                                         .filter((p) => {
                                             return (
                                                 p.item.item_type ===
@@ -1035,7 +1233,7 @@ const View = ({ auth }) => {
                                                         </span>
                                                     </div>
                                                     {proposal.proposal_status <
-                                                    1 ? (
+                                                    3 ? (
                                                         <div className="flex flex-row gap-2">
                                                             <div className="mr-2 flex flex-row items-center gap-2 py-2">
                                                                 <button
@@ -1146,13 +1344,13 @@ const View = ({ auth }) => {
                                                     )}
                                                 </div>
                                             );
-                                        })}
+                                        })} */}
                                 </div>
                                 <div className="py-4">
                                     <span className="text-lg font-bold">
                                         Meals
                                     </span>
-                                    {proposalItem
+                                    {/* {proposalItem
                                         .filter((p) => {
                                             return p.item.item_type === "FOOD";
                                         })
@@ -1184,13 +1382,47 @@ const View = ({ auth }) => {
                                                     </div>
                                                 </div>
                                             );
-                                        })}
+                                        })} */}
+                                    <Accordion
+                                        type="single"
+                                        collapsible
+                                        defaultValue="item-2"
+                                        className="w-full"
+                                    >
+                                        <AccordionItem value="item-2">
+                                            <AccordionTrigger>
+                                                Meals
+                                            </AccordionTrigger>
+                                            <AccordionContent>
+                                                <div>
+                                                    <span>
+                                                        Please choose (optional)
+                                                    </span>
+                                                </div>
+                                                <AccordionProposalItem
+                                                    productItems={mealsItem}
+                                                    proposalItems={proposalItem}
+                                                    handleProposalItemChanged={
+                                                        handleProposalItemChanged
+                                                    }
+                                                    handleItemQtyChange={
+                                                        handleItemQtyChange
+                                                    }
+                                                    distance={0}
+                                                    proposalStatus={
+                                                        proposal.proposal_status
+                                                    }
+                                                    calculate={false}
+                                                />
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    </Accordion>
                                 </div>
                                 <div className="py-4">
                                     <span className="text-lg font-bold">
                                         Insurance
                                     </span>
-                                    {proposalItem
+                                    {/* {proposalItem
                                         .filter((p) => {
                                             return (
                                                 p.item.item_type === "INSURANCE"
@@ -1224,7 +1456,36 @@ const View = ({ auth }) => {
                                                     </div>
                                                 </div>
                                             );
-                                        })}
+                                        })} */}
+                                    <Accordion
+                                        type="single"
+                                        collapsible
+                                        defaultValue="item-3"
+                                        className="w-full"
+                                    >
+                                        <AccordionItem value="item-3">
+                                            <AccordionTrigger>
+                                                Insurance
+                                            </AccordionTrigger>
+                                            <AccordionContent>
+                                                <AccordionProposalItem
+                                                    productItems={insuranceItem}
+                                                    proposalItems={proposalItem}
+                                                    handleProposalItemChanged={
+                                                        handleProposalItemChanged
+                                                    }
+                                                    handleItemQtyChange={
+                                                        handleItemQtyChange
+                                                    }
+                                                    distance={0}
+                                                    proposalStatus={
+                                                        proposal.proposal_status
+                                                    }
+                                                    calculate={false}
+                                                />
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    </Accordion>
                                 </div>
                                 {proposalItem.some(
                                     (q: any) => q.item.item_type === "GUIDE"
@@ -1285,6 +1546,28 @@ const View = ({ auth }) => {
                                     rows={4}
                                 />
                             </div>
+                            <div className="flex flex-col py-4">
+                                <InputLabel>Official School Letter</InputLabel>
+                                {proposal?.proposal_file ? (
+                                    <div className="flex h-12 w-12 items-center justify-center px-2">
+                                        <img
+                                            src={
+                                                "/images/PDF_file_icon.svg.png"
+                                            }
+                                            className="w-12 cursor-pointer object-contain"
+                                            onClick={() => {
+                                                window.open(
+                                                    `${proposal?.proposal_file}`,
+                                                    "_blank"
+                                                );
+                                            }}
+                                            alt="pdf"
+                                        />
+                                    </div>
+                                ) : (
+                                    <span>No file available</span>
+                                )}
+                            </div>
                             <hr />
                             <div className="px-4 py-4">
                                 <div className="flex justify-end gap-4">
@@ -1302,73 +1585,28 @@ const View = ({ auth }) => {
                             <div className="px-4 py-4">
                                 <div className="text-lg font-bold">Fees</div>
                                 <div className="py-2">
-                                    {/* {proposalFees.map((f: any) => {
-                                        return (
-                                            <div
-                                                className="flex flex-row justify-between items-center"
-                                                key={f.fee_id}
-                                            >
-                                                <div className="flex items-center gap-4">
-                                                    <Checkbox
-                                                        name="checkbox"
-                                                        defaultChecked
-                                                        className=""
-                                                    />
-                                                    <span>
-                                                        {f.fee_description}{" "}
-                                                        {f.fee_type === "P"
-                                                            ? "(" +
-                                                              parseInt(
-                                                                  f.fee_amount
-                                                              ) +
-                                                              "%)"
-                                                            : formattedNumber(
-                                                                  f.fee_amount
-                                                              )}
-                                                    </span>
-                                                </div>
-                                                <span className="text-lg font-bold">
-                                                    {f.fee_type === "P"
-                                                        ? formattedNumber(
-                                                              ((productTotal +
-                                                                  optionTotal) *
-                                                                  f.fee_amount) /
-                                                                  100
-                                                          )
-                                                        : f.fee_amount}
-                                                </span>
-                                            </div>
-                                        );
-                                    })} */}
-
                                     <div className="flex flex-row justify-end items-center gap-4">
                                         <span className="font-bold text-lg">
                                             {proposalFees.fee_description}{" "}
                                             {proposalFees.fee_type === "P"
-                                                ? `(${parseInt(
-                                                      proposalFees.fee_amount
-                                                  )}%)`
+                                                ? `(${proposalFees.fee_amount}%)`
                                                 : ""}
                                             {"  "}
                                         </span>
                                         <span className="font-bold text-lg">
                                             {" "}
-                                            {formattedNumber(
-                                                proposalFees.fee_charges
-                                            )}
+                                            {formattedNumber(feeTotal)}
                                         </span>
                                     </div>
                                 </div>
                             </div>
                             <hr />
-
                             <div className="px-4 py-4">
                                 <div>
                                     <span className="text-lg font-bold">
                                         Discount
                                     </span>
                                 </div>
-
                                 <div className="flex flex-col  md:flex-row md:justify-end py-4 gap-4">
                                     <div>
                                         <SelectInput
@@ -1404,18 +1642,7 @@ const View = ({ auth }) => {
                                             className=""
                                         />
                                     </div>
-                                    {/* <div className="flex items-center">
-                                        <Button
-                                            variant="primary"
-                                            onClick={() =>
-                                                handleUpdateDiscount()
-                                            }
-                                        >
-                                            Save Discount
-                                        </Button>
-                                    </div> */}
                                 </div>
-
                                 <div className="flex flex-row gap-4 justify-end">
                                     <span className="font-bold text-lg text-red-600">
                                         Discount
@@ -1435,16 +1662,6 @@ const View = ({ auth }) => {
                                         {formattedNumber(total)}
                                     </span>
                                 </div>
-                                {/* <div className="flex justify-end">
-                                        <span>
-                                            price per pax{" "}
-                                            {formattedNumber(
-                                                total /
-                                                    proposal.proposal
-                                                        .qty_student
-                                            )}
-                                        </span>
-                                    </div> */}
                             </div>
                             <hr />
                             <div className="flex flex-row-reverse  py-4">

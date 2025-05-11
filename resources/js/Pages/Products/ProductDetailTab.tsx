@@ -630,6 +630,20 @@ const ProductDetailTab = ({
             ) : (
                 <div className="py-4">No image available</div>
             )}
+
+            <div className="py-2">
+                <InputLabel htmlFor="status" value="Product Status" />
+                <SelectInput
+                    options={[
+                        { value: "0", label: "Active" },
+                        { value: "2", label: "Inactive" },
+                    ]}
+                    selected={data.product_status ?? 1}
+                    onChange={(e) => {
+                        setData("product_status", e.target.value);
+                    }}
+                />
+            </div>
         </div>
     );
 };

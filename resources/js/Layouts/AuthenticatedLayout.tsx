@@ -54,12 +54,59 @@ export default function Authenticated({
                                         Merchants
                                     </NavLink>
                                 )}
-                                <NavLink
+                                {/* <NavLink
                                     href={route("products")}
                                     active={route().current("products")}
                                 >
                                     Products
-                                </NavLink>
+                                </NavLink> */}
+                                <div className="hidden sm:flex sm:items-center sm:ms-6">
+                                    <div className="ms-3 relative">
+                                        <Dropdown>
+                                            <Dropdown.Trigger>
+                                                <span className="inline-flex rounded-md">
+                                                    <button
+                                                        type="button"
+                                                        className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150"
+                                                    >
+                                                        Products
+                                                        <svg
+                                                            className="ms-2 -me-0.5 h-4 w-4"
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            viewBox="0 0 20 20"
+                                                            fill="currentColor"
+                                                        >
+                                                            <path
+                                                                fillRule="evenodd"
+                                                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                                                clipRule="evenodd"
+                                                            />
+                                                        </svg>
+                                                    </button>
+                                                </span>
+                                            </Dropdown.Trigger>
+
+                                            <Dropdown.Content>
+                                                <Dropdown.Link
+                                                    href={route(
+                                                        "products",
+                                                        "locations"
+                                                    )}
+                                                >
+                                                    Location
+                                                </Dropdown.Link>
+                                                <Dropdown.Link
+                                                    href={route(
+                                                        "products",
+                                                        "supplies"
+                                                    )}
+                                                >
+                                                    School Supplies
+                                                </Dropdown.Link>
+                                            </Dropdown.Content>
+                                        </Dropdown>
+                                    </div>
+                                </div>
                                 {user.roles.find((u) => u === "merchant") && (
                                     <NavLink
                                         href={route("chatrooms")}
@@ -76,14 +123,6 @@ export default function Authenticated({
                                         >
                                             Schools
                                         </NavLink>
-                                        {/* <NavLink
-                                            href={route("quotations")}
-                                            active={route().current(
-                                                "quotations"
-                                            )}
-                                        >
-                                            Quotations
-                                        </NavLink> */}
                                         <NavLink
                                             href={route("proposals")}
                                             active={route().current(
@@ -210,6 +249,84 @@ export default function Authenticated({
                         >
                             Dashboard
                         </ResponsiveNavLink>
+
+                        {user.roles.find((u) => u === "admin") && (
+                            <ResponsiveNavLink
+                                href={route("merchants")}
+                                active={route().current("merchants")}
+                            >
+                                Merchants
+                            </ResponsiveNavLink>
+                        )}
+                        {/* <ResponsiveNavLink
+                            href={route("products")}
+                            active={route().current("products")}
+                        >
+                            Products
+                        </ResponsiveNavLink> */}
+                        <div>
+                            <div className="px-4">
+                                <span>Products</span>
+                            </div>
+                            <div className="px-6">
+                                <ResponsiveNavLink
+                                    href={route("products", {
+                                        category: "locations",
+                                    })}
+                                    active={route().current(
+                                        "products.locations"
+                                    )}
+                                >
+                                    Location
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink
+                                    href={route("products", {
+                                        category: "supplies",
+                                    })}
+                                    active={route().current(
+                                        "products.supplies"
+                                    )}
+                                >
+                                    School Supplies
+                                </ResponsiveNavLink>
+                            </div>
+                        </div>
+                        {user.roles.find((u) => u === "admin") && (
+                            <>
+                                <ResponsiveNavLink
+                                    href={route("schools")}
+                                    active={route().current("schools")}
+                                >
+                                    Schools
+                                </ResponsiveNavLink>
+                                {/* <NavLink
+                                            href={route("quotations")}
+                                            active={route().current(
+                                                "quotations"
+                                            )}
+                                        >
+                                            Quotations
+                                        </NavLink> */}
+                                <ResponsiveNavLink
+                                    href={route("proposals")}
+                                    active={route().current("proposals")}
+                                >
+                                    Proposals
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink
+                                    href={route("orders")}
+                                    active={route().current("orders")}
+                                >
+                                    Orders
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink
+                                    href={route("invoices")}
+                                    active={route().current("invoices")}
+                                >
+                                    Invoices
+                                </ResponsiveNavLink>
+                            </>
+                        )}
                     </div>
 
                     <div className="pt-4 pb-1 border-t border-gray-200 dark:border-gray-600">

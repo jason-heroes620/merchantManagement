@@ -185,7 +185,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/proposal/{id}', [ProposalController::class, 'view'])->name('proposal.view');
     Route::get('/getDisabledDays/{id}', [ProposalController::class, 'getDisabledDays'])->name('proposal.getDisabledDays');
     Route::get('/getDisabledDates/{id}', [ProposalController::class, 'getDisabledDates'])->name('proposal.getDisabledDates');
-
+    // Route::get('proposal_file_download/{id}', [ProposalController::class, 'fileDownload'])->name('proposal_file.download');
 
     // Quotations
     Route::get('/quotations/{type?}', [QuotationController::class, 'index'])->name('quotations');

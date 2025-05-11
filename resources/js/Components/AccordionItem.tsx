@@ -97,7 +97,7 @@ const AccordionItem = ({
                                                 {m.item_name}
                                             </span>
                                         </div>
-                                        {m.item_image &&
+                                        {/* {m.item_image &&
                                             m.item_type === "FOOD" && (
                                                 <div className="md:col-span-1flex cursor-pointer justify-end">
                                                     <img
@@ -114,7 +114,7 @@ const AccordionItem = ({
                                                         }}
                                                     />
                                                 </div>
-                                            )}
+                                            )} */}
                                     </div>
                                 </div>
                             </div>
