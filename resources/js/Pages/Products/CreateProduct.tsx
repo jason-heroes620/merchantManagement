@@ -474,7 +474,7 @@ const CreateProduct = ({
                                             <div>
                                                 <InputLabel
                                                     htmlFor="student_price"
-                                                    value="student_price"
+                                                    value="Student Price"
                                                 />
                                                 <TextInput
                                                     id="student_price"

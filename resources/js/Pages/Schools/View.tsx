@@ -52,7 +52,7 @@ const View = ({ auth, flash, previousUrl }: any) => {
         school_status: school.school_status,
         google_place_name: school.google_place_name || "",
     });
-    console.log(data);
+
     const [logo, setLogo] = useState<File>();
     const getObjectUrl = useObjectUrls();
 
@@ -379,6 +379,35 @@ const View = ({ auth, flash, previousUrl }: any) => {
                                         </div>
                                         <InputError
                                             message={errors.email}
+                                            className="mt-2"
+                                        />
+                                    </div>
+                                    <div className="grid py-2 grid-flow-row-dense md:gap-4 grid-cols-1 md:grid-cols-6 lg:grid-cols-12">
+                                        <div className="flex items-center md:col-span-1 lg:col-span-2">
+                                            <InputLabel
+                                                htmlFor="contact_person"
+                                                value="Contact Person"
+                                            />
+                                        </div>
+                                        <div className="flex md:col-span-2 lg:col-span-4">
+                                            <TextInput
+                                                id="contact_person"
+                                                name="contact_person"
+                                                type="text"
+                                                value={data.contact_person}
+                                                className="mt-1 block w-full"
+                                                autoComplete="contact_person"
+                                                onChange={(e) =>
+                                                    setData(
+                                                        "contact_person",
+                                                        e.target.value
+                                                    )
+                                                }
+                                                maxLength={100}
+                                            />
+                                        </div>
+                                        <InputError
+                                            message={errors.contact_person}
                                             className="mt-2"
                                         />
                                     </div>

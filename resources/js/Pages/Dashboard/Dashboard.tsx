@@ -1,6 +1,6 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, usePage } from "@inertiajs/react";
-import { PageProps } from "@/types";
+import { Head, usePage, router } from "@inertiajs/react";
+import { PageProps, PaginatedData, UserActivity } from "@/types";
 import Merchant from "./Merchant";
 import Admin from "./Admin";
 import {
@@ -12,22 +12,27 @@ import {
     CardTitle,
 } from "@/Components/ui/card";
 import moment from "moment";
+import UserActivityDashboard from "./ActivityLog";
 
 export default function Dashboard({ auth }: PageProps) {
     const {
         merchant,
         product,
         schools,
-        quotations,
+        proposals,
         orders,
         confirmed_current_month,
+        activity,
+        stats,
     } = usePage<{
-        merchant;
-        product;
-        schools;
-        quotations;
-        orders;
+        merchant: any;
+        product: any;
+        schools: any;
+        proposals: any;
+        orders: any;
         confirmed_current_month: any;
+        activity: PaginatedData<UserActivity>;
+        stats: any;
     }>().props;
 
     return (
@@ -57,7 +62,7 @@ export default function Dashboard({ auth }: PageProps) {
                                     merchant={merchant}
                                     product={product}
                                     schools={schools}
-                                    quotations={quotations}
+                                    proposals={proposals}
                                     orders={orders}
                                 />
                             )}
@@ -112,6 +117,13 @@ export default function Dashboard({ auth }: PageProps) {
                                     );
                                 })}
                         </div>
+                    </div>
+                </div>
+                <div className="py-4 max-w-7xl mx-auto sm:px-6 lg:px-8">
+                    <div className=" bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                        {auth.user.roles.find((m) => m === "admin") && (
+                            <UserActivityDashboard />
+                        )}
                     </div>
                 </div>
             </div>

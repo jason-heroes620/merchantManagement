@@ -1,6 +1,4 @@
-import React, { useState, useEffect } from "react";
 import DashboardCard from "@/Components/Dashboard/DashboardCard";
-import { usePage } from "@inertiajs/react";
 
 const Admin = ({ merchant, product, schools, proposals, orders }: any) => {
     return (
@@ -67,19 +65,11 @@ const Admin = ({ merchant, product, schools, proposals, orders }: any) => {
                 <div>
                     <DashboardCard
                         header={"Proposal"}
-                        content={proposals.count}
+                        content={proposals[0]?.count || 0}
                         type={"requestingOrder"}
                         links={["proposals", 1]}
                     />
                 </div>
-                {/* <div>
-                    <DashboardCard
-                        header={"Quotations"}
-                        content={quotations[1].count}
-                        type={"accepted"}
-                        links={["quotations", 2]}
-                    />
-                </div> */}
                 <div>
                     <DashboardCard
                         header={"Orders"}

@@ -136,6 +136,7 @@ Route::get('/list', function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
+    Route::get('/activity-dashboard', [DashboardController::class, 'activity'])->name('dashboard.activity');
 
     Route::get('/chatrooms', [RoomController::class, 'rooms'])->name('chatrooms');
 
