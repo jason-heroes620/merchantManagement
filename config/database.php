@@ -59,6 +59,26 @@ return [
             ]) : [],
         ],
 
+        'account' => [
+            'driver' => 'mysql',
+            'url' => env('ACCOUNT_DB_URL'),
+            'host' => env('ACCOUNT_DB_HOST', '127.0.0.1'),
+            'port' => env('ACCOUNT_DB_PORT', '3306'),
+            'database' => env('ACCOUNT_DB_DATABASE', ''),
+            'username' => env('ACCOUNT_DB_USERNAME', 'root'),
+            'password' => env('ACCOUNT_DB_PASSWORD', ''),
+            'unix_socket' => env('ACCOUNT_DB_SOCKET', ''),
+            'charset' => env('ACCOUNT_DB_CHARSET', 'utf8mb4'),
+            'collation' => env('ACCOUNT_DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => env('ACCOUNT_PREFIX', ''),
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
         'journey' => [
             'driver' => 'mysql',
             'url' => env('JOURNEY_DB_URL'),

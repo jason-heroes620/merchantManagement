@@ -14,6 +14,7 @@ use App\Models\Chat;
 class User extends Authenticatable
 {
     use HasFactory, Notifiable, HasRoles, HasApiTokens;
+    protected $connection = 'account';
     /**
      * The attributes that are mass assignable.
      *
