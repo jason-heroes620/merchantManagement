@@ -47,7 +47,7 @@ class DashboardController extends Controller
             // $quotation_accepted = Quotation::selectRaw('COUNT(*) as count')->where('quotation_status', 2)->first();
             $proposal_pending = Proposal::selectRaw('COUNT(*) as count')->where('proposal_status', 2)->first();
 
-            $order_pending = Order::selectRaw('COUNT(*) as count')->where('order_status', 2)->first();
+            $order_pending = Order::selectRaw('COUNT(*) as count')->where('order_status', 0)->first();
             $order_paid = Order::selectRaw('COUNT(*) as count')->where('order_status', 2)->first();
 
             $confirmed_current_month = Order::leftJoin('proposal', 'proposal.proposal_id', 'orders.proposal_id')
