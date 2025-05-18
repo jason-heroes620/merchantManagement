@@ -159,7 +159,7 @@ class DashboardController extends Controller
         })
             ->leftJoin(
                 config('custom.account_database') . '.model_has_roles',
-                config('acustom.ccount_database') . '.model_has_roles.model_id',
+                config('custom.account_database') . '.model_has_roles.model_id',
                 '=',
                 'users.id'
             )->leftJoin(config('custom.trip_database') . '.school', config('custom.trip_database') . '.school.user_id', '=', 'users.id')
