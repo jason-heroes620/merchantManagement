@@ -168,6 +168,8 @@ class DashboardController extends Controller
                 '=',
                 3
             )
+            ->where(config('custom.trip_database') . '.school.school_name', '!=', null)
+            ->where(config('custom.trip_database') . '.school.school_name', 'not like', "%TEST%")
             ->get();
 
         return response()->json([
