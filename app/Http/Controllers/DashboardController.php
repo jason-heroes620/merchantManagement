@@ -152,30 +152,65 @@ class DashboardController extends Controller
             ->orderBy('hour')
             ->get();
 
-        $inactiveUsers = User::whereNotIn('id', function ($query) {
-            $query->select('user_id')
-                ->from(config('custom.activity_database') . '.activity_log')
-                ->whereDate('created_at', '>=', now()->subDays(7));
-        })
-            ->leftJoin(
-                config('custom.account_database') . '.model_has_roles',
-                config('custom.account_database') . '.model_has_roles.model_id',
-                '=',
-                'users.id'
-            )->leftJoin(config('custom.trip_database') . '.school', config('custom.trip_database') . '.school.user_id', '=', 'users.id')
-            ->where(
-                config('custom.account_database') . '.model_has_roles.role_id',
-                '=',
-                3
-            )
+        // $inactiveUsers = User::whereNotIn('id', function ($query) {
+        //     $query->select('user_id')
+        //         ->from(config('custom.activity_database') . '.activity_log');
+        // })
+        //     ->leftJoin(
+        //         config('custom.account_database') . '.model_has_roles',
+        //         config('custom.account_database') . '.model_has_roles.model_id',
+        //         '=',
+        //         'users.id'
+        //     )->leftJoin(config('custom.trip_database') . '.school', config('custom.trip_database') . '.school.user_id', '=', 'users.id')
+        //     ->where(
+        //         config('custom.account_database') . '.model_has_roles.role_id',
+        //         '=',
+        //         3
+        //     )
+        //     ->where(config('custom.trip_database') . '.school.school_name', '!=', null)
+        //     ->where(config('custom.trip_database') . '.school.school_name', 'not like', "%TEST%")
+        //     ->get();
+        $q1 = User::leftJoin('model_has_roles', 'model_has_roles.model_id', '=', 'users.id')
+            ->leftJoin(config('custom.trip_database') . '.school', 'school.user_id', '=', 'users.id')
+            ->where('model_has_roles.role_id', 3)
             ->where(config('custom.trip_database') . '.school.school_name', '!=', null)
-            ->where(config('custom.trip_database') . '.school.school_name', 'not like', "%TEST%")
-            ->get();
+            ->where(config('custom.trip_database') . '.school.school_status', 0)
+            ->where(config('custom.trip_database') . '.school.school_name', 'not like', "%TEST%");
+
+        $inactiveProposalUsers = $q1->whereIn(
+            'users.id',
+            function ($q) {
+                $q->select('user_id')
+                    ->from(config('custom.trip_database') . '.proposal');
+            }
+        )->whereNotIn(
+            'users.id',
+            function ($q) {
+                $q->select('user_id')
+                    ->from(config('custom.trip_database') . '.orders');
+            }
+        )->get();
+
+        $q2 = User::leftJoin('model_has_roles', 'model_has_roles.model_id', '=', 'users.id')
+            ->leftJoin(config('custom.trip_database') . '.school', 'school.user_id', '=', 'users.id')
+            ->where('model_has_roles.role_id', 3)
+            ->where(config('custom.trip_database') . '.school.school_name', '!=', null)
+            ->where(config('custom.trip_database') . '.school.school_status', 0)
+            ->where(config('custom.trip_database') . '.school.school_name', 'not like', "%TEST%");
+
+        $inactiveUsers = $q2->whereNotIn(
+            'users.id',
+            function ($q) {
+                $q->select('user_id')
+                    ->from(config('custom.trip_database') . '.proposal');
+            }
+        )->get();
 
         return response()->json([
             'topProducts' => $topProducts,
             'heatmapData' => $heatmapData,
             'inactiveUsers' => $inactiveUsers,
+            'inactiveProposalUsers' => $inactiveProposalUsers,
         ]);
     }
 }

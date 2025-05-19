@@ -26,12 +26,14 @@ export default function UserActivityDashboard() {
     const [heatmapData, setHeatmapData] = useState([]);
     const [topProducts, setTopProducts] = useState([]);
     const [inactiveUsers, setInactiveUsers] = useState([]);
+    const [inactiveProposalUsers, setInactiveProposalUsers] = useState([]);
 
     useEffect(() => {
         axios.get(route("dashboard.activity")).then((response) => {
             setHeatmapData(response.data.heatmapData);
             setTopProducts(response.data.topProducts);
             setInactiveUsers(response.data.inactiveUsers);
+            setInactiveProposalUsers(response.data.inactiveProposalUsers);
         });
     }, []);
     const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
@@ -118,7 +120,44 @@ export default function UserActivityDashboard() {
                         <TableBody>
                             {inactiveUsers.map((activity) => (
                                 <TableRow key={activity.id}>
-                                    <TableCell>{activity.name}</TableCell>
+                                    <TableCell>
+                                        {activity.contact_person}
+                                    </TableCell>
+                                    <TableCell>
+                                        {activity.school_name}
+                                    </TableCell>
+                                    <TableCell>
+                                        {activity.contact_no} /{" "}
+                                        {activity.mobile_no}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </ScrollArea>
+            </div>
+
+            <div className="py-4">
+                <div className="py-2">
+                    <span className="font-bold">
+                        Users With Proposal, No Order
+                    </span>
+                </div>
+                <ScrollArea className="h-[200px] rounded-md border">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Contact Person</TableHead>
+                                <TableHead>School</TableHead>
+                                <TableHead>Contact No.</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {inactiveProposalUsers.map((activity) => (
+                                <TableRow key={activity.id}>
+                                    <TableCell>
+                                        {activity.contact_person}
+                                    </TableCell>
                                     <TableCell>
                                         {activity.school_name}
                                     </TableCell>
