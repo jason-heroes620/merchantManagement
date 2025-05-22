@@ -149,6 +149,7 @@ class DashboardController extends Controller
         $heatmapData = ActivityLog::selectRaw('HOUR(created_at) as hour, COUNT(*) as count')
             ->where('app_name', 'trip')
             ->groupByRaw('HOUR(created_at)')
+            ->limit(6)
             ->orderBy('hour')
             ->get();
 
@@ -181,7 +182,8 @@ class DashboardController extends Controller
             'users.id',
             function ($q) {
                 $q->select('user_id')
-                    ->from(config('custom.trip_database') . '.proposal');
+                    ->from(config('custom.trip_database') . '.proposal')
+                    ->where('proposal_status', "<=", 1);
             }
         )->whereNotIn(
             'users.id',

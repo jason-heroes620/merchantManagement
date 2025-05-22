@@ -14,7 +14,7 @@ import {
     Bar,
     XAxis,
     YAxis,
-    Tooltip,
+    ResponsiveContainer,
     Legend,
 } from "recharts";
 import { useEffect, useState } from "react";
@@ -36,7 +36,7 @@ export default function UserActivityDashboard() {
             setInactiveProposalUsers(response.data.inactiveProposalUsers);
         });
     }, []);
-    const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+    const COLORS = ["#6050DC", "#D52DB7", "#FF2E7E", "#FF6B45", "FFAB05"];
 
     const RADIAN = Math.PI / 180;
     const renderCustomizedLabel = ({
@@ -65,23 +65,40 @@ export default function UserActivityDashboard() {
         );
     };
 
+    const renderLegend = (props) => {
+        const { payload } = props;
+
+        return (
+            <ul className=" text-ellipsis line-clamp-1 w-2">
+                {payload.map((entry, index) => ({
+                    id: entry.name,
+                    type: "square",
+                    value: `${entry.name} (${entry.value}%)`,
+                    color: COLORS[index % COLORS.length],
+                }))}
+            </ul>
+        );
+    };
+
     return (
         <div className="flex flex-col gap-4 py-4 px-4">
             <div className="flex flex-col py-4 items-center border">
                 <div className="py-2">
                     <span className="font-bold">Top Usage Time</span>
                 </div>
-                <BarChart width={600} height={250} data={heatmapData}>
-                    <XAxis dataKey="hour" label={"Hour"} className="py-2" />
-                    <YAxis />
-                    <Bar dataKey="count" fill="#4f46e5" />
-                </BarChart>
+                <ResponsiveContainer width="90%" height={250}>
+                    <BarChart data={heatmapData}>
+                        <XAxis dataKey="hour" label={"Hour"} className="py-2" />
+                        <YAxis />
+                        <Bar dataKey="count" fill="#4f46e5" />
+                    </BarChart>
+                </ResponsiveContainer>
             </div>
             <div className="flex flex-col py-4 items-center border">
                 <div>
                     <span className="font-bold">Top 5 Products</span>
                 </div>
-                <PieChart width={400} height={250}>
+                <PieChart width={400} height={400}>
                     <Pie
                         data={topProducts}
                         dataKey="views"
