@@ -26,7 +26,7 @@ class ProductController extends Controller
         $user = $req->user();
         $role = $user->roles->pluck('name')->toArray();
         $type = $req->input('tab', $req->type ?? 'pending');
-        $category = $req->category;
+        $category = $req->category ?? 'locations';
 
         if ($role[0] === 'admin') {
             // $rejectedProducts = Product::with('merchant')->wherße('status', 2)->paginate(10, ['*'], 'RejectedPage')->appends(['tab' => 'rejected']);
