@@ -7,16 +7,20 @@ import { PageProps, PaginatedData, Product } from "@/types";
 import ProductTab from "@/Components/Tabs/ProductTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/Components/ui/tabs";
 import { Badge } from "@/Components/ui/badge";
+import SearchBar from "@/Components/SearchBar";
 
 const Products = ({ auth, flash }: PageProps) => {
     const { toast } = useToast();
 
-    const { newProducts, products, rejectedProducts, role, type } = usePage<{
-        newProducts: PaginatedData<Product>;
-        products: PaginatedData<Product>;
-        rejectedProducts: PaginatedData<Product>;
-        type: string;
-    }>().props;
+    const { newProducts, products, rejectedProducts, type, category, search } =
+        usePage<{
+            newProducts: PaginatedData<Product>;
+            products: PaginatedData<Product>;
+            rejectedProducts: PaginatedData<Product>;
+            type: string;
+            category: string;
+            search: string;
+        }>().props;
 
     useEffect(() => {
         if (flash.message.success) {
@@ -31,7 +35,7 @@ const Products = ({ auth, flash }: PageProps) => {
             user={auth.user}
             header={
                 <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                    Products
+                    Products ({category.toUpperCase()})
                 </h2>
             }
         >
@@ -50,6 +54,22 @@ const Products = ({ auth, flash }: PageProps) => {
                                 >
                                     Create Product
                                 </Link>
+                                {/* <Link
+                                    href={route("product.create_test")}
+                                    type="button"
+                                    className="py-2 px-4 border bg-green-800 hover:bg-green-800/60 text-white font-bold text-sm rounded-md"
+                                >
+                                    Create Product T
+                                </Link> */}
+                            </div>
+                            <div>
+                                <div className="flex justify-end px-8 py-2">
+                                    <SearchBar
+                                        link={"products"}
+                                        category={category}
+                                        search={search}
+                                    />
+                                </div>
                             </div>
                             <div>
                                 <Tabs defaultValue={type} className="w-full">

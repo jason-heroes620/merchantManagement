@@ -26,16 +26,19 @@ class ProductController extends Controller
         $user = $req->user();
         $role = $user->roles->pluck('name')->toArray();
         $type = $req->input('tab', $req->type ?? 'pending');
-        $category = $req->type;
+        $category = $req->category;
 
         if ($role[0] === 'admin') {
-            $rejectedProducts = Product::with('merchant')->where('status', 2)->paginate(10, ['*'], 'RejectedPage')->appends(['tab' => 'rejected']);
-            $newProducts = Product::with('merchant')->where('status', 1)->paginate(10, ['*'], 'PendingPage')->appends(['tab' => 'pending']);
-            $products = Product::with('merchant')->where('status', 0)->paginate(
-                10,
-                ['*'],
-                'CurrentPage'
-            )->appends(['tab' => 'current']);
+            // $rejectedProducts = Product::with('merchant')->wherße('status', 2)->paginate(10, ['*'], 'RejectedPage')->appends(['tab' => 'rejected']);
+            // $newProducts = Product::with('merchant')->where('status', 1)->paginate(10, ['*'], 'PendingPage')->appends(['tab' => 'pending']);
+            // $products = Product::with('merchant')->where('status', 0)->paginate(
+            //     10,
+            //     ['*'],
+            //     'CurrentPage'
+            // )->appends(['tab' => 'current']);
+            $products = $this->getStatusResults(0, $req->input('search'), 'current', 'CurrentPage');
+            $newProducts = $this->getStatusResults(1, $req->input('search'), 'pending', 'PendingPage');
+            $rejectedProducts = $this->getStatusResults(2, $req->input('search'), 'rejected', 'RejectedPage');
         } else {
             $rejectedProducts = Product::where('merchant_id', $user->merchant_id)->with('merchant')
                 ->where('status', 2)->paginate(10);
@@ -51,7 +54,24 @@ class ProductController extends Controller
             'rejectedProducts' => $rejectedProducts,
             'role' => $role[0],
             'type' => $type,
+            'category' => $category,
+            'search' => $req->input('search'),
         ]);
+    }
+
+    protected function getStatusResults($status, $searchTerm, $tab, $page)
+    {
+        return Product::with('merchant')->where('status', $status)
+            ->when($searchTerm, function ($query) use ($searchTerm) {
+                if (!empty($searchTerm)) {
+                    $query->where('product_name', 'like', '%' . $searchTerm . '%');
+                }
+            })
+            ->paginate(
+                10,
+                ['*'],
+                $page
+            )->appends(['tab' => $tab]);
     }
 
     public function createProduct(Request $req, Product $product)
@@ -529,5 +549,16 @@ class ProductController extends Controller
         $minutes = floor($duration % 3600) / 60;
 
         return compact('hours', 'minutes');
+    }
+
+    public function autocomplete(Request $req)
+    {
+        $search = $req->query('search');
+
+        $products = Product::where('product_name', 'like', "%{$search}%")
+            ->limit(10)
+            ->pluck('product_name');
+
+        return response()->json($products);
     }
 }

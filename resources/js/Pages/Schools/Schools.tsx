@@ -4,13 +4,15 @@ import SchoolTab from "@/Components/Tabs/SchoolTab";
 import { PaginatedData, School } from "@/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/Components/ui/tabs";
 import { Badge } from "@/Components/ui/badge";
+import SearchBar from "@/Components/SearchBar";
 
 const Schools = ({ auth }) => {
-    const { new_schools, schools, rejected_schools, type } = usePage<{
+    const { new_schools, schools, rejected_schools, type, search } = usePage<{
         new_schools: PaginatedData<School>;
         schools: PaginatedData<School>;
         rejected_schools: PaginatedData<School>;
         type: string;
+        search: string;
     }>().props;
 
     return (
@@ -27,7 +29,9 @@ const Schools = ({ auth }) => {
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-gray-100">
-                            <div className="flex justify-end px-8 py-2"></div>
+                            <div className="flex justify-end px-8 py-2">
+                                <SearchBar link={"schools"} search={search} />
+                            </div>
                             <div>
                                 <Tabs defaultValue={type} className="w-full">
                                     <TabsList>

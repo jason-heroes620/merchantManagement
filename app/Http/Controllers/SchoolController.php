@@ -19,26 +19,29 @@ class SchoolController extends Controller
     public function index(Request $req)
     {
         $type = $req->input('tab', $req->type ?? 'pending');
-
-        $schools = School::where('school_status', 0)->paginate(
-            10,
-            ['*'],
-            'CurrentPage'
-        )->appends(['tab' => 'current']);
-        $new_schools = School::where('school_status', 1)->paginate(
-            10,
-            ['*'],
-            'PendingPage'
-        )->appends(['tab' => 'pending']);
-        $rejected_schools = School::where('school_status', 2)->paginate(
-            10,
-            ['*'],
-            'RejectedPage'
-        )->appends(['tab' => 'rejected']);
+        $search = $req->input('search');
+        $schools = $this->getStatusResults(0, $req->input('search'), 'current', 'CurrentPage');
+        $new_schools = $this->getStatusResults(1, $req->input('search'), 'pending', 'PendingPage');
+        $rejected_schools = $this->getStatusResults(2, $req->input('search'), 'rejected', 'RejectedPage');;
 
         $type = $type;
 
-        return Inertia::render('Schools/Schools', compact('schools', 'new_schools', 'rejected_schools', 'type'));
+        return Inertia::render('Schools/Schools', compact('schools', 'new_schools', 'rejected_schools', 'type', 'search'));
+    }
+
+    protected function getStatusResults($status, $searchTerm, $tab, $page)
+    {
+        return School::where('school_status', $status)
+            ->when($searchTerm, function ($query) use ($searchTerm) {
+                if (!empty($searchTerm)) {
+                    $query->where('school_name', 'like', '%' . $searchTerm . '%');
+                }
+            })
+            ->paginate(
+                10,
+                ['*'],
+                $page
+            )->appends(['tab' => $tab]);
     }
 
     public function view(Request $req)
@@ -153,6 +156,17 @@ class SchoolController extends Controller
             return $image['url'];
         }
         return;
+    }
+
+    public function autocomplete(Request $req)
+    {
+        $search = $req->query('search');
+
+        $schools = School::where('school_name', 'like', "%{$search}%")
+            ->limit(10)
+            ->pluck('school_name');
+
+        return response()->json($schools);
     }
 
     private function randomFileNameGenerator($length, $extension)

@@ -87,9 +87,9 @@ Route::get('/test-school-quotation-confirm', function () {
 
 Route::post('/merchant-register', [MerchantController::class, 'create'])->name('merchant.register');
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard/Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Route::get('/dashboard', function () {
+//     return Inertia::render('Dashboard/Dashboard');
+// })->middleware(['auth', 'verified'])->name('dashboard');
 
 // Route::get('/merchants', function () {
 //     return Inertia::render('Merchants');
@@ -159,7 +159,13 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/products/create', [ProductController::class, 'createProduct'])->name('product.form');
     Route::post('/products/create', [ProductController::class, 'createProduct'])->name('product.create');
-    Route::get('/products/{type?}', [ProductController::class, 'products'])->name('products');
+    Route::get('/products/{category?}/{type?}/{search?}', [ProductController::class, 'products'])->name('products');
+    Route::get('/products_autocomplete/{category?}', [ProductController::class, 'autocomplete'])->name('products.autocomplete');
+
+    Route::get('/products_test', function () {
+        return Inertia::render('Products/CreateProductT');
+    })->name('product.create_test');
+
 
     Route::get('/product/{id}', [ProductController::class, 'view'])->name('product.view');
     Route::post('/product/{id}', [ProductController::class, 'update'])->name('product.update');
@@ -175,11 +181,13 @@ Route::middleware('auth')->group(function () {
 
 
     // Schools
-    Route::get('/schools/{type?}', [SchoolController::class, 'index'])->name('schools');
+    Route::get('/schools/{type?}/{search?}', [SchoolController::class, 'index'])->name('schools');
     Route::get('/school/{id?}', [SchoolController::class, 'view'])->name('school.view');
     Route::post('/school/{id?}', [SchoolController::class, 'update'])->name('school.update');
     Route::put('/school_approve/{id?}', [SchoolController::class, 'approve'])->name('school.approve');
     Route::put('/school_reject/{id?}', [SchoolController::class, 'reject'])->name('school.reject');
+    Route::get('/schools_autocomplete', [SchoolController::class, 'autocomplete'])->name('schools.autocomplete');
+
 
     // Proposals
     Route::get('/proposals/{type?}', [ProposalController::class, 'index'])->name('proposals');
