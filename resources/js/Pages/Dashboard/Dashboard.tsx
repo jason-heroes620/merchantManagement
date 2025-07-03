@@ -74,7 +74,7 @@ export default function Dashboard({ auth }: PageProps) {
                         <div className="py-4 px-4">
                             <span>This Month's Confirmed Bookings</span>
                         </div>
-                        <div className="flex flex-row py-2 px-4">
+                        <div className="flex flex-row py-2 px-4 gap-4">
                             {(confirmed_current_month &&
                                 confirmed_current_month.length) > 0 &&
                                 confirmed_current_month.map((c) => {

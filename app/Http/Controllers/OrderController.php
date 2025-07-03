@@ -63,12 +63,13 @@ class OrderController extends Controller
                     );
                 }
                 $fee = $req->input('fees');
-                ProposalFees::where("proposal_id", $req->input("proposal_id"))->update(
+                ProposalFees::create(
                     [
                         'fee_id' => $fee['fee_id'],
                         'fee_type' => $fee['fee_type'],
                         'fee_amount' => $fee['fee_type'] === 'P' ? $fee['fee_amount'] : $fee['fee_charges'],
-                        'fee_description' => $fee['fee_description']
+                        'fee_description' => $fee['fee_description'],
+                        'proposal_id' => $req->input('proposal_id'),
                     ]
                 );
 
@@ -349,12 +350,19 @@ class OrderController extends Controller
                 $this->addOrRemoveProposalItem($req->input('proposal_items'), $req->input('proposal_id'));
             }
 
+            $total = 0;
             foreach ($req->input('order_total') as $o) {
                 OrderTotal::where('order_total_id', $o['order_total_id'])->update([
                     'value' => $o['value']
                 ]);
+                if ($o['code'] === 'balance')
+                    $total = $o['value'];
             }
-
+            Order::where('order_id', $req->id)->update(
+                [
+                    'order_amount' => $total
+                ]
+            );
 
             $data["success"] = "Order updated";
             $school = School::where('user_id', $order['user_id'])->first();

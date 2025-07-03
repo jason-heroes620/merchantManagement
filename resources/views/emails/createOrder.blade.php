@@ -50,7 +50,7 @@
             </table>
 
             <br>
-            <p>We have generated a new order. Please proceed to log in and review your order.</p>
+            <p>We have generated an order as per requested. Please <a href="https://trips.heroes.my" target="_blank">log in</a> to your Heroes account and review your order.</p>
             <p>Your Order No.:
 
                 @foreach ($order as $o)

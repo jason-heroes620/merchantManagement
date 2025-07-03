@@ -17,6 +17,8 @@ use App\Models\ReservedDate;
 use App\Models\School;
 use Illuminate\Http\Client\Response;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Exceptions;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class ProposalController extends Controller
@@ -26,8 +28,8 @@ class ProposalController extends Controller
         $type = $req->input('tab', $req->type ?? 'current');
 
         $user = $req->user();
-        $proposals = $this->getProposals(0);
-        $requestingOrder = $this->getProposals(2);
+        $proposals = $this->getProposals(0, 'current', 'CurrentPage');
+        $requestingOrder = $this->getProposals(2, 'requestingOrder', 'RequstingOrderPage');
 
         return Inertia::render('Proposals/Proposals', compact('proposals', 'requestingOrder', 'type'));
     }
@@ -99,13 +101,18 @@ class ProposalController extends Controller
             $proposal['proposal_file'] = $path ?? null;
         }
 
-
         return Inertia::render('Proposals/View', compact('proposal', 'proposal', 'proposal_product', 'proposal_item', 'prices', 'proposal_discount', 'proposal_fees', 'items'));
     }
 
-    private function getProposals($status)
+    private function getProposals($status, $tab, $page)
     {
-        $proposals = Proposal::where('proposal_status', $status)->orderByRaw('ISNULL(proposal_date), proposal_date ASC')->paginate(10);
+        $proposals = Proposal::where('proposal_status', $status)
+            ->orderByRaw('ISNULL(proposal_date), proposal_date ASC')
+            ->paginate(
+                10,
+                ['*'],
+                $page
+            )->appends(['tab' => $tab]);
 
         foreach ($proposals as $p) {
             $p['school'] = School::select(['school_name'])->where('user_id', $p['user_id'])->first();
@@ -161,5 +168,61 @@ class ProposalController extends Controller
             return response()->download($path);
         }
         return response()->json(['error' => 'File not found'], 404);
+    }
+
+    public function update(Request $req)
+    {
+        $user = $req->user();
+        try {
+            Proposal::where('proposal_id', $req->input('proposal_id'))->update([
+                'qty_student' => $req->input('qty_student'),
+                'qty_teacher' => $req->input('qty_teacher'),
+            ]);
+
+            $proposal_product = ProposalProduct::where('proposal_id', $req->input('proposal_id'))->get();
+            foreach ($proposal_product as $p) {
+
+                ProposalProductPrice::where('proposal_product_id', $p['proposal_product_id'])
+                    ->where('attribute', 'student')
+                    ->update([
+                        'qty' => $req->input('qty_student')
+                    ]);
+                ProposalProductPrice::where('proposal_product_id', $p['proposal_product_id'])
+                    ->where('attribute', 'teacher')
+                    ->update([
+                        'qty' => $req->input('qty_teacher')
+                    ]);
+            }
+
+            ProposalItem::where('proposal_id', $req->input('proposal_id'))->delete();
+
+            if (sizeof($req->input('proposal_items')) > 0) {
+                $this->addOrRemoveProposalItem($req->input('proposal_items'), $req->input('proposal_id'));
+            }
+
+            $data["success"] = "Proposal updated";
+
+            return response()->json($data);
+        } catch (Exceptions $e) {
+            Log::info($e);
+            $data["failed"] = "Proposal update failed";
+            return response()->json($data);
+        }
+    }
+
+    private function addOrRemoveProposalItem($itemArray, $proposal_id)
+    {
+        try {
+            // Log::info($itemArray . ' ' . $proposal_id);
+            foreach ($itemArray as $t) {
+                $item = Item::where('item_id', $t['item_id'])->first();
+                ProposalItem::updateOrCreate(
+                    ['proposal_id' => $proposal_id, 'item_id' => $t['item_id'],],
+                    ['item_qty' => $t['item_qty'], 'uom' => $t['uom'], 'unit_price' => $t['unit_price'], 'sales_tax' => $item['sales_tax']]
+                );
+            }
+        } catch (Exceptions $e) {
+            Log::info('error ', $e);
+        }
     }
 }

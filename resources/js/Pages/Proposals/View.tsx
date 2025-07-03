@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Link, usePage, Head, useForm } from "@inertiajs/react";
+import { Link, usePage, Head, useForm, router } from "@inertiajs/react";
 import {
     Proposal,
     ProposalDiscount,
@@ -45,7 +45,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/Components/ui/select";
-import { Minus, Plus } from "lucide-react";
 import SelectInput from "@/Components/SelectInput";
 import {
     GoogleMap,
@@ -54,7 +53,6 @@ import {
 } from "@react-google-maps/api";
 import "react-toastify/dist/ReactToastify.css";
 import { secondsToHms } from "@/utils/secondsToHms";
-import { router } from "@inertiajs/react";
 import { Calendar } from "@/Components/ui/calendar";
 import dayjs from "dayjs";
 import {
@@ -62,7 +60,6 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/Components/ui/popover";
-import Checkbox from "@/Components/Checkbox";
 import { renderHTML } from "@/utils/renderHtml";
 import {
     Accordion,
@@ -70,10 +67,7 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@/Components/ui/accordion";
-import { useToast } from "@/hooks/use-toast";
 import AccordionProposalItem from "@/Components/AccordionItem";
-import { min } from "lodash";
-import { spawn } from "child_process";
 
 const discountType = [
     { label: "Fix Amount", value: "F" },
@@ -385,6 +379,37 @@ const View = ({ auth }) => {
             setProposalItem(newItem);
             calculateTotal(newItem, null);
         }
+
+        setHasChanges(checkIfHaveChanges(newItem, proposalItem));
+    };
+
+    const [hasChanges, setHasChanges] = useState(false);
+    const checkIfHaveChanges = (arr1, arr2) => {
+        if (arr1 !== null && arr2 !== null) {
+            if (arr1.length !== arr2.length) {
+                return true;
+            }
+
+            for (let i = 0; i < arr1.length; i++) {
+                const obj1 = arr1[i];
+                const obj2 = arr2[i];
+
+                // Simple shallow comparison for object properties (can be extended for deep object comparison)
+                const keys1 = Object.keys(obj1);
+                const keys2 = Object.keys(obj2);
+
+                if (keys1.length !== keys2.length) {
+                    return true;
+                }
+
+                for (const key of keys1) {
+                    if (obj1[key] !== obj2[key]) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     };
 
     const generateOrder = () => {
@@ -393,7 +418,11 @@ const View = ({ auth }) => {
                 <DialogTrigger asChild>
                     <Button
                         variant="primary"
-                        disabled={proposal.proposal_status < 3 ? false : true}
+                        disabled={
+                            proposal.proposal_status < 3 && !hasChanges
+                                ? false
+                                : true
+                        }
                     >
                         Create Order
                     </Button>
@@ -637,6 +666,73 @@ const View = ({ auth }) => {
                                 </AlertDialogFooter>
                             </AlertDialogContent>
                         </AlertDialog>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        );
+    };
+
+    const handleUpdateProposal = (e) => {
+        e.preventDefault();
+        const d = {
+            proposal_id: proposal.proposal_id,
+            qty_student: data.qty_student,
+            qty_teacher: data.qty_teacher,
+            proposal_items: proposalItem,
+        };
+
+        axios.post(route("proposal.update"), d).then((resp) => {
+            if (resp.data.success) {
+                toast.success("Proposal Updated!");
+            } else {
+                toast.error(
+                    "There was an issue with update. Please check your information and try again"
+                );
+            }
+            setUpdateOpen(false);
+        });
+        router.visit(route("proposal.view", proposal.proposal_id), {
+            only: ["proposal", "proposal_item"],
+        });
+    };
+
+    const [updateOpen, setUpdateOpen] = useState(false);
+    const updateProposal = () => {
+        return (
+            <Dialog open={updateOpen} onOpenChange={setUpdateOpen}>
+                <DialogTrigger asChild>
+                    <Button
+                        variant="secondary"
+                        disabled={proposal.proposal_status < 3 ? false : true}
+                    >
+                        Update
+                    </Button>
+                </DialogTrigger>
+                <DialogContent
+                    className="sm:max-w-[425px]"
+                    onInteractOutside={(e) => {
+                        e.preventDefault();
+                    }}
+                >
+                    <DialogHeader>
+                        <DialogTitle>Confirm To Update?</DialogTitle>
+                        <DialogDescription></DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-2"></div>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button type="button" variant="secondary">
+                                Close
+                            </Button>
+                        </DialogClose>
+                        <Button
+                            variant="primary"
+                            onClick={(e) => {
+                                handleUpdateProposal(e);
+                            }}
+                        >
+                            {processing ? "Updating ..." : "Confirm"}
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -911,6 +1007,23 @@ const View = ({ auth }) => {
                                                         } else return p;
                                                     })
                                                 );
+                                                setHasChanges(
+                                                    checkIfHaveChanges(
+                                                        [
+                                                            {
+                                                                qty: proposal.qty_student,
+                                                            },
+                                                        ],
+                                                        [
+                                                            {
+                                                                qty: parseInt(
+                                                                    e.target
+                                                                        .value
+                                                                ),
+                                                            },
+                                                        ]
+                                                    )
+                                                );
                                             }}
                                         />
                                     </div>
@@ -947,6 +1060,23 @@ const View = ({ auth }) => {
                                                             };
                                                         } else return p;
                                                     })
+                                                );
+                                                setHasChanges(
+                                                    checkIfHaveChanges(
+                                                        [
+                                                            {
+                                                                qty: proposal.qty_teacher,
+                                                            },
+                                                        ],
+                                                        [
+                                                            {
+                                                                qty: parseInt(
+                                                                    e.target
+                                                                        .value
+                                                                ),
+                                                            },
+                                                        ]
+                                                    )
                                                 );
                                             }}
                                         />
@@ -1664,7 +1794,8 @@ const View = ({ auth }) => {
                                 </div>
                             </div>
                             <hr />
-                            <div className="flex flex-row-reverse  py-4">
+                            <div className="flex flex-row justify-end py-4 gap-4">
+                                <div>{updateProposal()}</div>
                                 <div className="">{generateOrder()}</div>
                             </div>
                         </div>

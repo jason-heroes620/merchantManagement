@@ -18,7 +18,7 @@ const SearchBar = ({ link, search, category }: any) => {
     const { data, setData, get, processing, reset } = useForm({
         search: search || "",
     });
-    console.log("link ", link);
+
     const fetchSuggestions = debounce(async (searchTerm) => {
         if (!searchTerm) {
             setSuggestions([]);

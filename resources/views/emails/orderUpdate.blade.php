@@ -50,8 +50,8 @@
             </table>
 
             <br>
-            <p>We have updated your order (Order No.: {{ $order->order_no }}) as per requested. Please proceed to review your new order.</p>
-            <p>If you have any questions, please do not hesitate to contact us at <a href="mailto:help@heroes.my">help@hereos.my</a></p>
+            <p>We have updated your order (Order No.: {{ $order->order_no }}) as per requested. Please <a href="https://trips.heroes.my/" targer="_blank">log in</a> to your Heroes account and review your order.</p>
+            <p>If you have any questions, please do not hesitate to contact us at <a href=" mailto:help@heroes.my">help@hereos.my</a></p>
             <br>
             <p style="font-size: 14px">
                 Best Regards,

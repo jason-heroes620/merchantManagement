@@ -1,10 +1,17 @@
 import ProposalTab from "@/Components/Tabs/ProposalTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/Components/ui/tabs";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head } from "@inertiajs/react";
+import { Head, usePage } from "@inertiajs/react";
 import { Badge } from "@/Components/ui/badge";
+import { PaginatedData, Proposal, Order } from "@/types";
 
-const Proposals = ({ auth, proposals, requestingOrder, type }: any) => {
+const Proposals = ({ auth }: any) => {
+    const { proposals, requestingOrder, type } = usePage<{
+        proposals: PaginatedData<Proposal>;
+        requestingOrder: PaginatedData<Proposal>;
+        type: string;
+    }>().props;
+    console.log(proposals);
     return (
         <AuthenticatedLayout
             user={auth.user}
