@@ -429,7 +429,7 @@ class OrderController extends Controller
 
             if ($order['order_status'] === 2) {
                 $invoice = Invoice::select(['invoice_no'])->where('order_id', $order['order_id'])->first();
-                $order['invoice_no'] = $invoice['invoice_no'];
+                $order['invoice_no'] = $invoice ? $invoice['invoice_no'] : '';
             }
         }
 
